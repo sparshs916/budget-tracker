@@ -1,0 +1,20 @@
+.env
+teller-certs/
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+env/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
