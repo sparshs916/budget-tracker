@@ -224,7 +224,7 @@ def transactions(conn, filters, page, page_size):
         f"""
         SELECT t.id, t.date, t.description, t.merchant, t.merchant_key, t.flow, t.raw_amount,
                t.status, t.type, t.source, {EFFECTIVE_CATEGORY} AS category,
-               t.override_category IS NOT NULL AS overridden,
+               t.override_category IS NOT NULL AS overridden, r.category IS NOT NULL AS ruled,
                (t.override_category IS NULL AND r.category IS NULL AND t.pair_category IS NULL
                 AND {AI_CATEGORY} IS NOT NULL) AS ai_suggested,
                t.paired_with IS NOT NULL AS paired, t.note, t.hidden,

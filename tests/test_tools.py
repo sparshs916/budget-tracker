@@ -333,3 +333,17 @@ def test_every_page_and_control_is_on_the_page(conn):
     for marker in ['data-view="cashflow"', 'data-view="giving"', 'data-view="checkup"', 'id="checkup-badge"', 'id="qall"',
                    'id="category-dialog"', 'id="note-dialog"', 'id="toast"', 'id="cf-threshold"', 'id="giving-export"']:
         assert marker in html, marker
+
+
+def test_automatic_undoes_your_choice_and_your_merchant_rule(conn):
+    tid = add(conn, "card", "2026-09-03", "-62.10", "SAFEWAY #1234")
+    other = add(conn, "card", "2026-09-10", "-20.00", "SAFEWAY #1234")
+    conn.commit()
+    client, post = client_for()
+    post("/api/transactions/category", {"id": tid, "category": "Savings", "remember": True})
+    rows = {r["id"]: r for r in client.get("/api/transactions?start=2026-09-01&end=2026-09-30").get_json()["rows"]}
+    assert rows[other]["category"] == "Savings" and rows[other]["ruled"]
+    post("/api/transactions/category", {"id": tid, "category": "", "remember": True})
+    rows = {r["id"]: r for r in client.get("/api/transactions?start=2026-09-01&end=2026-09-30").get_json()["rows"]}
+    assert rows[tid]["category"] == rows[other]["category"] == "Groceries"
+    assert not rows[tid]["ruled"] and not rows[tid]["overridden"]

@@ -378,3 +378,18 @@ def test_checkup_suggests_treating_a_fill_only_account_as_savings(capital_one):
     book.settle()
     found = [i for i in queries.health(book.conn, datetime.date(2026, 10, 10)) if i["kind"] == "savings_account"]
     assert [i["account_id"] for i in found] == ["nest"] and found[0]["action"] == "make_savings"
+
+
+def test_labeling_a_deposit_into_an_in_budget_account_as_savings_is_undoable(capital_one):
+    # What happened in August: the +$3,000 arriving at Capital One was labeled Savings by hand,
+    # which reads as $3,000 taken OUT of savings (Savings -3,000, Remaining +3,000).
+    book = capital_one
+    book.conn.execute("UPDATE accounts SET include_in_budget = TRUE WHERE id = 'nest'")
+    book.add("sav", "2026-08-18", "-3000.00", "Withdrawal-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)")
+    inn = book.add("nest", "2026-08-17", "3000.00", "THE GOLDEN 1 CREDIT UNION")
+    book.settle()
+    book.override(inn, "Savings")
+    assert book.summary(AUG)["by"]["Savings"] == Decimal("-3000.00")
+    book.override(inn, None)  # "↺ Automatic"
+    s = book.summary(AUG)
+    assert "Savings" not in s["by"] and s["total_expenses"] == 0 and s["total_income"] == 0

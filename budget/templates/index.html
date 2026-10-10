@@ -649,7 +649,10 @@ async function loadSummary(seq) {
   for (const r of s.income) rows.push(row(r.category, r.amount, { category: r.category, count: r.count, amountCls: "in", kind: "income" }));
   if (!s.income.length) rows.push(row("Income", 0, { target: false }));
   const shown = new Set(s.expenses.map((r) => r.category));
-  for (const r of s.expenses) rows.push(row(r.category, r.amount, { category: r.category, count: r.count, kind: r.kind }));
+  for (const r of s.expenses) {
+    const label = r.category === "Savings" && Number(r.amount) < 0 ? "Savings (more taken out than put in)" : r.category;
+    rows.push(row(label, r.amount, { category: r.category, count: r.count, kind: r.kind }));
+  }
   // Categories with a target (or all of them while editing) show even before any spending.
   for (const [name, kind] of Object.entries(KINDS)) {
     if (shown.has(name) || (kind !== "expense" && kind !== "savings")) continue;
@@ -838,7 +841,9 @@ function emptyHelp() {
 function txnRow(t) {
   const flow = Number(t.flow);
   const select = h("select", { "aria-label": "Category", disabled: t.hidden, onchange: (e) => changeCategory(t, e.target) },
-    CATEGORIES.map((c) => h("option", { value: c, selected: c === t.category }, c)));
+    CATEGORIES.map((c) => h("option", { value: c, selected: c === t.category }, c)),
+    // Undo your own choice (or a rule for this merchant) and let the app decide again.
+    t.overridden || t.ruled ? h("option", { value: "" }, "↺ Automatic (undo my choice)") : null);
   const excluded = KINDS[t.category] === "excluded";
   return h("tr", { class: (excluded ? "muted " : "") + (t.hidden ? "hidden-row" : "") },
     h("td", { class: "small", style: "white-space:nowrap" }, t.date),
@@ -880,9 +885,17 @@ let categoryFor = null;
 function changeCategory(t, select) {
   categoryFor = { t, select, category: select.value };
   const name = t.merchant || t.description;
-  $("category-what").textContent = `“${name}” (${t.date}, ${money(t.flow)}) → ${select.value}`;
+  $("category-what").replaceChildren(`“${name}” (${t.date}, ${money(t.flow)}) → ${select.value || "automatic"}`,
+    // Savings on money coming IN means money taken out of savings - easy to pick by mistake.
+    select.value === "Savings" && Number(t.flow) > 0
+      ? h("p", { class: "alert small", style: "margin:.5rem 0 0" }, h("b", {}, "Careful: "),
+          "Savings on money coming in means money taken back out of savings: it lowers your Savings and raises Remaining. ",
+          "If this money went into a savings account, don't label it here. Instead, set that account's type to Savings and untick it ",
+          "under Accounts; then everything you move into it counts as saved.")
+      : null);
   $("category-all-label").textContent = `Every transaction from “${name}”, past and future`;
-  $("category-form").scope.value = "one";
+  // Undoing a merchant rule has to remove the rule, or nothing changes.
+  $("category-form").scope.value = !select.value && t.ruled ? "all" : "one";
   $("category-dialog").showModal();
 }
 $("category-cancel").addEventListener("click", () => $("category-dialog").close());
@@ -899,7 +912,7 @@ $("category-form").addEventListener("submit", async (e) => {
     await api("/api/transactions/category", { method: "POST", body: JSON.stringify({ id: t.id, category, remember }) });
     categoryFor = null;
     $("category-dialog").close();
-    toast(remember ? `All from “${t.merchant || t.description}” are now ${category}.` : `Now ${category}.`);
+    toast(!category ? "Back to automatic." : remember ? `All from “${t.merchant || t.description}” are now ${category}.` : `Now ${category}.`);
     await refresh(false);
   } catch (err) { alert(err.message); }
 });
