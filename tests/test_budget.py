@@ -1,6 +1,7 @@
 """Run with a throwaway Postgres:  TEST_DATABASE_URL=postgresql://... pytest"""
 import base64
 import io
+import json
 import datetime
 import os
 from decimal import Decimal
@@ -101,7 +102,7 @@ class FakeSimpleFIN:
 @pytest.fixture()
 def conn():
     with db.connect() as c:
-        c.execute("TRUNCATE enrollments, accounts, transactions, merchant_rules, login_attempts CASCADE")
+        c.execute("TRUNCATE enrollments, accounts, transactions, merchant_rules, login_attempts, ai_categories CASCADE")
         save_connection(c, ACCESS_URL)
         c.commit()
         enrollment = c.execute("SELECT * FROM enrollments").fetchone()
@@ -610,3 +611,78 @@ def test_rules_change_recategorizes_existing_rows_but_not_your_choices(conn):
     assert rows[K("cc", "k2")]["auto_category"] == "Subscriptions"
     assert rows[K("cc", "k1")]["override_category"] == "Shopping"  # your choice stays
     assert sync.recategorize_all_if_rules_changed(conn) == 0  # only once per rules version
+
+
+# --- AI categorization (Claude is faked; nothing is sent anywhere) ---
+
+from budget import ai_categorize  # noqa: E402
+
+
+def test_ai_fills_in_other_and_never_overrides_you(conn):
+    asked = []
+
+    def fake_ask(items):
+        asked.append(items)
+        answers = {"Old September thing": "Shopping", "Interest": "Other Income"}
+        return {i: answers[it["text"]] for i, it in enumerate(items) if it["text"] in answers}
+
+    assert ai_categorize.categorize_unknown(conn, ask=fake_ask) == 1  # Interest stays "Other Income"
+    texts = {it["text"]: it for it in asked[0]}
+    assert texts["Old September thing"] == {"text": "Old September thing", "direction": "money out", "account": "bank account"}
+
+    sept = {"start": datetime.date(2026, 9, 1), "end": datetime.date(2026, 9, 30), "account": "budget"}
+    assert amounts(queries.summary(conn, sept)["expenses"]) == {"Shopping": Decimal("999.00")}
+    row = queries.transactions(conn, {**sept, "account": "all"}, 1, 10)["rows"][0]
+    assert row["category"] == "Shopping" and row["ai_suggested"]
+
+    # Already asked: nothing is sent again.
+    assert ai_categorize.categorize_unknown(conn, ask=fake_ask) == 0 and len(asked) == 1
+
+    # Your own choice wins over the AI's.
+    conn.execute("UPDATE transactions SET override_category = 'Giving' WHERE id = %s", (K("chk", "c6"),))
+    row = queries.transactions(conn, {**sept, "account": "all"}, 1, 10)["rows"][0]
+    assert row["category"] == "Giving" and not row["ai_suggested"]
+
+
+def test_ai_unanswered_and_impossible_answers(conn):
+    # No answer (e.g. a refusal): nothing saved, so it's asked again next time.
+    assert ai_categorize.categorize_unknown(conn, ask=lambda items: {}) == 0
+    assert not conn.execute("SELECT 1 FROM ai_categories").fetchone()
+    # "Income" for money going out is ignored by the totals.
+    ai_categorize.categorize_unknown(conn, ask=lambda items: {i: "Income" for i in range(len(items))})
+    sept = {"start": datetime.date(2026, 9, 1), "end": datetime.date(2026, 9, 30), "account": "budget"}
+    assert amounts(queries.summary(conn, sept)["expenses"]) == {"Other": Decimal("999.00")}
+
+
+def test_ask_claude_request_and_parsing(monkeypatch):
+    sent = {}
+
+    class Block:
+        type = "text"
+        text = json.dumps({"results": [{"id": 0, "category": "Giving"}, {"id": 1, "category": "Not A Category"},
+                                       {"id": 7, "category": "Travel"}]})
+
+    class Response:
+        stop_reason = "end_turn"
+        content = [Block()]
+
+    class FakeMessages:
+        def create(self, **kwargs):
+            sent.update(kwargs)
+            return Response()
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            self.beta = type("Beta", (), {"messages": FakeMessages()})()
+
+    monkeypatch.setattr(ai_categorize.anthropic, "Anthropic", FakeClient)
+    monkeypatch.setattr(ai_categorize.config, "ANTHROPIC_API_KEY", "test")
+    items = [{"text": "THE HOPE COMMUNITY", "direction": "money out", "account": "credit card"},
+             {"text": "BDTOURS", "direction": "money out", "account": "credit card"}]
+    assert ai_categorize.ask_claude(items) == {0: "Giving"}  # unknown category and out-of-range id dropped
+    assert sent["model"] == "claude-opus-5-5" and sent["fallbacks"] == "default"
+    assert sent["output_config"]["format"]["schema"]["properties"]["results"]["items"]["properties"]["category"]["enum"]
+    assert "THE HOPE COMMUNITY" in sent["messages"][0]["content"]
+
+    Response.stop_reason = "refusal"
+    assert ai_categorize.ask_claude(items) == {}

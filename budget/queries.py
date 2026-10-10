@@ -2,12 +2,18 @@ from decimal import Decimal
 
 from .categorize import CATEGORIES, CATEGORY_KIND
 
-EFFECTIVE_CATEGORY = "COALESCE(t.override_category, r.category, t.auto_category)"
+# Your choice for the transaction, then your rule for the merchant, then the
+# keyword rules - with Claude's suggestion filling in only where those said Other.
+AI_CATEGORY = ("CASE WHEN t.auto_category IN ('Other', 'Other Income') AND ai.category NOT IN ('Other', 'Other Income') "
+               "AND NOT (ai.category = 'Income' AND t.flow < 0) THEN ai.category END")
+EFFECTIVE_CATEGORY = f"COALESCE(t.override_category, r.category, {AI_CATEGORY}, t.auto_category)"
 
 BASE_FROM = """
 FROM transactions t
 JOIN accounts a ON a.id = t.account_id
 LEFT JOIN merchant_rules r ON r.merchant_key = t.merchant_key
+LEFT JOIN ai_categories ai ON ai.merchant_key = t.merchant_key
+                          AND ai.direction = CASE WHEN t.flow < 0 THEN 'out' ELSE 'in' END
 """
 
 
@@ -91,6 +97,7 @@ def transactions(conn, filters, page, page_size):
         SELECT t.id, t.date, t.description, t.merchant, t.merchant_key, t.flow, t.raw_amount,
                t.status, t.type, t.source, {EFFECTIVE_CATEGORY} AS category,
                t.override_category IS NOT NULL AS overridden,
+               (t.override_category IS NULL AND r.category IS NULL AND {AI_CATEGORY} IS NOT NULL) AS ai_suggested,
                a.name AS account_name, a.last_four, a.institution, a.type AS account_type
         {BASE_FROM}
         WHERE {where}

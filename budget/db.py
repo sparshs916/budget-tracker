@@ -86,6 +86,15 @@ ALTER TABLE transactions ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT '
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS import_id BIGINT REFERENCES imports(id) ON DELETE CASCADE;
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS bank_category TEXT;  -- from a CSV's category column
 CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT);
+-- Claude's answer per merchant and direction, for transactions the rules left as Other.
+CREATE TABLE IF NOT EXISTS ai_categories (
+    merchant_key TEXT NOT NULL,
+    direction    TEXT NOT NULL,  -- in | out
+    category     TEXT NOT NULL,
+    model        TEXT,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (merchant_key, direction)
+);
 """
 
 _schema_ready = False

@@ -28,6 +28,9 @@ TOKEN_ENCRYPTION_KEY = _env("TOKEN_ENCRYPTION_KEY")
 # Vercel sends "Authorization: Bearer $CRON_SECRET" on cron requests.
 CRON_SECRET = _env("CRON_SECRET")
 
+# Optional: lets Claude categorize merchants the keyword rules can't (see ai_categorize.py).
+ANTHROPIC_API_KEY = _env("ANTHROPIC_API_KEY")
+
 # SimpleFIN amounts already use one convention for every account: positive
 # means money came into the account, so a card purchase is negative. Set to
 # "true" only if your card purchases show up as income.

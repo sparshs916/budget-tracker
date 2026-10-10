@@ -11,7 +11,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, ses
 from flask.json.provider import DefaultJSONProvider
 from werkzeug.security import check_password_hash
 
-from . import config, csv_import, db, queries
+from . import ai_categorize, config, csv_import, db, queries
 from .categorize import CATEGORIES, CATEGORY_NAMES
 from .simplefin import SimpleFINError, claim_setup_token
 from .sync import (SUBTYPES, compare_account, recategorize_account, recategorize_all_if_rules_changed, save_connection,
@@ -178,6 +178,7 @@ def index():
         categories=CATEGORY_NAMES,
         category_kinds=dict(CATEGORIES),
         today=today().isoformat(),
+        ai_enabled=ai_categorize.enabled(),
     )
 
 
@@ -304,6 +305,18 @@ def api_set_category():
     return jsonify(ok=True)
 
 
+def _auto_categorize(conn, limit=300):
+    """Let Claude fill in merchants still in Other, if an API key is set. Never fails the caller."""
+    if not ai_categorize.enabled():
+        return None
+    try:
+        return ai_categorize.categorize_unknown(conn, limit=limit)
+    except Exception:
+        logging.exception("AI categorization failed")
+        conn.rollback()
+        return None
+
+
 @app.post("/api/connections")
 @login_required
 def api_add_connection():
@@ -320,6 +333,7 @@ def api_add_connection():
         conn.commit()
         connection = conn.execute("SELECT * FROM enrollments WHERE id = %s", (connection_id,)).fetchone()
         result = sync_enrollment(conn, connection, today=today())
+        result["ai_categorized"] = _auto_categorize(conn)
         # Connections whose accounts all moved to this one are leftovers from a reconnect.
         conn.execute(
             """DELETE FROM enrollments e WHERE e.id <> %s
@@ -418,6 +432,8 @@ def api_import():
         if form.get("commit") == "1":
             result["import_id"] = csv_import.save(conn, account, new_rows, upload.filename) if new_rows else None
             result["saved"] = True
+            conn.commit()
+            result["ai_categorized"] = _auto_categorize(conn, limit=100)
     return jsonify(result)
 
 
@@ -449,7 +465,17 @@ def api_sync():
             # Re-fetch the full history window, e.g. to fill gaps from an earlier sync.
             conn.execute("UPDATE accounts SET history_synced = FALSE")
             conn.commit()
-        return jsonify(results=sync_all(conn, today=today()))
+        results = sync_all(conn, today=today())
+        return jsonify(results=results, ai_categorized=_auto_categorize(conn))
+
+
+@app.post("/api/ai-categorize")
+@login_required
+def api_ai_categorize():
+    if not ai_categorize.enabled():
+        return jsonify(error="Add ANTHROPIC_API_KEY in Vercel to turn this on."), 400
+    with db.connect() as conn:
+        return jsonify(ai_categorized=ai_categorize.categorize_unknown(conn))
 
 
 @app.get("/api/cron/sync")
@@ -458,7 +484,8 @@ def api_cron_sync():
     if not expected or not hmac.compare_digest(request.headers.get("Authorization", ""), expected):
         return jsonify(error="Unauthorized"), 401
     with db.connect() as conn:
-        return jsonify(results=sync_all(conn, today=today()))
+        results = sync_all(conn, today=today())
+        return jsonify(results=results, ai_categorized=_auto_categorize(conn))
 
 
 @app.errorhandler(413)

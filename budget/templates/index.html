@@ -85,6 +85,8 @@
     <h2>Budget <span class="muted small" id="range-label"></span></h2>
     <table id="summary"></table>
     <p class="muted small" id="excluded"></p>
+    <p id="ai-row" class="small hidden"><button id="ai-btn">✨ Categorize “Other” with AI</button>
+      <span class="muted">Claude suggests a category for merchants the rules couldn’t place. Suggestions are marked “AI”; change any of them like normal.</span></p>
   </section>
 
   <section>
@@ -203,6 +205,7 @@ const CSRF = {{ csrf|tojson }};
 const CATEGORIES = {{ categories|tojson }};
 const KINDS = {{ category_kinds|tojson }};
 const TODAY = {{ today|tojson }};
+const AI_ENABLED = {{ ai_enabled|tojson }};
 const SIMPLEFIN_URL = "https://beta-bridge.simplefin.org";
 const ACCOUNT_TYPES = [["checking", "Checking"], ["savings", "Savings"], ["credit_card", "Credit card"], ["other", "Other"]];
 
@@ -314,6 +317,8 @@ async function loadSummary() {
   rows.push(row("Total Expenses", s.total_expenses, { cls: "total" }));
   rows.push(row("Remaining", s.remaining, { cls: "total", amountCls: Number(s.remaining) < 0 ? "neg" : "in" }));
   $("summary").replaceChildren(...rows);
+  const hasOther = s.expenses.some((r) => r.category === "Other") || s.income.some((r) => r.category === "Other Income");
+  $("ai-row").classList.toggle("hidden", !(AI_ENABLED && hasOther));
 
   const ex = s.excluded.map((r) => `${r.category} ${money(Math.abs(r.amount))} (${r.count})`).join(" · ");
   $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
@@ -351,7 +356,7 @@ function txnRow(t) {
       t.status === "pending" ? h("span", { class: "pill" }, "pending") : null,
       t.source === "csv" ? h("span", { class: "pill", title: "From a CSV upload" }, "csv") : null),
     h("td", { class: "small" }, `${t.account_name || ""}${t.last_four ? " ·" + t.last_four : ""}`),
-    h("td", {}, select),
+    h("td", {}, select, t.ai_suggested ? h("span", { class: "pill", title: "Category suggested by Claude. Pick one to replace it." }, "AI") : null),
     h("td", { class: "num " + (flow > 0 ? "in" : "") }, (flow > 0 ? "+" : "") + money(flow)));
 }
 
@@ -639,6 +644,16 @@ async function removeAccount(a) {
     await refresh(true);
   } catch (err) { alert(err.message); }
 }
+
+$("ai-btn").addEventListener("click", async (e) => {
+  e.target.disabled = true; e.target.textContent = "Categorizing…";
+  try {
+    const r = await api("/api/ai-categorize", { method: "POST" });
+    e.target.textContent = r.ai_categorized ? `Categorized ${r.ai_categorized} merchant${r.ai_categorized === 1 ? "" : "s"}` : "Nothing new to categorize";
+    await refresh(false);
+  } catch (err) { alert(err.message); e.target.textContent = "✨ Categorize “Other” with AI"; }
+  e.target.disabled = false;
+});
 
 $("upload-btn").addEventListener("click", () => openUpload());
 $("upload-cancel").addEventListener("click", () => $("upload-dialog").close());
