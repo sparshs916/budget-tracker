@@ -325,7 +325,7 @@ async function loadAccounts() {
   sel.value = prev;
   if (sel.value !== prev) { state.account = "budget"; sel.value = "budget"; }
 
-  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"), h("th", {}, ""))];
+  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"))];
   for (const a of accountsData.accounts) {
     const box = h("input", { type: "checkbox", checked: a.include_in_budget, onchange: async (e) => {
       await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ include_in_budget: e.target.checked }) });
@@ -335,19 +335,20 @@ async function loadAccounts() {
       await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ subtype: e.target.value }) });
       refresh(true);
     }}, ACCOUNT_TYPES.map(([v, label]) => h("option", { value: v, selected: v === a.subtype }, label)));
-    const status = a.enrollment_status === "ok" ? "OK" : h("span", { class: "neg" }, a.last_error || a.enrollment_status);
+    // The full message is in the banner at the top; keep the row narrow so nothing scrolls off screen.
+    const status = a.enrollment_status === "ok" ? "OK" : h("span", { class: "neg", title: a.last_error || "" }, "Needs attention");
     rows.push(h("tr", {},
       h("td", {}, box),
-      h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`),
+      h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""} `,
+        h("button", { class: "small", title: "Compare with what SimpleFIN returns for the selected dates",
+          onclick: (e) => checkAccount(a, e.target) }, "Check")),
       h("td", {}, type),
       h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
       h("td", { class: "num small", title: "Synced transactions, and the newest one's date" },
         a.transaction_count ? `${a.transaction_count} · latest ${a.latest_transaction}` : "none yet"),
-      h("td", { class: "small" }, status),
-      h("td", {}, h("button", { class: "small", title: "Compare with what SimpleFIN returns for the selected dates",
-        onclick: (e) => checkAccount(a, e.target) }, "Check"))));
+      h("td", { class: "small" }, status)));
   }
-  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 7, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
+  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 6, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
   $("accounts").replaceChildren(...rows);
 
   const alerts = accountsData.enrollments.filter((e) => e.status !== "ok").map((e) =>
