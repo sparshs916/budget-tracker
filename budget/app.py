@@ -14,8 +14,8 @@ from werkzeug.security import check_password_hash
 from . import ai_categorize, config, csv_import, db, queries
 from .categorize import CATEGORIES, CATEGORY_NAMES
 from .simplefin import SimpleFINError, claim_setup_token
-from .sync import (SUBTYPES, compare_account, recategorize_account, recategorize_all_if_rules_changed, save_connection,
-                   sync_all, sync_enrollment)
+from .sync import (SUBTYPES, compare_account, link_transfers, recategorize_account, recategorize_all_if_rules_changed,
+                   save_connection, sync_all, sync_enrollment)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -105,6 +105,7 @@ def apply_new_category_rules():
     try:
         with db.connect() as conn:
             changed = recategorize_all_if_rules_changed(conn)
+            _relink(conn)  # once per server start: picks up pairing for data synced before it existed
         if changed:
             logging.info("Re-categorized %s transactions for new rules", changed)
     except Exception:
@@ -272,6 +273,8 @@ def api_update_account():
                 (subtype, SUBTYPES[subtype], subtype in ("checking", "credit_card"), account_id),
             )
             recategorize_account(conn, account_id)
+            conn.commit()
+            _relink(conn)
         if "include_in_budget" in body:
             conn.execute("UPDATE accounts SET include_in_budget = %s WHERE id = %s",
                          (bool(body["include_in_budget"]), account_id))
@@ -302,11 +305,23 @@ def api_set_category():
             conn.execute("UPDATE transactions SET override_category = NULL WHERE id = %s", (txn_id,))
         else:
             conn.execute("UPDATE transactions SET override_category = %s WHERE id = %s", (category, txn_id))
+        conn.commit()
+        _relink(conn)
     return jsonify(ok=True)
 
 
+def _relink(conn):
+    try:
+        link_transfers(conn)
+    except Exception:
+        logging.exception("Linking transfers failed")
+        conn.rollback()
+
+
 def _auto_categorize(conn, limit=300):
-    """Let Claude fill in merchants still in Other, if an API key is set. Never fails the caller."""
+    """After new data: pair transfers, then let Claude fill in merchants still in
+    Other if an API key is set. Never fails the caller."""
+    _relink(conn)
     if not ai_categorize.enabled():
         return None
     try:
@@ -382,6 +397,8 @@ def api_delete_manual_account():
         # Only hand-made accounts; SimpleFIN accounts would just come back on the next sync.
         deleted = conn.execute("DELETE FROM accounts WHERE id = %s AND enrollment_id IS NULL RETURNING id",
                                (account_id,)).fetchone()
+        conn.commit()
+        _relink(conn)
     if not deleted:
         return jsonify(error="Only accounts you added by hand can be removed."), 400
     return jsonify(ok=True)
@@ -454,6 +471,8 @@ def api_undo_import(import_id):
     with db.connect() as conn:
         # Rows a later SimpleFIN sync took over are no longer part of the upload and stay.
         conn.execute("DELETE FROM imports WHERE id = %s", (import_id,))
+        conn.commit()
+        _relink(conn)
     return jsonify(ok=True)
 
 

@@ -7,7 +7,8 @@ from .categorize import CATEGORIES, CATEGORY_KIND
 # keyword rules - with Claude's suggestion filling in only where those said Other.
 AI_CATEGORY = ("CASE WHEN t.auto_category IN ('Other', 'Other Income') AND ai.category NOT IN ('Other', 'Other Income') "
                "AND NOT (ai.category = 'Income' AND t.flow < 0) THEN ai.category END")
-EFFECTIVE_CATEGORY = f"COALESCE(t.override_category, r.category, {AI_CATEGORY}, t.auto_category)"
+# A matched move between your own accounts (link_transfers) outranks the wording rules.
+EFFECTIVE_CATEGORY = f"COALESCE(t.override_category, r.category, t.pair_category, {AI_CATEGORY}, t.auto_category)"
 
 BASE_FROM = """
 FROM transactions t
@@ -146,7 +147,9 @@ def transactions(conn, filters, page, page_size):
         SELECT t.id, t.date, t.description, t.merchant, t.merchant_key, t.flow, t.raw_amount,
                t.status, t.type, t.source, {EFFECTIVE_CATEGORY} AS category,
                t.override_category IS NOT NULL AS overridden,
-               (t.override_category IS NULL AND r.category IS NULL AND {AI_CATEGORY} IS NOT NULL) AS ai_suggested,
+               (t.override_category IS NULL AND r.category IS NULL AND t.pair_category IS NULL
+                AND {AI_CATEGORY} IS NOT NULL) AS ai_suggested,
+               t.paired_with IS NOT NULL AS paired,
                a.name AS account_name, a.last_four, a.institution, a.type AS account_type
         {BASE_FROM}
         WHERE {where}

@@ -85,6 +85,9 @@ CREATE TABLE IF NOT EXISTS imports (
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'simplefin';  -- simplefin | csv
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS import_id BIGINT REFERENCES imports(id) ON DELETE CASCADE;
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS bank_category TEXT;  -- from a CSV's category column
+-- Set by link_transfers(): the other half of a move between your own accounts.
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS paired_with TEXT;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS pair_category TEXT;
 CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT);
 -- Claude's answer per merchant and direction, for transactions the rules left as Other.
 CREATE TABLE IF NOT EXISTS ai_categories (

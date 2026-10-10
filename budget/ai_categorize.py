@@ -14,7 +14,7 @@ from .categorize import CATEGORY_NAMES
 
 log = logging.getLogger(__name__)
 
-MODEL = "claude-opus-5-5"
+MODEL = "claude-haiku-5-5"
 BATCH_SIZE = 100
 
 SYSTEM = """You categorize transactions for a personal budget app. Each item is one merchant as it appears \
@@ -60,11 +60,10 @@ def ask_claude(items):
     """items: [{"text", "direction", "account"}] -> {index: category}. Empty on refusal."""
     client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY, max_retries=2, timeout=120)
     listing = "\n".join(f'{i}. "{it["text"]}" ({it["direction"]}, {it["account"]})' for i, it in enumerate(items))
-    response = client.beta.messages.create(
+    # Claude Haiku 5.5 has no server-side fallback; a declined batch is retried on the next sync.
+    response = client.messages.create(
         model=MODEL,
         max_tokens=16000,
-        betas=["server-side-fallback-2026-07-01"],
-        fallbacks="default",
         system=SYSTEM,
         output_config={"effort": "low", "format": OUTPUT_FORMAT},
         messages=[{"role": "user", "content": f"Categorize these {len(items)} merchants:\n{listing}"}],
@@ -96,7 +95,7 @@ def categorize_unknown(conn, limit=300, ask=None):
         LEFT JOIN merchant_rules r ON r.merchant_key = t.merchant_key
         LEFT JOIN ai_categories ai ON ai.merchant_key = t.merchant_key
                                   AND ai.direction = CASE WHEN t.flow < 0 THEN 'out' ELSE 'in' END
-        WHERE t.auto_category IN ('Other', 'Other Income') AND t.override_category IS NULL
+        WHERE t.auto_category IN ('Other', 'Other Income') AND t.override_category IS NULL AND t.pair_category IS NULL
           AND r.category IS NULL AND ai.merchant_key IS NULL AND t.merchant_key IS NOT NULL
         GROUP BY 1, 2
         ORDER BY COUNT(*) DESC

@@ -319,7 +319,7 @@ async function loadSummary() {
   rows.push(row("Remaining", s.remaining, { cls: "total", amountCls: Number(s.remaining) < 0 ? "neg" : "in" }));
   $("summary").replaceChildren(...rows);
   const hasOther = s.expenses.some((r) => r.category === "Other") || s.income.some((r) => r.category === "Other Income");
-  $("ai-row").classList.toggle("hidden", !(AI_ENABLED && hasOther));
+  $("ai-row").classList.toggle("hidden", !hasOther);
 
   const ex = s.excluded.map((r) => `${r.category} ${money(Math.abs(r.amount))} (${r.count})`).join(" · ");
   $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
@@ -667,6 +667,10 @@ async function removeAccount(a) {
 }
 
 $("ai-btn").addEventListener("click", async (e) => {
+  if (!AI_ENABLED) {
+    alert("AI categories are off. To turn them on: create an API key at console.anthropic.com, add it in Vercel → Settings → Environment Variables as ANTHROPIC_API_KEY, then redeploy.");
+    return;
+  }
   e.target.disabled = true; e.target.textContent = "Categorizing…";
   try {
     const r = await api("/api/ai-categorize", { method: "POST" });

@@ -7,7 +7,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from . import config, crypto
-from .categorize import RULES_VERSION, categorize, merchant_key
+from .categorize import RULES_VERSION, TRANSFER_WORDING, categorize, merchant_key
 from .simplefin import SimpleFINClient, SimpleFINError, error_messages
 
 log = logging.getLogger(__name__)
@@ -338,3 +338,73 @@ def compare_account(conn, account_id, start, end, client=None):
         "not_returned": [{"date": r["date"].isoformat(), "description": r["description"], "amount": str(r["raw_amount"])}
                          for r in in_range if r["id"] not in remote_ids][:100],
     }
+
+
+PAIR_DAYS = 3
+_MOVE_CATEGORIES = ("Transfer", "Credit Card Payment", "Savings")
+
+
+def link_transfers(conn):
+    """Find both halves of money moving between your own accounts and label them.
+
+    Money out of one account and the same amount into a different account
+    within 3 days, where both sides read like a transfer or payment (or are
+    already categorized as one), is one move - whatever each bank calls it.
+    ("Withdrawal Overdraft transfer to ****022-S9" on savings and "Overdraft
+    Transfer" on checking.) Both halves are then left out of the totals, as a
+    card payment if either side is a card. Requiring transfer-like wording on
+    both sides keeps a refund and an unrelated payment of the same amount from
+    being paired. Your own category choices still win.
+    """
+    rows = conn.execute(
+        """SELECT t.id, t.account_id, t.date, t.flow, t.description, t.merchant, t.auto_category,
+                  t.override_category, a.type AS account_type
+           FROM transactions t JOIN accounts a ON a.id = t.account_id
+           WHERE abs(t.flow) >= 1
+           ORDER BY t.date, t.id"""
+    ).fetchall()
+
+    def movable(r):
+        if r["override_category"]:
+            return r["override_category"] in _MOVE_CATEGORIES  # you said what this was
+        if r["auto_category"] in ("Income", "Person-to-Person"):
+            return False  # a paycheck or a payment to someone else is never one of your own moves
+        text = f"{r['description'] or ''} {r['merchant'] or ''}"
+        return r["auto_category"] in _MOVE_CATEGORIES or bool(TRANSFER_WORDING.search(text))
+
+    buckets = {}
+    for r in rows:
+        if movable(r):
+            buckets.setdefault(abs(Decimal(r["flow"])), []).append(r)
+
+    pairs = []
+    for group in buckets.values():
+        outs = [r for r in group if r["flow"] < 0]
+        ins = [r for r in group if r["flow"] > 0]
+        used = set()
+        for distance in range(PAIR_DAYS + 1):
+            for out in outs:
+                if out["id"] in used:
+                    continue
+                for inn in ins:
+                    if (inn["id"] not in used and inn["account_id"] != out["account_id"]
+                            and abs((inn["date"] - out["date"]).days) == distance):
+                        used.update((out["id"], inn["id"]))
+                        pairs.append((out, inn))
+                        break
+
+    updates = []
+    for out, inn in pairs:
+        if "credit" in (out["account_type"], inn["account_type"]):
+            out_category = in_category = "Credit Card Payment"
+        else:
+            # Moving money into savings stays visible as "Savings" on the way out.
+            out_category = "Savings" if out["auto_category"] == "Savings" else "Transfer"
+            in_category = "Transfer"
+        updates += [(inn["id"], out_category, out["id"]), (out["id"], in_category, inn["id"])]
+
+    conn.execute("UPDATE transactions SET paired_with = NULL, pair_category = NULL WHERE paired_with IS NOT NULL")
+    with conn.cursor() as cur:
+        cur.executemany("UPDATE transactions SET paired_with = %s, pair_category = %s WHERE id = %s", updates)
+    conn.commit()
+    return len(pairs)

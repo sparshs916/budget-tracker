@@ -224,7 +224,8 @@ def test_changing_account_type_sticks_and_recategorizes(conn):
     resp = client.post("/api/accounts/update", json={"id": K("cc"), "subtype": "checking"}, headers={"X-CSRF-Token": csrf})
     assert resp.status_code == 200
     conn.rollback()
-    assert category() == "Other Income"
+    # No longer a card, but still matched with the -$300 from checking: a transfer.
+    assert category() == "Transfer"
 
     assert client.post("/api/accounts/update", json={"id": "missing", "subtype": "checking"},
                        headers={"X-CSRF-Token": csrf}).status_code == 404
@@ -673,14 +674,15 @@ def test_ask_claude_request_and_parsing(monkeypatch):
 
     class FakeClient:
         def __init__(self, **kwargs):
-            self.beta = type("Beta", (), {"messages": FakeMessages()})()
+            self.messages = FakeMessages()
 
     monkeypatch.setattr(ai_categorize.anthropic, "Anthropic", FakeClient)
     monkeypatch.setattr(ai_categorize.config, "ANTHROPIC_API_KEY", "test")
     items = [{"text": "THE HOPE COMMUNITY", "direction": "money out", "account": "credit card"},
              {"text": "BDTOURS", "direction": "money out", "account": "credit card"}]
     assert ai_categorize.ask_claude(items) == {0: "Giving"}  # unknown category and out-of-range id dropped
-    assert sent["model"] == "claude-opus-5-5" and sent["fallbacks"] == "default"
+    assert sent["model"] == "claude-haiku-5-5" and "fallbacks" not in sent  # Haiku has no server-side fallback
+    assert sent["output_config"]["effort"] == "low"
     assert sent["output_config"]["format"]["schema"]["properties"]["results"]["items"]["properties"]["category"]["enum"]
     assert "THE HOPE COMMUNITY" in sent["messages"][0]["content"]
 
@@ -706,3 +708,51 @@ def test_unmatched_transfers_flag_money_that_left_untracked(conn):
     # Re-labelling the money for what it was (sent to a friend) clears the warning for it.
     conn.execute("UPDATE transactions SET override_category = 'Person-to-Person' WHERE id = %s", (K("sav", "s1"),))
     assert queries.summary(conn, month_filters())["unmatched_total"] == Decimal("300.00")
+
+
+def test_transfers_are_paired_whatever_the_bank_calls_them(conn):
+    # Your September: savings -> checking ("Overdraft Transfer") -> Chase payment, and a
+    # transfer that funded a Zelle to a friend.
+    def add(acct, tid, date, amount, desc):
+        flow = Decimal(amount)
+        conn.execute(
+            """INSERT INTO transactions (id, account_id, date, description, raw_amount, flow, status, auto_category)
+               VALUES (%s, %s, %s, %s, %s, %s, 'posted', %s)""",
+            (K(acct, tid), K(acct), date, desc, flow, flow,
+             sync.categorize(description=desc, merchant=None, flow=flow,
+                             account_type="credit" if acct == "cc" else "depository")))
+    conn.execute("DELETE FROM transactions WHERE date < '2026-10-01'")
+    add("sav", "x1", "2026-09-22", "-3758.46", "Withdrawal Overdraft transfer to ****022-S9")
+    add("chk", "x2", "2026-09-22", "3758.46", "Overdraft Transfer")
+    add("chk", "x3", "2026-09-22", "-3750.68", "Credit Card Payment")
+    add("cc", "x4", "2026-09-21", "3750.68", "Payment Thank You-Mobile")
+    add("sav", "x5", "2026-09-19", "-1231.00", "Withdrawal at G1 Online Transfer 1,231.00 to share 9")
+    add("chk", "x6", "2026-09-19", "1231.00", "Online Transfer")
+    add("chk", "x7", "2026-09-19", "-1230.00", "Zelle Transfer")
+    # A refund and an unrelated card payment of the same amount must not pair.
+    add("chk", "x8", "2026-09-25", "-45.00", "PG&E WEB ONLINE PAYMENT")
+    add("cc", "x9", "2026-09-25", "45.00", "AMAZON REFUND")
+    conn.commit()
+    assert sync.link_transfers(conn) == 5  # these 3 plus October's card payment and savings transfer
+
+    rows = {r["id"].rsplit(":", 1)[1]: r for r in queries.transactions(
+        conn, {"start": datetime.date(2026, 9, 1), "end": datetime.date(2026, 9, 30), "account": "all"}, 1, 50)["rows"]}
+    assert rows["x2"]["category"] == "Transfer" and rows["x2"]["paired"]  # not "Fees & Interest"
+    assert rows["x1"]["category"] == "Transfer"
+    assert rows["x3"]["category"] == rows["x4"]["category"] == "Credit Card Payment"
+    assert rows["x7"]["category"] == "Person-to-Person" and not rows["x7"]["paired"]
+    assert not rows["x8"]["paired"] and not rows["x9"]["paired"]
+
+    # Budget with savings and checking both tracked: the only spending is the friend payment
+    # and the PG&E bill, net of the refund; nothing is flagged as leaking.
+    conn.execute("UPDATE accounts SET include_in_budget = TRUE")
+    s = queries.summary(conn, {"start": datetime.date(2026, 9, 1), "end": datetime.date(2026, 9, 30), "account": "budget"})
+    assert amounts(s["expenses"]) == {"Electricity": Decimal("45.00"), "Shopping": Decimal("-45.00"),
+                                      "Person-to-Person": Decimal("1230.00")}
+    assert s["unmatched_transfers"] == []
+
+    # You say a "transfer" was really something else: the pairing respects it.
+    conn.execute("UPDATE transactions SET override_category = 'Rent' WHERE id = %s", (K("chk", "x3"),))
+    conn.commit()
+    sync.link_transfers(conn)
+    assert not conn.execute("SELECT paired_with FROM transactions WHERE id = %s", (K("cc", "x4"),)).fetchone()["paired_with"]

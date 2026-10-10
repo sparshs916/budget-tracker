@@ -45,7 +45,7 @@ Card exports that list purchases as positive numbers are detected and flipped; t
 
 ## AI categories (optional)
 
-Set `ANTHROPIC_API_KEY` and the app asks Claude (`claude-opus-5-5`, low effort) to categorize merchants the keyword rules leave as **Other**, after each sync and upload, or on demand with **Categorize "Other" with AI** under the budget table. Only the merchant text, the direction of the money, and whether it was a card or bank account are sent; no amounts, dates, names or account numbers. Each merchant is asked about once and the answer is saved. Suggestions only fill in where the rules said Other, are marked "AI" in the list, and never override a category you chose. Requests use server-side fallbacks (`fallbacks: "default"`) so a declined request is retried on another model.
+Set `ANTHROPIC_API_KEY` and the app asks Claude (`claude-haiku-5-5`, low effort) to categorize merchants the keyword rules leave as **Other**, after each sync and upload, or on demand with **Categorize "Other" with AI** under the budget table. Only the merchant text, the direction of the money, and whether it was a card or bank account are sent; no amounts, dates, names or account numbers. Each merchant is asked about once and the answer is saved. Suggestions only fill in where the rules said Other, are marked "AI" in the list, and never override a category you chose. A batch Claude declines is retried on the next sync.
 
 ## Security notes
 

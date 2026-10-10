@@ -12,7 +12,7 @@ Every category has a kind:
 import re
 
 # Bump when the rules below change; existing transactions are then re-categorized.
-RULES_VERSION = "2026-10-10.1"
+RULES_VERSION = "2026-10-10.3"
 
 # Display order of the budget table.
 CATEGORIES = [
@@ -56,13 +56,16 @@ def _rx(*words):
     return re.compile(r"(?<![a-z0-9])(?:" + "|".join(words) + r")(?![a-z0-9])", re.I)
 
 
-CARD_PAYMENT = _rx(
-    r"payment thank you", r"autopay", r"auto pay", r"epayment", r"e-payment", r"online payment",
-    r"mobile payment", r"crd pmt", r"card pmt", r"cardmember serv", r"credit card", r"card payment",
+# Card issuers: money to them from a bank account is a card payment.
+CARD_ISSUER = _rx(
+    r"cardmember serv", r"credit card", r"card payment", r"crd pmt", r"card pmt", r"crd autopay", r"payment thank you",
     r"applecard", r"apple card", r"gsbank", r"chase card", r"chase credit", r"amex", r"american express",
     r"discover", r"capital one", r"citi card", r"citicard", r"barclaycard", r"bank of america credit",
     r"wells fargo card", r"synchrony", r"bilt",
 )
+# Generic payment words: a card payment only if nothing more specific (PG&E, rent...) matches.
+PAYMENT_WORDS = _rx(r"autopay", r"auto pay", r"epayment", r"e-payment", r"online payment", r"mobile payment")
+CARD_PAYMENT = re.compile(f"(?:{CARD_ISSUER.pattern})|(?:{PAYMENT_WORDS.pattern})", re.IGNORECASE)
 SAVINGS = _rx(
     r"to sav\w*", r"to savings", r"transfer to share", r"ally bank", r"marcus", r"wealthfront",
     r"betterment", r"robinhood", r"vanguard", r"fidelity", r"schwab", r"acorns", r"stash",
@@ -71,7 +74,11 @@ SAVINGS = _rx(
 INTERNAL_TRANSFER = _rx(
     r"online transfer", r"internal transfer", r"transfer from", r"transfer to", r"xfer", r"from sav\w*",
     r"from chk", r"to chk", r"from checking", r"to checking", r"funds transfer",
+    r"overdraft (?:transfer|protection)", r"from share", r"to share",
 )
+# Wording that suggests money moving between accounts; used to pair the two halves.
+TRANSFER_WORDING = _rx(r"\w*transfer\w*", r"xfer", r"payment", r"pymt", r"pmt", r"paymt", r"autopay", r"auto pay",
+                       r"overdraft", r"thank you", r"deposit")
 P2P = _rx(r"zelle", r"venmo", r"cash app", r"cashapp", r"square cash", r"paypal transfer", r"apple cash")
 PAYCHECK = _rx(r"payroll", r"direct dep\w*", r"dir dep", r"salary", r"paycheck", r"adp", r"gusto", r"paychex")
 
@@ -98,7 +105,7 @@ KEYWORD_RULES = [
     ("Entertainment", _rx(r"\w*tours?", r"museum", r"aquarium", r"zoo", r"amc", r"cinema", r"theat(?:er|re)", r"ticketmaster", r"stubhub", r"steam", r"playstation", r"xbox", r"nintendo", r"bowling", r"concert")),
     ("Shopping", _rx(r"sephora", r"ulta", r"uniqlo", r"h&m", r"american eagle", r"abercrombie", r"galleria", r"arden fair", r"adidas", r"bylt", r"nordstrom", r"macy'?s", r"kohl'?s", r"zara", r"goodwill", r"daiso", r"amazon", r"amzn", r"target", r"walmart", r"best buy", r"home depot", r"lowe'?s", r"ikea", r"etsy", r"ebay", r"tj ?maxx", r"marshalls", r"ross", r"old navy", r"nike", r"apple store")),
     ("Education", _rx(r"academy", r"acdmy", r"parchment", r"univ\w*", r"tuition", r"college", r"coursera", r"udemy")),
-    ("Fees & Interest", _rx(r"interest charge", r"finance charge", r"late fee", r"annual fee", r"overdraft", r"service fee", r"atm fee", r"foreign transaction fee")),
+    ("Fees & Interest", _rx(r"interest charge", r"finance charge", r"late fee", r"annual fee", r"overdraft fee", r"nsf", r"service fee", r"atm fee", r"foreign transaction fee")),
     ("Taxes", _rx(r"irs", r"franchise tax", r"tax payment", r"dept of revenue", r"treas tax")),
 ]
 
@@ -162,7 +169,9 @@ def _categorize(*, description, merchant, flow, account_type):
     # Money moving between your own accounts.
     if is_credit and flow > 0 and (CARD_PAYMENT.search(text) or re.search(r"\b(?:payment|pymt|pmt)\b", text, re.IGNORECASE)):
         return "Credit Card Payment"
-    if not is_credit and flow < 0 and CARD_PAYMENT.search(text) and not SAVINGS.search(text):
+    if not is_credit and flow < 0 and not SAVINGS.search(text) and (
+            CARD_ISSUER.search(text)
+            or (PAYMENT_WORDS.search(text) and not any(p.search(text) for _, p in KEYWORD_RULES))):
         return "Credit Card Payment"
     if not is_credit and SAVINGS.search(text):
         return "Savings" if flow < 0 else "Transfer"
