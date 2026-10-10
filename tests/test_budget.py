@@ -150,10 +150,11 @@ def test_categories_and_math(conn):
     assert exp["Savings"] == Decimal("500.00")
     # Card payment shows up on both sides, but is excluded from totals.
     assert amounts(s["excluded"]) == {"Credit Card Payment": Decimal("0.00")}
-    total = Decimal("1650") + Decimal("92") + Decimal("45.10") + Decimal("15.49") + Decimal("20") + Decimal("12") + Decimal("500")
-    assert s["total_expenses"] == total
+    # Savings is shown on its own and left out of expenses and Remaining.
+    total = Decimal("1650") + Decimal("92") + Decimal("45.10") + Decimal("15.49") + Decimal("20") + Decimal("12")
+    assert s["total_expenses"] == s["total_spending"] == total
     assert s["remaining"] == Decimal("2701.00") - total
-    assert s["total_spending"] == total - 500
+    assert s["total_savings"] == Decimal("500.00")
 
 
 def test_savings_account_excluded_by_default_but_viewable(conn):

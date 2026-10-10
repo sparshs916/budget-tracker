@@ -148,15 +148,17 @@ def summary(conn, filters):
             {BASE_FROM} WHERE {where} AND {EFFECTIVE_CATEGORY} = 'Savings'""", params).fetchone()
 
     total_income = sum((r["amount"] for r in income), Decimal(0))
-    total_expenses = sum((r["amount"] for r in expenses), Decimal(0))
+    # Savings is shown on its own and never touches Remaining: Remaining is income minus
+    # spending, so moving money into (or out of) savings can't make it look better or worse.
     savings = sum((r["amount"] for r in expenses if r["kind"] == "savings"), Decimal(0))
+    total_expenses = sum((r["amount"] for r in expenses if r["kind"] != "savings"), Decimal(0))
     return {
         "income": income,
-        "expenses": expenses,
+        "expenses": expenses,  # includes the Savings row (kind "savings"); the page shows it apart
         "excluded": excluded,
         "total_income": total_income,
         "total_expenses": total_expenses,
-        "total_spending": total_expenses - savings,
+        "total_spending": total_expenses,
         "total_savings": savings,
         "remaining": total_income - total_expenses,
         "savings_in": Decimal(moves["put_in"]),

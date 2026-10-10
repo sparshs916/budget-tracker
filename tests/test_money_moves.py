@@ -352,7 +352,8 @@ def test_moving_money_into_savings_and_back_shows_what_you_kept(capital_one):
     s = book.summary()
     assert s["by"]["Savings"] == Decimal("700.00")  # 1,000 in, 300 back
     assert s["savings_in"] == Decimal("1000.00") and s["savings_out"] == Decimal("300.00")
-    assert s["total_income"] == Decimal("3000.00") and s["remaining"] == Decimal("2300.00")
+    # Saving doesn't touch Remaining: it's income minus spending.
+    assert s["total_income"] == Decimal("3000.00") and s["remaining"] == Decimal("3000.00") and s["total_expenses"] == 0
     assert book.category(back) == "Savings" and s["unmatched_transfers"] == []
 
 
@@ -382,14 +383,16 @@ def test_checkup_suggests_treating_a_fill_only_account_as_savings(capital_one):
 
 def test_labeling_a_deposit_into_an_in_budget_account_as_savings_is_undoable(capital_one):
     # What happened in August: the +$3,000 arriving at Capital One was labeled Savings by hand,
-    # which reads as $3,000 taken OUT of savings (Savings -3,000, Remaining +3,000).
+    # which reads as $3,000 taken OUT of savings (Savings -3,000; it used to inflate Remaining too).
     book = capital_one
     book.conn.execute("UPDATE accounts SET include_in_budget = TRUE WHERE id = 'nest'")
     book.add("sav", "2026-08-18", "-3000.00", "Withdrawal-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)")
     inn = book.add("nest", "2026-08-17", "3000.00", "THE GOLDEN 1 CREDIT UNION")
     book.settle()
     book.override(inn, "Savings")
-    assert book.summary(AUG)["by"]["Savings"] == Decimal("-3000.00")
+    s = book.summary(AUG)
+    assert s["by"]["Savings"] == Decimal("-3000.00")
+    assert s["remaining"] == 0 and s["total_expenses"] == 0  # Savings never moves Remaining, even mislabeled
     book.override(inn, None)  # "↺ Automatic"
     s = book.summary(AUG)
     assert "Savings" not in s["by"] and s["total_expenses"] == 0 and s["total_income"] == 0

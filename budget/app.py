@@ -669,6 +669,8 @@ def api_import():
             "new": [_import_row(r) for r in sorted(new_rows, key=lambda r: r["date"], reverse=True)[:200]],
             "duplicates": [_import_row(r) for r in sorted(duplicates, key=lambda r: r["date"], reverse=True)[:200]],
             "not_in_file": [_import_row(r) for r in sorted(not_in_file, key=lambda r: r["date"], reverse=True)[:200]],
+            # Most of these rows already in another account: probably the wrong account picked.
+            "elsewhere": csv_import.matches_elsewhere(conn, account["id"], new_rows),
         }
         if form.get("commit") == "1":
             result["import_id"] = csv_import.save(conn, account, new_rows, upload.filename) if new_rows else None

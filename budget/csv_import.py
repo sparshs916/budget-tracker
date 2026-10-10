@@ -233,3 +233,34 @@ def save(conn, account, new_rows, filename):
             ),
         )
     return import_id
+
+
+def matches_elsewhere(conn, account_id, rows):
+    """The other account that already holds most of these rows (same amount, within a few
+    days), if any - a sign the file was uploaded into the wrong account."""
+    if not rows:
+        return None
+    start = min(r["date"] for r in rows) - datetime.timedelta(days=MATCH_DAYS)
+    end = max(r["date"] for r in rows) + datetime.timedelta(days=MATCH_DAYS)
+    others = conn.execute(
+        """SELECT t.account_id, a.name, t.date, t.flow FROM transactions t JOIN accounts a ON a.id = t.account_id
+           WHERE t.account_id <> %s AND t.date BETWEEN %s AND %s AND NOT t.hidden""",
+        (account_id, start, end)).fetchall()
+    by_account = {}
+    for o in others:
+        by_account.setdefault((o["account_id"], o["name"]), {}).setdefault(Decimal(o["flow"]), []).append(o["date"])
+    best = None
+    for (other_id, name), amounts in by_account.items():
+        used = set()
+        hits = 0
+        for r in rows:
+            for i, d in enumerate(amounts.get(Decimal(r["flow"]), [])):
+                if (Decimal(r["flow"]), i) not in used and abs((d - r["date"]).days) <= MATCH_DAYS:
+                    used.add((Decimal(r["flow"]), i))
+                    hits += 1
+                    break
+        if not best or hits > best["count"]:
+            best = {"account_id": other_id, "account": name, "count": hits}
+    if best and best["count"] >= max(5, len(rows) // 2):
+        return best
+    return None

@@ -347,3 +347,28 @@ def test_automatic_undoes_your_choice_and_your_merchant_rule(conn):
     rows = {r["id"]: r for r in client.get("/api/transactions?start=2026-09-01&end=2026-09-30").get_json()["rows"]}
     assert rows[tid]["category"] == rows[other]["category"] == "Groceries"
     assert not rows[tid]["ruled"] and not rows[tid]["overridden"]
+
+
+def _preview(client, csrf, account_id, text):
+    data = {"account_id": account_id, "flip": "auto", "commit": "0", "file": (io.BytesIO(text.encode()), "x.csv")}
+    return client.post("/api/import", data=data, headers={"X-CSRF-Token": csrf}, content_type="multipart/form-data").get_json()
+
+
+def test_uploading_a_file_into_the_wrong_account_is_flagged(conn):
+    lines = ["Transaction Date,Description,Amount"]
+    for d in range(1, 11):
+        add(conn, "card", f"2026-09-{d:02d}", f"-{d}.25", f"SHOP {d}")  # already in Chase via SimpleFIN
+        lines.append(f"09/{d:02d}/2026,SHOP {d},-{d}.25")
+    conn.commit()
+    client, _ = client_for()
+    with client.session_transaction() as s:
+        csrf = s["csrf"]
+    wrong = _preview(client, csrf, "off", "\n".join(lines))
+    assert wrong["new_count"] == 10 and wrong["elsewhere"] == {"account_id": "card", "account": "card", "count": 10}
+    right = _preview(client, csrf, "card", "\n".join(lines))
+    assert right["new_count"] == 0 and right["duplicate_count"] == 10 and right["elsewhere"] is None
+    # A card payment is the same amount in two accounts but opposite signs: no warning.
+    add(conn, "chk", "2026-09-20", "-500.00", "CHASE CREDIT CRD AUTOPAY")
+    conn.commit()
+    pay = _preview(client, csrf, "off", "Transaction Date,Description,Amount\n" + "\n".join(f"09/{d}/2026,PAYMENT,500.00" for d in range(14, 24)))
+    assert pay["elsewhere"] is None

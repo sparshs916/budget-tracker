@@ -650,21 +650,31 @@ async function loadSummary(seq) {
   if (!s.income.length) rows.push(row("Income", 0, { target: false }));
   const shown = new Set(s.expenses.map((r) => r.category));
   for (const r of s.expenses) {
-    const label = r.category === "Savings" && Number(r.amount) < 0 ? "Savings (more taken out than put in)" : r.category;
-    rows.push(row(label, r.amount, { category: r.category, count: r.count, kind: r.kind }));
+    if (r.kind === "savings") continue;  // shown below Remaining, on its own
+    rows.push(row(r.category, r.amount, { category: r.category, count: r.count, kind: r.kind }));
   }
   // Categories with a target (or all of them while editing) show even before any spending.
   for (const [name, kind] of Object.entries(KINDS)) {
-    if (shown.has(name) || (kind !== "expense" && kind !== "savings")) continue;
+    if (shown.has(name) || kind !== "expense") continue;
     if (editingTargets || targets[name]) rows.push(row(name, 0, { name, category: editingTargets ? null : name, kind, cls: "muted" }));
   }
-  const totalTarget = Object.values(targets).reduce((a, b) => a + Number(b), 0) * factor;
+  const totalTarget = Object.entries(targets).filter(([c]) => KINDS[c] === "expense").reduce((a, [, b]) => a + Number(b), 0) * factor;
   rows.push(row("Total Expenses", s.total_expenses, { cls: "total", target: false }));
   if (showTargets && totalTarget && !editingTargets) {
     rows[rows.length - 1].lastChild.replaceWith(h("td", { class: "target" }, meter(Number(s.total_expenses), totalTarget),
       h("span", { class: "small muted" }, `of ${money(totalTarget)} planned`)));
   }
   rows.push(row("Remaining", s.remaining, { cls: "total", amountCls: Number(s.remaining) < 0 ? "neg" : "in", target: false }));
+
+  // Savings: what you put away, apart from the budget. It never changes Remaining.
+  const savedRow = s.expenses.find((r) => r.kind === "savings");
+  if (savedRow || targets.Savings || editingTargets) {
+    const amount = savedRow ? savedRow.amount : 0;
+    rows.push(h("tr", { class: "group" }, h("td", { colspan: showTargets ? 3 : 2 }, "Savings (not part of Remaining)")));
+    rows.push(row(Number(amount) < 0 ? "Taken out of savings" : "Saved", amount,
+      { name: "Savings", category: savedRow && !editingTargets ? "Savings" : null, count: savedRow?.count, kind: "savings",
+        amountCls: Number(amount) < 0 ? "neg" : "in" }));
+  }
   $("summary").replaceChildren(...rows);
   $("targets-btn").textContent = editingTargets ? "Save targets" : Object.keys(targets).length ? "Edit targets" : "Set targets";
   $("targets-btn").classList.toggle("primary", editingTargets);
@@ -675,8 +685,7 @@ async function loadSummary(seq) {
   const saved = Number(s.savings_out)
     ? `Savings: ${money(s.savings_in)} put in, ${money(s.savings_out)} taken back out, ${money(s.total_savings)} kept. `
     : "";
-  $("excluded").textContent = saved + (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
-    (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
+  $("excluded").textContent = saved + (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
   $("range-label").textContent = searchingAll() ? "all dates" : state.period === "all" ? "all time" : `${state.start} → ${state.end}`;
   const note = $("search-note");
   note.classList.toggle("hidden", !state.q);
@@ -889,7 +898,7 @@ function changeCategory(t, select) {
     // Savings on money coming IN means money taken out of savings - easy to pick by mistake.
     select.value === "Savings" && Number(t.flow) > 0
       ? h("p", { class: "alert small", style: "margin:.5rem 0 0" }, h("b", {}, "Careful: "),
-          "Savings on money coming in means money taken back out of savings: it lowers your Savings and raises Remaining. ",
+          "Savings on money coming in means money taken back out of savings: it lowers what the page shows as saved. ",
           "If this money went into a savings account, don't label it here. Instead, set that account's type to Savings and untick it ",
           "under Accounts; then everything you move into it counts as saved.")
       : null);
@@ -1176,6 +1185,9 @@ async function previewUpload() {
         r.flip ? "Signs are flipped from the file (it showed purchases as positive)." : "Signs are as in the file. ",
         "If they look backwards, change “Amount signs” and preview again."),
     ];
+    if (r.elsewhere) parts.unshift(h("div", { class: "alert small" }, h("b", {}, "⚠ Wrong account? "),
+      `${r.elsewhere.count} of the ${r.new_count} new rows are already in “${r.elsewhere.account}” (same amounts, same days). `,
+      "If this file is from that account, pick it above and preview again; importing here would count them twice."));
     if (r.new.length) parts.push(h("b", { class: "small" }, "Will be added"), previewTable(r.new, false));
     if (r.duplicates.length) parts.push(h("b", { class: "small" }, "Skipped as duplicates"), previewTable(r.duplicates, true));
     if (r.not_in_file.length) parts.push(
@@ -1184,7 +1196,7 @@ async function previewUpload() {
       previewTable(r.not_in_file, false));
     $("upload-result").replaceChildren(...parts);
     if (r.new_count) {
-      $("upload-commit").textContent = `Import ${r.new_count} transaction${r.new_count === 1 ? "" : "s"}`;
+      $("upload-commit").textContent = `${r.elsewhere ? "Import anyway: " : "Import "}${r.new_count} transaction${r.new_count === 1 ? "" : "s"}`;
       $("upload-commit").classList.remove("hidden");
     }
   } catch (e) { $("upload-error").textContent = e.message; }
@@ -1353,6 +1365,7 @@ async function loadTrends(seq) {
     stat("Average income / month", money(avg((m) => m.total_income)), "in"),
     stat("Average expenses / month", money(avg((m) => m.total_expenses))),
     stat("Average left over / month", money(avg((m) => m.remaining)), avg((m) => m.remaining) < 0 ? "neg" : "in"),
+    stat("Average saved / month", money(avg((m) => m.total_savings)), avg((m) => m.total_savings) < 0 ? "neg" : "in"),
     stat(`Left over, last ${full.length} full months`, money(saved), saved < 0 ? "neg" : "in"));
   $("trend-chart").replaceChildren(trendChart(months));
 
