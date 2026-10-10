@@ -1,0 +1,10948 @@
+{
+ "2025-10 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "7.10",
+     "category": "Transfer",
+     "count": 3
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "99.43",
+     "category": "Electricity",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "127.84",
+     "category": "Groceries",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "77.53",
+     "category": "Dining Out",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "702.16",
+     "category": "Car Payment",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "208.10",
+     "category": "Gas",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "67.87",
+     "category": "Transportation",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "345.09",
+     "category": "Shopping",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "293.11",
+     "category": "Health",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "185.33",
+     "category": "Entertainment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "366.22",
+     "category": "Travel",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "-2915.90",
+     "category": "Giving",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1713.64",
+     "category": "Person-to-Person",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "2915.90",
+     "category": "Income",
+     "count": 1
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "1258.89",
+   "total_expenses": "1657.42",
+   "total_income": "2916.31",
+   "total_savings": "300.00",
+   "total_spending": "1357.42",
+   "unmatched_total": "-37.10"
+  },
+  "transactions": {
+   "net": "1221.79",
+   "rows": [],
+   "total": 52
+  },
+  "unmatched": [
+   [
+    "2025-10-18",
+    "card",
+    "-7.10",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2025-11 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "313.73",
+     "category": "Credit Card Payment",
+     "count": 4
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 4
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "299.53",
+     "category": "Groceries",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "48.28",
+     "category": "Dining Out",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "152.21",
+     "category": "Pet Food & Supplies",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "1406.30",
+     "category": "Car Payment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "-214.50",
+     "category": "Gas",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "23.24",
+     "category": "Transportation",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "531.84",
+     "category": "Shopping",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "77.19",
+     "category": "Health",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "278.26",
+     "category": "Entertainment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "1047.22",
+     "category": "Travel",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "145.07",
+     "category": "Giving",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1916.84",
+     "category": "Person-to-Person",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "-323.42",
+     "category": "Other Income",
+     "count": 3
+    }
+   ],
+   "remaining": "-590.10",
+   "total_expenses": "6098.48",
+   "total_income": "5508.38",
+   "total_savings": "300.00",
+   "total_spending": "5798.48",
+   "unmatched_total": "-313.73"
+  },
+  "transactions": {
+   "net": "-903.83",
+   "rows": [],
+   "total": 58
+  },
+  "unmatched": [
+   [
+    "2025-11-20",
+    "chk",
+    "-283.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2025-12 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "1030.00",
+     "category": "Credit Card Payment",
+     "count": 6
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 2
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "239.04",
+     "category": "Electricity",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "272.53",
+     "category": "Groceries",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.64",
+     "category": "Dining Out",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "71.37",
+     "category": "Pet Food & Supplies",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "702.58",
+     "category": "Car Payment",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "105.26",
+     "category": "Transportation",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "9.65",
+     "category": "Subscriptions",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "661.99",
+     "category": "Shopping",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "251.04",
+     "category": "Health",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "184.88",
+     "category": "Entertainment",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "548.89",
+     "category": "Travel",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "105.75",
+     "category": "Giving",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1643.89",
+     "category": "Person-to-Person",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "1000.41",
+     "category": "Other Income",
+     "count": 2
+    }
+   ],
+   "remaining": "1572.70",
+   "total_expenses": "5259.51",
+   "total_income": "6832.21",
+   "total_savings": "300.00",
+   "total_spending": "4959.51",
+   "unmatched_total": "-1030.00"
+  },
+  "transactions": {
+   "net": "542.70",
+   "rows": [],
+   "total": 58
+  },
+  "unmatched": [
+   [
+    "2025-12-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-01 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 4
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "227.17",
+     "category": "Electricity",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "609.92",
+     "category": "Groceries",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "87.42",
+     "category": "Dining Out",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "89.24",
+     "category": "Pet Food & Supplies",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "700.62",
+     "category": "Car Payment",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "350.49",
+     "category": "Gas",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "36.18",
+     "category": "Transportation",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "33.32",
+     "category": "Subscriptions",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "196.18",
+     "category": "Shopping",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "228.30",
+     "category": "Health",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "22.87",
+     "category": "Entertainment",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1707.00",
+     "category": "Travel",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "118.03",
+     "category": "Giving",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1602.00",
+     "category": "Person-to-Person",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "-563.53",
+   "total_expenses": "6395.74",
+   "total_income": "5832.21",
+   "total_savings": "300.00",
+   "total_spending": "6095.74",
+   "unmatched_total": "-30.00"
+  },
+  "transactions": {
+   "net": "-593.53",
+   "rows": [],
+   "total": 61
+  },
+  "unmatched": [
+   [
+    "2026-01-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-02 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 2
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "196.85",
+     "category": "Electricity",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "169.50",
+     "category": "Groceries",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "78.34",
+     "category": "Dining Out",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "68.35",
+     "category": "Pet Food & Supplies",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "1052.61",
+     "category": "Car Payment",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "51.22",
+     "category": "Gas",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "195.16",
+     "category": "Transportation",
+     "count": 8,
+     "kind": "expense"
+    },
+    {
+     "amount": "8.83",
+     "category": "Subscriptions",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "747.79",
+     "category": "Shopping",
+     "count": 8,
+     "kind": "expense"
+    },
+    {
+     "amount": "577.56",
+     "category": "Health",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "99.01",
+     "category": "Entertainment",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "703.02",
+     "category": "Travel",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "84.06",
+     "category": "Giving",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1712.52",
+     "category": "Person-to-Person",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "445.92",
+     "category": "Savings",
+     "count": 2,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "-445.53",
+   "total_expenses": "6277.74",
+   "total_income": "5832.21",
+   "total_savings": "445.92",
+   "total_spending": "5831.82",
+   "unmatched_total": "-30.00"
+  },
+  "transactions": {
+   "net": "-475.53",
+   "rows": [],
+   "total": 61
+  },
+  "unmatched": [
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-03 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "1030.00",
+     "category": "Credit Card Payment",
+     "count": 6
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 4
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "167.72",
+     "category": "Electricity",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "186.32",
+     "category": "Groceries",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "136.26",
+     "category": "Dining Out",
+     "count": 10,
+     "kind": "expense"
+    },
+    {
+     "amount": "50.70",
+     "category": "Pet Food & Supplies",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "350.69",
+     "category": "Car Payment",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "246.07",
+     "category": "Gas",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "74.93",
+     "category": "Transportation",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "26.49",
+     "category": "Subscriptions",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "914.29",
+     "category": "Shopping",
+     "count": 8,
+     "kind": "expense"
+    },
+    {
+     "amount": "209.30",
+     "category": "Health",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "522.20",
+     "category": "Travel",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "37.19",
+     "category": "Giving",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1984.96",
+     "category": "Person-to-Person",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "538.09",
+   "total_expenses": "5294.12",
+   "total_income": "5832.21",
+   "total_savings": "300.00",
+   "total_spending": "4994.12",
+   "unmatched_total": "-1030.00"
+  },
+  "transactions": {
+   "net": "-491.91",
+   "rows": [],
+   "total": 63
+  },
+  "unmatched": [
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-04 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "-1000.00",
+     "category": "Transfer",
+     "count": 3
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "580.03",
+     "category": "Electricity",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "95.70",
+     "category": "Groceries",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "65.92",
+     "category": "Dining Out",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "154.71",
+     "category": "Pet Food & Supplies",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "350.53",
+     "category": "Car Payment",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "177.58",
+     "category": "Gas",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "16.45",
+     "category": "Transportation",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "2.73",
+     "category": "Subscriptions",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "663.95",
+     "category": "Shopping",
+     "count": 9,
+     "kind": "expense"
+    },
+    {
+     "amount": "291.63",
+     "category": "Health",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "208.70",
+     "category": "Entertainment",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "729.87",
+     "category": "Travel",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "24.95",
+     "category": "Giving",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1862.13",
+     "category": "Person-to-Person",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "-62.71",
+     "category": "Other Income",
+     "count": 2
+    }
+   ],
+   "remaining": "157.21",
+   "total_expenses": "5611.88",
+   "total_income": "5769.09",
+   "total_savings": "300.00",
+   "total_spending": "5311.88",
+   "unmatched_total": "970.00"
+  },
+  "transactions": {
+   "net": "1127.21",
+   "rows": [],
+   "total": 61
+  },
+  "unmatched": [
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ]
+  ]
+ },
+ "2026-05 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 4
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "381.95",
+     "category": "Electricity",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "248.24",
+     "category": "Groceries",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "111.93",
+     "category": "Dining Out",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "78.07",
+     "category": "Pet Food & Supplies",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "700.86",
+     "category": "Car Payment",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "181.42",
+     "category": "Gas",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "100.74",
+     "category": "Transportation",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "11.75",
+     "category": "Subscriptions",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "438.91",
+     "category": "Shopping",
+     "count": 8,
+     "kind": "expense"
+    },
+    {
+     "amount": "194.07",
+     "category": "Health",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "145.27",
+     "category": "Entertainment",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "588.45",
+     "category": "Travel",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "2158.35",
+     "category": "Person-to-Person",
+     "count": 7,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "348.80",
+     "category": "Savings",
+     "count": 3,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "56.40",
+   "total_expenses": "5775.81",
+   "total_income": "5832.21",
+   "total_savings": "348.80",
+   "total_spending": "5427.01",
+   "unmatched_total": "-30.00"
+  },
+  "transactions": {
+   "net": "26.40",
+   "rows": [],
+   "total": 65
+  },
+  "unmatched": [
+   [
+    "2026-05-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-06 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "348.58",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "681.42",
+     "category": "Transfer",
+     "count": 3
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "70.36",
+     "category": "Electricity",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "64.59",
+     "category": "Dining Out",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "114.50",
+     "category": "Pet Food & Supplies",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "1052.79",
+     "category": "Car Payment",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "104.23",
+     "category": "Gas",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "22.80",
+     "category": "Subscriptions",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "601.64",
+     "category": "Shopping",
+     "count": 9,
+     "kind": "expense"
+    },
+    {
+     "amount": "313.37",
+     "category": "Health",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "220.48",
+     "category": "Entertainment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "330.14",
+     "category": "Travel",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "53.32",
+     "category": "Giving",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1952.71",
+     "category": "Person-to-Person",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "544.28",
+   "total_expenses": "5287.93",
+   "total_income": "5832.21",
+   "total_savings": "300.00",
+   "total_spending": "4987.93",
+   "unmatched_total": "-1030.00"
+  },
+  "transactions": {
+   "net": "-485.72",
+   "rows": [],
+   "total": 55
+  },
+  "unmatched": [
+   [
+    "2026-06-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-07 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 4
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "271.93",
+     "category": "Electricity",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "33.32",
+     "category": "Groceries",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "93.14",
+     "category": "Dining Out",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "201.54",
+     "category": "Pet Food & Supplies",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "1401.48",
+     "category": "Car Payment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "205.45",
+     "category": "Gas",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "144.98",
+     "category": "Transportation",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "49.90",
+     "category": "Subscriptions",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "245.23",
+     "category": "Shopping",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "173.45",
+     "category": "Health",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "62.81",
+     "category": "Entertainment",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "167.92",
+     "category": "Travel",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "88.31",
+     "category": "Giving",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1704.27",
+     "category": "Person-to-Person",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "601.48",
+   "total_expenses": "5230.73",
+   "total_income": "5832.21",
+   "total_savings": "300.00",
+   "total_spending": "4930.73",
+   "unmatched_total": "-30.00"
+  },
+  "transactions": {
+   "net": "571.48",
+   "rows": [],
+   "total": 65
+  },
+  "unmatched": [
+   [
+    "2026-07-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-08 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "30.00",
+     "category": "Credit Card Payment",
+     "count": 5
+    },
+    {
+     "amount": "-1000.00",
+     "category": "Transfer",
+     "count": 3
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "238.71",
+     "category": "Electricity",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "216.92",
+     "category": "Groceries",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "43.91",
+     "category": "Dining Out",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "170.80",
+     "category": "Pet Food & Supplies",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "2104.57",
+     "category": "Car Payment",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "116.12",
+     "category": "Gas",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "50.71",
+     "category": "Transportation",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "7.11",
+     "category": "Subscriptions",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "291.67",
+     "category": "Shopping",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "117.84",
+     "category": "Health",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "312.45",
+     "category": "Entertainment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "1613.13",
+     "category": "Travel",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "-2794.61",
+     "category": "Giving",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1894.52",
+     "category": "Person-to-Person",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "2915.90",
+     "category": "Income",
+     "count": 1
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "-1854.54",
+   "total_expenses": "4770.85",
+   "total_income": "2916.31",
+   "total_savings": "300.00",
+   "total_spending": "4470.85",
+   "unmatched_total": "970.00"
+  },
+  "transactions": {
+   "net": "-884.54",
+   "rows": [],
+   "total": 62
+  },
+  "unmatched": [
+   [
+    "2026-08-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ]
+  ]
+ },
+ "2026-09 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "1030.00",
+     "category": "Credit Card Payment",
+     "count": 6
+    },
+    {
+     "amount": "6.35",
+     "category": "Transfer",
+     "count": 5
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "280.33",
+     "category": "Electricity",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "207.84",
+     "category": "Groceries",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "47.06",
+     "category": "Dining Out",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "196.44",
+     "category": "Pet Food & Supplies",
+     "count": 5,
+     "kind": "expense"
+    },
+    {
+     "amount": "209.84",
+     "category": "Gas",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "56.28",
+     "category": "Transportation",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "22.70",
+     "category": "Subscriptions",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "791.48",
+     "category": "Shopping",
+     "count": 13,
+     "kind": "expense"
+    },
+    {
+     "amount": "90.64",
+     "category": "Health",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "224.20",
+     "category": "Travel",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "54.30",
+     "category": "Giving",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "12.00",
+     "category": "Fees & Interest",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1602.00",
+     "category": "Person-to-Person",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "75.00",
+     "category": "Other",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "5831.80",
+     "category": "Income",
+     "count": 2
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "1662.10",
+   "total_expenses": "4170.11",
+   "total_income": "5832.21",
+   "total_savings": "300.00",
+   "total_spending": "3870.11",
+   "unmatched_total": "-1036.35"
+  },
+  "transactions": {
+   "net": "625.75",
+   "rows": [],
+   "total": 60
+  },
+  "unmatched": [
+   [
+    "2026-09-17",
+    "card",
+    "-6.35",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "2026-10 budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "0.00",
+     "category": "Transfer",
+     "count": 2
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "156.11",
+     "category": "Electricity",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "123.76",
+     "category": "Groceries",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "34.98",
+     "category": "Pet Food & Supplies",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "54.70",
+     "category": "Gas",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "21.87",
+     "category": "Transportation",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "9.07",
+     "category": "Subscriptions",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "265.42",
+     "category": "Shopping",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "86.74",
+     "category": "Health",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "93.29",
+     "category": "Entertainment",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "26.95",
+     "category": "Giving",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "1650.00",
+     "category": "Person-to-Person",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "300.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "2915.90",
+     "category": "Income",
+     "count": 1
+    },
+    {
+     "amount": "0.41",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "93.42",
+   "total_expenses": "2822.89",
+   "total_income": "2916.31",
+   "total_savings": "300.00",
+   "total_spending": "2522.89",
+   "unmatched_total": "0.00"
+  },
+  "transactions": {
+   "net": "93.42",
+   "rows": [],
+   "total": 19
+  },
+  "unmatched": []
+ },
+ "odd range": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "1090.00",
+     "category": "Credit Card Payment",
+     "count": 16
+    },
+    {
+     "amount": "-1000.00",
+     "category": "Transfer",
+     "count": 7
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "839.05",
+     "category": "Electricity",
+     "count": 10,
+     "kind": "expense"
+    },
+    {
+     "amount": "325.05",
+     "category": "Groceries",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "271.74",
+     "category": "Dining Out",
+     "count": 18,
+     "kind": "expense"
+    },
+    {
+     "amount": "234.75",
+     "category": "Pet Food & Supplies",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "1403.66",
+     "category": "Car Payment",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "423.65",
+     "category": "Gas",
+     "count": 10,
+     "kind": "expense"
+    },
+    {
+     "amount": "192.12",
+     "category": "Transportation",
+     "count": 8,
+     "kind": "expense"
+    },
+    {
+     "amount": "29.22",
+     "category": "Subscriptions",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "2219.65",
+     "category": "Shopping",
+     "count": 23,
+     "kind": "expense"
+    },
+    {
+     "amount": "781.37",
+     "category": "Health",
+     "count": 8,
+     "kind": "expense"
+    },
+    {
+     "amount": "208.70",
+     "category": "Entertainment",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "1657.63",
+     "category": "Travel",
+     "count": 6,
+     "kind": "expense"
+    },
+    {
+     "amount": "107.77",
+     "category": "Giving",
+     "count": 4,
+     "kind": "expense"
+    },
+    {
+     "amount": "36.00",
+     "category": "Fees & Interest",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "5533.94",
+     "category": "Person-to-Person",
+     "count": 14,
+     "kind": "expense"
+    },
+    {
+     "amount": "225.00",
+     "category": "Other",
+     "count": 3,
+     "kind": "expense"
+    },
+    {
+     "amount": "745.92",
+     "category": "Savings",
+     "count": 3,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "14579.50",
+     "category": "Income",
+     "count": 5
+    },
+    {
+     "amount": "-62.30",
+     "category": "Other Income",
+     "count": 3
+    }
+   ],
+   "remaining": "-718.02",
+   "total_expenses": "15235.22",
+   "total_income": "14517.20",
+   "total_savings": "745.92",
+   "total_spending": "14489.30",
+   "unmatched_total": "-90.00"
+  },
+  "transactions": {
+   "net": "-808.02",
+   "rows": [],
+   "total": 161
+  },
+  "unmatched": [
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ]
+  ]
+ },
+ "year all": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "3962.31",
+     "category": "Credit Card Payment",
+     "count": 62
+    },
+    {
+     "amount": "-5205.13",
+     "category": "Transfer",
+     "count": 56
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "2909.63",
+     "category": "Electricity",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "2591.42",
+     "category": "Groceries",
+     "count": 31,
+     "kind": "expense"
+    },
+    {
+     "amount": "930.02",
+     "category": "Dining Out",
+     "count": 68,
+     "kind": "expense"
+    },
+    {
+     "amount": "1382.91",
+     "category": "Pet Food & Supplies",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "10525.19",
+     "category": "Car Payment",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "1690.72",
+     "category": "Gas",
+     "count": 35,
+     "kind": "expense"
+    },
+    {
+     "amount": "893.67",
+     "category": "Transportation",
+     "count": 36,
+     "kind": "expense"
+    },
+    {
+     "amount": "492.37",
+     "category": "Subscriptions",
+     "count": 47,
+     "kind": "expense"
+    },
+    {
+     "amount": "6695.48",
+     "category": "Shopping",
+     "count": 93,
+     "kind": "expense"
+    },
+    {
+     "amount": "2904.24",
+     "category": "Health",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "1813.35",
+     "category": "Entertainment",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "8548.26",
+     "category": "Travel",
+     "count": 31,
+     "kind": "expense"
+    },
+    {
+     "amount": "-4972.58",
+     "category": "Giving",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "144.00",
+     "category": "Fees & Interest",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "23397.83",
+     "category": "Person-to-Person",
+     "count": 53,
+     "kind": "expense"
+    },
+    {
+     "amount": "900.00",
+     "category": "Other",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "4107.29",
+     "category": "Savings",
+     "count": 17,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "67065.70",
+     "category": "Income",
+     "count": 23
+    },
+    {
+     "amount": "618.38",
+     "category": "Other Income",
+     "count": 17
+    }
+   ],
+   "remaining": "2730.28",
+   "total_expenses": "64953.80",
+   "total_income": "67684.08",
+   "total_savings": "4107.29",
+   "total_spending": "60846.51",
+   "unmatched_total": "-2657.18"
+  },
+  "transactions": {
+   "net": "3973.10",
+   "rows": [
+    [
+     "apple:775",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:776",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:777",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:772",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:773",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:774",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:771",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:770",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:767",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:763",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:764",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:765",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:766",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:768",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:769",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:761",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:762",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:758",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:759",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:760",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:755",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:756",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:757",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:752",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:753",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:754",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:749",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:750",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:751",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:747",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:748",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:746",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:744",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:745",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:740",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:741",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:743",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:742",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:739",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:735",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "apple:737",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:734",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:736",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:738",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:731",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:732",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:733",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:729",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:730",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:726",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:728",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:724",
+     "Transfer",
+     "excluded",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:725",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:727",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:723",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:722",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:721",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:720",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:719",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:715",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:714",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:716",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:718",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "sav:717",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:713",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:712",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:710",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:711",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:708",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:709",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:707",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:706",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:703",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:701",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:702",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:704",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:705",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:700",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:697",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:699",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:698",
+     "Gas",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:696",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:694",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:695",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:692",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:693",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:689",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:690",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:691",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:688",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:681",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:682",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:683",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:684",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:685",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:686",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:687",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:679",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:680",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:676",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:677",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:678",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:675",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:674",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:673",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:672",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:667",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:671",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:669",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:665",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:666",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:668",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:670",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:663",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:664",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:661",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:662",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:659",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:658",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:660",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:656",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:657",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:655",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:651",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:650",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:652",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:653",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:654",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:648",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:649",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:647",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:643",
+     "Travel",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:644",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:645",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:646",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:641",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:642",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:640",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "sav:637",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:636",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:638",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:639",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:635",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:633",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:631",
+     "Giving",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "chk:632",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:634",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:630",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:629",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:625",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:626",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:628",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:627",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:619",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:620",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:621",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:622",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:623",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:624",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:618",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:617",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:616",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:615",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:611",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:614",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:612",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:613",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:602",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:609",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:610",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:606",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:607",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:608",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:599",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:604",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:600",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:601",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:603",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:605",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:598",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:595",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:596",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:597",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:594",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:593",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:592",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:590",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:591",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:588",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:589",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:584",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:585",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:587",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "sav:586",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:583",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:582",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:580",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:579",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:578",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:581",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:577",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:574",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:572",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:573",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:575",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:576",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "apple:568",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:569",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:570",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:571",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:567",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:565",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:566",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:563",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:564",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:562",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:559",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:560",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:561",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:556",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:557",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:558",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:555",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:554",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:552",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:553",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:551",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:549",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:548",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:550",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:547",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:542",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:546",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:544",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:541",
+     "Transfer",
+     "excluded",
+     true,
+     false,
+     true
+    ],
+    [
+     "chk:543",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:545",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:540",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:539",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:538",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:537",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:536",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:533",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:535",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:532",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:534",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:531",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:528",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:529",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:530",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:527",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:524",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:525",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:526",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:521",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:522",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:523",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:519",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:520",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:517",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:518",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:514",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:512",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:513",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:515",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "disc:511",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "hysa:516",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:510",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:509",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:508",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:506",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:507",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:505",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:501",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:502",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:503",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:504",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:496",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:497",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:498",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:499",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:500",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:495",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:494",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:493",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:492",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:490",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:491",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:482",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:489",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:486",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:487",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:488",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:478",
+     "Savings",
+     "savings",
+     true,
+     false,
+     false
+    ],
+    [
+     "apple:484",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:479",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:480",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:481",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:483",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:485",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:476",
+     "Savings",
+     "savings",
+     true,
+     false,
+     false
+    ],
+    [
+     "chk:477",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:474",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:475",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:473",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:472",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:469",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:470",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:471",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:466",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:468",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "sav:467",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:465",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:463",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:464",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:461",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:460",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:462",
+     "Travel",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:458",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:459",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:456",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:457",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:453",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:451",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:452",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:454",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:455",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:448",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:449",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:450",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:446",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:447",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:443",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:444",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:445",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:440",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:442",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:438",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:439",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:441",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:437",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:432",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:429",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:430",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:431",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:433",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:434",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:435",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:436",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:428",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:426",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:427",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:425",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:424",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:423",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:422",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:417",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:421",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:419",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:415",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:414",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:416",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:418",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:420",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:412",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:413",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:408",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:409",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:410",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:411",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:407",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:406",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:404",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:405",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:403",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:402",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:399",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:400",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:401",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:396",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:397",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:398",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:394",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:395",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:392",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:393",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "sav:389",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:386",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:387",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:388",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:390",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:391",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:384",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:385",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:383",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:377",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:378",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:381",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:375",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:376",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:379",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:382",
+     "Other Income",
+     "income",
+     true,
+     false,
+     false
+    ],
+    [
+     "disc:380",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:373",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:374",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:372",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:371",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:370",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:367",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:368",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:369",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:365",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:366",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:363",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:364",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:360",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:361",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:362",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:358",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:359",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:357",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:356",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:355",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:354",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:352",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:347",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:348",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:350",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:349",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:351",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:353",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:345",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:346",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:342",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:344",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:341",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:343",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:340",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:339",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:338",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:335",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:336",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:337",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:334",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:331",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:330",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:333",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "sav:332",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:328",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:329",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:327",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:324",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:323",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:325",
+     "Giving",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "sav:326",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:320",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:321",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:322",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:319",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:316",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:314",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:315",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:317",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:318",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:312",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:313",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:311",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:310",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:308",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:309",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:304",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:305",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:306",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:307",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:303",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:302",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:300",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:301",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:299",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:298",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:297",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:291",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:296",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:295",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:293",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:286",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:289",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:287",
+     "Savings",
+     "savings",
+     true,
+     false,
+     false
+    ],
+    [
+     "chk:288",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:290",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:292",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:294",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:284",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:283",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:285",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:280",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:281",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:282",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:278",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:279",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:276",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:277",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:274",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:275",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:272",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:273",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:270",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:271",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:268",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:269",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:264",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:266",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:265",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:267",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:262",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:263",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:259",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:261",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:260",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:256",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:253",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:254",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:255",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:257",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:258",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:251",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:252",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:250",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:245",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:249",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:246",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:248",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:247",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:243",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:244",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:241",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:242",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:234",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:235",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:236",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:237",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:238",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:239",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:240",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:233",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:230",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:231",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:232",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:229",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:227",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:228",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:217",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:224",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:225",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:226",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:221",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:222",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:223",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:215",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:219",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:216",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:218",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:220",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:213",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:214",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:212",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:211",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:210",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:208",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:209",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:206",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:207",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:202",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:203",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:205",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "sav:204",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:201",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:198",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:197",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:199",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:200",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:196",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:193",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:194",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:195",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:192",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:189",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:187",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:188",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:190",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:191",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:186",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:181",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:182",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:185",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:183",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:184",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:178",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:179",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:180",
+     "Gas",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:177",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:175",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:176",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:172",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:173",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:174",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:171",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:170",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:169",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:167",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:166",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:168",
+     "Other Income",
+     "income",
+     true,
+     false,
+     false
+    ],
+    [
+     "disc:165",
+     "Savings",
+     "savings",
+     true,
+     false,
+     false
+    ],
+    [
+     "apple:158",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:163",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:157",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:161",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:159",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:160",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:162",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:164",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:156",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:154",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:155",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:152",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:153",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:150",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:151",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:149",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:148",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:146",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:147",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:143",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:144",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:145",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:142",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:138",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:139",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:140",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:141",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:134",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:135",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:136",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:137",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:133",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:131",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:132",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:128",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:126",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:127",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:129",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:130",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:125",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:123",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:124",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:119",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:120",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:121",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:122",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:118",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:116",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:117",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:115",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:111",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:112",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:113",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:114",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:110",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "apple:107",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:108",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:109",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:106",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:105",
+     "Other Income",
+     "income",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:103",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:104",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:99",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "apple:101",
+     "Gas",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "chk:100",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:102",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:98",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:97",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:96",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:94",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:95",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:92",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:93",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:91",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:89",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:90",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:88",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "disc:86",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:87",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:83",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:84",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:85",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:80",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:81",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:82",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:76",
+     "Pet Food & Supplies",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:77",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:78",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:79",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:75",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:74",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:73",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:71",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:72",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:68",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:65",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:66",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:67",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:69",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:70",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "apple:63",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:62",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:64",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:58",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:59",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:61",
+     "Giving",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "disc:60",
+     "Subscriptions",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:56",
+     "Other Income",
+     "income",
+     true,
+     false,
+     false
+    ],
+    [
+     "chk:57",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:54",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:55",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:53",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:49",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:50",
+     "Fees & Interest",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:51",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:52",
+     "Other",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:48",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:47",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:46",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:41",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:42",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:43",
+     "Travel",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:44",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:45",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:40",
+     "Gas",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:37",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:38",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:39",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:35",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:30",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:33",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:31",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:32",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:34",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:36",
+     "Credit Card Payment",
+     "excluded",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:29",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "apple:28",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:26",
+     "Transfer",
+     "excluded",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:27",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:25",
+     "Car Payment",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:23",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:24",
+     "Shopping",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "chk:22",
+     "Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:20",
+     "Dining Out",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:21",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:18",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:19",
+     "Travel",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "apple:15",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:13",
+     "Groceries",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:14",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:16",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:17",
+     "Other Income",
+     "income",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:12",
+     "Electricity",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:10",
+     "Transportation",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:11",
+     "Entertainment",
+     "expense",
+     false,
+     true,
+     false
+    ],
+    [
+     "card:9",
+     "Health",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "sav:6",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "card:4",
+     "Gas",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:5",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:7",
+     "Savings",
+     "savings",
+     false,
+     false,
+     true
+    ],
+    [
+     "hysa:8",
+     "Transfer",
+     "excluded",
+     false,
+     false,
+     true
+    ],
+    [
+     "chk:3",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "chk:1",
+     "Giving",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "chk:2",
+     "Person-to-Person",
+     "expense",
+     false,
+     false,
+     false
+    ]
+   ],
+   "total": 777
+  },
+  "unmatched": [
+   [
+    "2025-10-18",
+    "card",
+    "-7.10",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-283.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-17",
+    "card",
+    "-6.35",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "year budget": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "3962.31",
+     "category": "Credit Card Payment",
+     "count": 62
+    },
+    {
+     "amount": "-1305.13",
+     "category": "Transfer",
+     "count": 43
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "2909.63",
+     "category": "Electricity",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "2591.42",
+     "category": "Groceries",
+     "count": 31,
+     "kind": "expense"
+    },
+    {
+     "amount": "930.02",
+     "category": "Dining Out",
+     "count": 68,
+     "kind": "expense"
+    },
+    {
+     "amount": "1382.91",
+     "category": "Pet Food & Supplies",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "10525.19",
+     "category": "Car Payment",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "1690.72",
+     "category": "Gas",
+     "count": 35,
+     "kind": "expense"
+    },
+    {
+     "amount": "893.67",
+     "category": "Transportation",
+     "count": 36,
+     "kind": "expense"
+    },
+    {
+     "amount": "204.35",
+     "category": "Subscriptions",
+     "count": 24,
+     "kind": "expense"
+    },
+    {
+     "amount": "6695.48",
+     "category": "Shopping",
+     "count": 93,
+     "kind": "expense"
+    },
+    {
+     "amount": "2904.24",
+     "category": "Health",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "1813.35",
+     "category": "Entertainment",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "8548.26",
+     "category": "Travel",
+     "count": 31,
+     "kind": "expense"
+    },
+    {
+     "amount": "-4972.58",
+     "category": "Giving",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "144.00",
+     "category": "Fees & Interest",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "23397.83",
+     "category": "Person-to-Person",
+     "count": 53,
+     "kind": "expense"
+    },
+    {
+     "amount": "900.00",
+     "category": "Other",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "4094.72",
+     "category": "Savings",
+     "count": 16,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "67065.70",
+     "category": "Income",
+     "count": 23
+    },
+    {
+     "amount": "618.38",
+     "category": "Other Income",
+     "count": 17
+    }
+   ],
+   "remaining": "3030.87",
+   "total_expenses": "64653.21",
+   "total_income": "67684.08",
+   "total_savings": "4094.72",
+   "total_spending": "60558.49",
+   "unmatched_total": "-2657.18"
+  },
+  "transactions": {
+   "net": "373.69",
+   "rows": [],
+   "total": 740
+  },
+  "unmatched": [
+   [
+    "2025-10-18",
+    "card",
+    "-7.10",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-283.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-17",
+    "card",
+    "-6.35",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "year card": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "-6078.07",
+     "category": "Credit Card Payment",
+     "count": 12
+    },
+    {
+     "amount": "13.45",
+     "category": "Transfer",
+     "count": 2
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "2591.42",
+     "category": "Groceries",
+     "count": 31,
+     "kind": "expense"
+    },
+    {
+     "amount": "930.02",
+     "category": "Dining Out",
+     "count": 68,
+     "kind": "expense"
+    },
+    {
+     "amount": "1382.91",
+     "category": "Pet Food & Supplies",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "1531.07",
+     "category": "Gas",
+     "count": 32,
+     "kind": "expense"
+    },
+    {
+     "amount": "893.67",
+     "category": "Transportation",
+     "count": 36,
+     "kind": "expense"
+    },
+    {
+     "amount": "1610.72",
+     "category": "Shopping",
+     "count": 58,
+     "kind": "expense"
+    },
+    {
+     "amount": "2904.24",
+     "category": "Health",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "8197.55",
+     "category": "Travel",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "-8.91",
+     "category": "Giving",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "41.00",
+     "category": "Savings",
+     "count": 1,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "-323.83",
+     "category": "Other Income",
+     "count": 2
+    }
+   ],
+   "remaining": "-20397.52",
+   "total_expenses": "20073.69",
+   "total_income": "-323.83",
+   "total_savings": "41.00",
+   "total_spending": "20032.69",
+   "unmatched_total": "6064.62"
+  },
+  "transactions": {
+   "net": "-14332.90",
+   "rows": [],
+   "total": 335
+  },
+  "unmatched": [
+   [
+    "2025-10-18",
+    "card",
+    "-7.10",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "card",
+    "658.59",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-21",
+    "card",
+    "647.94",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "card",
+    "205.65",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-22",
+    "card",
+    "511.92",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-22",
+    "card",
+    "442.25",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "card",
+    "517.75",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-21",
+    "card",
+    "422.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-22",
+    "card",
+    "400.38",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-21",
+    "card",
+    "681.42",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-22",
+    "card",
+    "654.78",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-21",
+    "card",
+    "526.69",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-17",
+    "card",
+    "-6.35",
+    "Transfer"
+   ],
+   [
+    "2026-09-21",
+    "card",
+    "408.65",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "year chk": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "8048.79",
+     "category": "Credit Card Payment",
+     "count": 35
+    },
+    {
+     "amount": "5981.42",
+     "category": "Transfer",
+     "count": 20
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "2909.63",
+     "category": "Electricity",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "10525.19",
+     "category": "Car Payment",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "443.38",
+     "category": "Gas",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "1813.35",
+     "category": "Entertainment",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "350.71",
+     "category": "Travel",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "-4963.67",
+     "category": "Giving",
+     "count": 29,
+     "kind": "expense"
+    },
+    {
+     "amount": "144.00",
+     "category": "Fees & Interest",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "23397.83",
+     "category": "Person-to-Person",
+     "count": 53,
+     "kind": "expense"
+    },
+    {
+     "amount": "900.00",
+     "category": "Other",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "4045.92",
+     "category": "Savings",
+     "count": 14,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "67065.70",
+     "category": "Income",
+     "count": 23
+    },
+    {
+     "amount": "-63.12",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "27436.24",
+   "total_expenses": "39566.34",
+   "total_income": "67002.58",
+   "total_savings": "4045.92",
+   "total_spending": "35520.42",
+   "unmatched_total": "-14030.21"
+  },
+  "transactions": {
+   "net": "13406.03",
+   "rows": [],
+   "total": 294
+  },
+  "unmatched": [
+   [
+    "2025-10-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-658.59",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-267.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-283.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-647.94",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-205.65",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-179.03",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-511.92",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-81.31",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-442.25",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-141.39",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-517.75",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-162.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-422.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-210.95",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-400.38",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-164.09",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-681.42",
+    "Transfer"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-156.80",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-654.78",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-260.53",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-526.69",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-181.42",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-408.65",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-203.11",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-10-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ]
+  ]
+ },
+ "year hysa": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "-3900.00",
+     "category": "Transfer",
+     "count": 13
+    }
+   ],
+   "expenses": [],
+   "income": [],
+   "remaining": "0.00",
+   "total_expenses": "0.00",
+   "total_income": "0.00",
+   "total_savings": "0.00",
+   "total_spending": "0.00",
+   "unmatched_total": "3900.00"
+  },
+  "transactions": {
+   "net": "3900.00",
+   "rows": [],
+   "total": 13
+  },
+  "unmatched": [
+   [
+    "2025-10-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2025-12-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-02-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-04-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-06-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-08-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-10-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ]
+  ]
+ },
+ "year search": {
+  "summary": {
+   "excluded": [],
+   "expenses": [
+    {
+     "amount": "1052.62",
+     "category": "Shopping",
+     "count": 33,
+     "kind": "expense"
+    },
+    {
+     "amount": "-8.91",
+     "category": "Giving",
+     "count": 1,
+     "kind": "expense"
+    }
+   ],
+   "income": [],
+   "remaining": "-1043.71",
+   "total_expenses": "1043.71",
+   "total_income": "0.00",
+   "total_savings": "0.00",
+   "total_spending": "1043.71",
+   "unmatched_total": "-2657.18"
+  },
+  "transactions": {
+   "net": "-1043.71",
+   "rows": [
+    [
+     "card:773",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:761",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:756",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:710",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:708",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:645",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:580",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:552",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:529",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:525",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:521",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:503",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:494",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:463",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:431",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:426",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:406",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:397",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:378",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:354",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:325",
+     "Giving",
+     "expense",
+     true,
+     false,
+     false
+    ],
+    [
+     "card:286",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:280",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:274",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:266",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:202",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:199",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:154",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:139",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:136",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:80",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:78",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:53",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ],
+    [
+     "card:16",
+     "Shopping",
+     "expense",
+     false,
+     false,
+     false
+    ]
+   ],
+   "total": 34
+  },
+  "unmatched": [
+   [
+    "2025-10-18",
+    "card",
+    "-7.10",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-283.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-17",
+    "card",
+    "-6.35",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "year type:checking": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "8048.79",
+     "category": "Credit Card Payment",
+     "count": 35
+    },
+    {
+     "amount": "5981.42",
+     "category": "Transfer",
+     "count": 20
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "2909.63",
+     "category": "Electricity",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "10525.19",
+     "category": "Car Payment",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "443.38",
+     "category": "Gas",
+     "count": 2,
+     "kind": "expense"
+    },
+    {
+     "amount": "1813.35",
+     "category": "Entertainment",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "350.71",
+     "category": "Travel",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "-4963.67",
+     "category": "Giving",
+     "count": 29,
+     "kind": "expense"
+    },
+    {
+     "amount": "144.00",
+     "category": "Fees & Interest",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "23397.83",
+     "category": "Person-to-Person",
+     "count": 53,
+     "kind": "expense"
+    },
+    {
+     "amount": "900.00",
+     "category": "Other",
+     "count": 12,
+     "kind": "expense"
+    },
+    {
+     "amount": "4045.92",
+     "category": "Savings",
+     "count": 14,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "67065.70",
+     "category": "Income",
+     "count": 23
+    },
+    {
+     "amount": "-63.12",
+     "category": "Other Income",
+     "count": 1
+    }
+   ],
+   "remaining": "27436.24",
+   "total_expenses": "39566.34",
+   "total_income": "67002.58",
+   "total_savings": "4045.92",
+   "total_spending": "35520.42",
+   "unmatched_total": "-14030.21"
+  },
+  "transactions": {
+   "net": "13406.03",
+   "rows": [],
+   "total": 294
+  },
+  "unmatched": [
+   [
+    "2025-10-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-658.59",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-267.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-10-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-283.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-20",
+    "chk",
+    "-647.94",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-205.65",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-179.03",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-511.92",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-81.31",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-442.25",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-141.39",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-517.75",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-162.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-422.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-210.95",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-400.38",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-164.09",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-681.42",
+    "Transfer"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-156.80",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-654.78",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-260.53",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-526.69",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-181.42",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-12",
+    "chk",
+    "200.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-408.65",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-203.11",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-20",
+    "chk",
+    "-30.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-10-05",
+    "chk",
+    "-500.00",
+    "Transfer"
+   ]
+  ]
+ },
+ "year type:credit": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "-8086.48",
+     "category": "Credit Card Payment",
+     "count": 23
+    },
+    {
+     "amount": "13.45",
+     "category": "Transfer",
+     "count": 2
+    }
+   ],
+   "expenses": [
+    {
+     "amount": "2591.42",
+     "category": "Groceries",
+     "count": 31,
+     "kind": "expense"
+    },
+    {
+     "amount": "930.02",
+     "category": "Dining Out",
+     "count": 68,
+     "kind": "expense"
+    },
+    {
+     "amount": "1382.91",
+     "category": "Pet Food & Supplies",
+     "count": 34,
+     "kind": "expense"
+    },
+    {
+     "amount": "1247.34",
+     "category": "Gas",
+     "count": 33,
+     "kind": "expense"
+    },
+    {
+     "amount": "893.67",
+     "category": "Transportation",
+     "count": 36,
+     "kind": "expense"
+    },
+    {
+     "amount": "492.37",
+     "category": "Subscriptions",
+     "count": 47,
+     "kind": "expense"
+    },
+    {
+     "amount": "6695.48",
+     "category": "Shopping",
+     "count": 93,
+     "kind": "expense"
+    },
+    {
+     "amount": "2904.24",
+     "category": "Health",
+     "count": 28,
+     "kind": "expense"
+    },
+    {
+     "amount": "8197.55",
+     "category": "Travel",
+     "count": 30,
+     "kind": "expense"
+    },
+    {
+     "amount": "-8.91",
+     "category": "Giving",
+     "count": 1,
+     "kind": "expense"
+    },
+    {
+     "amount": "61.37",
+     "category": "Savings",
+     "count": 3,
+     "kind": "savings"
+    }
+   ],
+   "income": [
+    {
+     "amount": "-323.83",
+     "category": "Other Income",
+     "count": 2
+    }
+   ],
+   "remaining": "-25711.29",
+   "total_expenses": "25387.46",
+   "total_income": "-323.83",
+   "total_savings": "61.37",
+   "total_spending": "25326.09",
+   "unmatched_total": "8073.03"
+  },
+  "transactions": {
+   "net": "-17638.26",
+   "rows": [],
+   "total": 431
+  },
+  "unmatched": [
+   [
+    "2025-10-18",
+    "card",
+    "-7.10",
+    "Transfer"
+   ],
+   [
+    "2025-10-20",
+    "apple",
+    "267.73",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-10-20",
+    "card",
+    "658.59",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-11-21",
+    "card",
+    "647.94",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "apple",
+    "179.03",
+    "Credit Card Payment"
+   ],
+   [
+    "2025-12-20",
+    "card",
+    "205.65",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-20",
+    "apple",
+    "81.31",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-22",
+    "card",
+    "511.92",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-20",
+    "apple",
+    "141.39",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-02-22",
+    "card",
+    "442.25",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "apple",
+    "162.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-03-20",
+    "card",
+    "517.75",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-20",
+    "apple",
+    "210.95",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-21",
+    "card",
+    "422.05",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-20",
+    "apple",
+    "164.09",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-05-22",
+    "card",
+    "400.38",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-20",
+    "apple",
+    "156.80",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-06-21",
+    "card",
+    "681.42",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-20",
+    "apple",
+    "260.53",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-22",
+    "card",
+    "654.78",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-20",
+    "apple",
+    "181.42",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-08-21",
+    "card",
+    "526.69",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-17",
+    "card",
+    "-6.35",
+    "Transfer"
+   ],
+   [
+    "2026-09-20",
+    "apple",
+    "203.11",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-09-21",
+    "card",
+    "408.65",
+    "Credit Card Payment"
+   ]
+  ]
+ },
+ "year type:savings": {
+  "summary": {
+   "excluded": [
+    {
+     "amount": "4000.00",
+     "category": "Credit Card Payment",
+     "count": 4
+    },
+    {
+     "amount": "-11200.00",
+     "category": "Transfer",
+     "count": 34
+    }
+   ],
+   "expenses": [],
+   "income": [
+    {
+     "amount": "1005.33",
+     "category": "Other Income",
+     "count": 14
+    }
+   ],
+   "remaining": "1005.33",
+   "total_expenses": "0.00",
+   "total_income": "1005.33",
+   "total_savings": "0.00",
+   "total_spending": "0.00",
+   "unmatched_total": "7200.00"
+  },
+  "transactions": {
+   "net": "8205.33",
+   "rows": [],
+   "total": 52
+  },
+  "unmatched": [
+   [
+    "2025-10-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2025-10-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2025-11-12",
+    "sav",
+    "-200.00",
+    "Transfer"
+   ],
+   [
+    "2025-12-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2025-12-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2025-12-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-01-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-01-12",
+    "sav",
+    "-200.00",
+    "Transfer"
+   ],
+   [
+    "2026-02-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-02-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-12",
+    "sav",
+    "-200.00",
+    "Transfer"
+   ],
+   [
+    "2026-03-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-04-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-04-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-04-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-05-12",
+    "sav",
+    "-200.00",
+    "Transfer"
+   ],
+   [
+    "2026-06-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-06-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-06-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-07-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-07-12",
+    "sav",
+    "-200.00",
+    "Transfer"
+   ],
+   [
+    "2026-08-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-08-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-08-22",
+    "sav",
+    "1000.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-12",
+    "sav",
+    "-200.00",
+    "Transfer"
+   ],
+   [
+    "2026-09-25",
+    "sav",
+    "-1000.00",
+    "Credit Card Payment"
+   ],
+   [
+    "2026-10-05",
+    "hysa",
+    "300.00",
+    "Transfer"
+   ],
+   [
+    "2026-10-06",
+    "sav",
+    "500.00",
+    "Transfer"
+   ]
+  ]
+ }
+}

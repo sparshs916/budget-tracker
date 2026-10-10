@@ -8,3 +8,5 @@ select = ["E", "F", "W"]
 "budget/categorize.py" = ["E501"]
 # Bank-export fixtures are copied verbatim.
 "tests/test_budget.py" = ["E501"]
+# The frozen-math fixture reads best one row per line.
+"tests/test_golden.py" = ["E501"]
