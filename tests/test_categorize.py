@@ -18,6 +18,7 @@ from budget.categorize import categorize
     ("GUSTO PAY 123", 2400, "depository", "Income"),
     ("Online Transfer to SAV ...2222", -500, "depository", "Savings"),
     ("Online Transfer from CHK ...1111", 500, "depository", "Transfer"),
+    ("Deposit-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)", 1000, "depository", "Transfer"),
     ("MYSTERY DEPOSIT", 20, "depository", "Other Income"),
     ("MYSTERY CHARGE", -20, "credit", "Other"),
     ("AMAZON MKTPL REFUND", 25, "credit", "Shopping"),
@@ -46,3 +47,4 @@ def test_categorize(description, flow, account_type, expected):
 ])
 def test_categorize_card_purchases(description, expected):
     assert categorize(description=description, merchant=None, flow=-10, account_type="credit") == expected
+

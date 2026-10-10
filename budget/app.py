@@ -299,6 +299,8 @@ def api_update_account():
         if "include_in_budget" in body:
             conn.execute("UPDATE accounts SET include_in_budget = %s WHERE id = %s",
                          (bool(body["include_in_budget"]), account_id))
+            conn.commit()
+            _relink(conn)
     return jsonify(ok=True)
 
 

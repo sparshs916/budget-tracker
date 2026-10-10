@@ -378,7 +378,7 @@ def link_transfers(conn):
     """
     rows = conn.execute(
         """SELECT t.id, t.account_id, t.date, t.flow, t.description, t.merchant, t.auto_category,
-                  t.override_category, a.type AS account_type
+                  t.override_category, a.type AS account_type, a.subtype, a.include_in_budget
            FROM transactions t JOIN accounts a ON a.id = t.account_id
            WHERE abs(t.flow) >= 1
            ORDER BY t.date, t.id"""
@@ -418,8 +418,10 @@ def link_transfers(conn):
         if "credit" in (out["account_type"], inn["account_type"]):
             out_category = in_category = "Credit Card Payment"
         else:
-            # Moving money into savings stays visible as "Savings" on the way out.
-            out_category = "Savings" if out["auto_category"] == "Savings" else "Transfer"
+            # Between two budget accounts a move nets to zero. Into an account outside the
+            # budget (a savings account you don't count), it shows as "Savings" on the way out.
+            out_category = ("Savings" if out["include_in_budget"] and not inn["include_in_budget"]
+                            and inn["subtype"] == "savings" else "Transfer")
             in_category = "Transfer"
         updates += [(inn["id"], out_category, out["id"]), (out["id"], in_category, inn["id"])]
 
