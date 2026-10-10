@@ -76,8 +76,22 @@ def sync_enrollment(conn, enrollment, today=None, client=None):
         window_start = today - datetime.timedelta(days=days)
 
         accounts, errors = _fetch(client, window_start, today, tz)
-        for account in accounts.values():
-            result["transactions"] += _save_account(conn, enrollment, account, window_start, tz,
+        windows = {key: window_start for key in accounts}
+
+        # A bank added in SimpleFIN after the first sync shows up here as a new
+        # account; give it the full history instead of just the recent window.
+        synced = {r["id"] for r in conn.execute("SELECT id FROM accounts WHERE history_synced").fetchall()}
+        new_keys = [key for key in accounts if key not in synced]
+        if new_keys and not fresh:
+            history_start = today - datetime.timedelta(days=config.INITIAL_HISTORY_DAYS)
+            history, more_errors = _fetch(client, history_start, today, tz)
+            errors += [m for m in more_errors if m not in errors]
+            for key in new_keys:
+                if key in history:
+                    accounts[key], windows[key] = history[key], history_start
+
+        for key, account in accounts.items():
+            result["transactions"] += _save_account(conn, enrollment, account, windows[key], tz,
                                                     prune=not errors)
             result["accounts"] += 1
 

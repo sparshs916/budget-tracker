@@ -189,6 +189,21 @@ def test_resync_drops_vanished_pending(conn):
     assert K("cc", "k6") not in ids and K("cc", "k6b") in ids
 
 
+def test_bank_added_later_gets_full_history(conn):
+    ACCOUNTS.append(("cc2", "Freedom Unlimited", "-50.00"))
+    try:
+        later = dict(OCT, cc2=[txn("f1", "2026-08-15", "-20.00", "SHELL OIL 57444"),
+                               txn("f2", "2026-10-08", "-5.00", "STARBUCKS")])
+        client = FakeSimpleFIN(later)
+        resync(conn, client)
+    finally:
+        ACCOUNTS.pop()
+    assert len(client.calls) == 3  # recent window, then 90 days of history for the new card
+    ids = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id = %s", (K("cc2"),)).fetchall()}
+    assert ids == {K("cc2", "f1"), K("cc2", "f2")}
+    assert conn.execute("SELECT history_synced FROM accounts WHERE id = %s", (K("cc2"),)).fetchone()["history_synced"]
+
+
 def test_bank_errors_are_reported_and_keep_existing_rows(conn):
     result = resync(conn, FakeSimpleFIN({}, errors=["Chase: You must reauthenticate."]))
     assert result["error"] == "Chase: You must reauthenticate."
