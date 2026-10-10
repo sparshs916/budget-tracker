@@ -174,6 +174,14 @@ def _save_account(conn, enrollment, account, window_start, tz, prune):
         ),
     )
 
+    existing_ids = {r["id"] for r in conn.execute(
+        "SELECT id FROM transactions WHERE account_id = %s AND source = 'simplefin'", (account["key"],)).fetchall()}
+    uploaded = conn.execute(
+        "SELECT id, date, flow FROM transactions WHERE account_id = %s AND source = 'csv' ORDER BY date, id",
+        (account["key"],),
+    ).fetchall()
+    taken = set()
+
     seen = []
     for t in account["transactions"]:
         timestamp = t.get("transacted_at") or t.get("posted")
@@ -181,6 +189,14 @@ def _save_account(conn, enrollment, account, window_start, tz, prune):
         merchant = t.get("payee") or None
         flow = to_flow(t["amount"], account_type)
         txn_id = f"{account['key']}:{t['id']}"
+        if txn_id not in existing_ids and not t.get("pending"):
+            # The same transaction may already be here from a CSV upload: same amount
+            # within a few days. Take that row over (keeping any category you set).
+            match = _closest_upload(uploaded, taken, date, flow)
+            if match:
+                taken.add(match["id"])
+                conn.execute("UPDATE transactions SET id = %s, source = 'simplefin', import_id = NULL WHERE id = %s",
+                             (txn_id, match["id"]))
         conn.execute(
             """
             INSERT INTO transactions (id, account_id, date, description, merchant, merchant_key,
@@ -206,11 +222,23 @@ def _save_account(conn, enrollment, account, window_start, tz, prune):
     # unless the bank reported an error (then a missing transaction proves nothing).
     if prune:
         conn.execute(
-            "DELETE FROM transactions WHERE account_id = %s AND date >= %s AND NOT (id = ANY(%s))",
+            """DELETE FROM transactions
+               WHERE account_id = %s AND source = 'simplefin' AND date >= %s AND NOT (id = ANY(%s))""",
             (account["key"], window_start, seen),
         )
         conn.execute("UPDATE accounts SET history_synced = TRUE WHERE id = %s", (account["key"],))
     return len(seen)
+
+
+def _closest_upload(uploaded, taken, date, flow, days=3):
+    best = None
+    for u in uploaded:
+        if u["id"] in taken or Decimal(u["flow"]) != flow:
+            continue
+        distance = abs((u["date"] - date).days)
+        if distance <= days and (best is None or distance < best[0]):
+            best = (distance, u)
+    return best[1] if best else None
 
 
 def recategorize_account(conn, account_id):
@@ -232,7 +260,7 @@ def compare_account(conn, account_id, start, end, client=None):
     """What SimpleFIN returns for one account and date range vs. what the app has saved."""
     tz = ZoneInfo(config.TIMEZONE)
     row = conn.execute(
-        """SELECT a.id, e.access_token FROM accounts a JOIN enrollments e ON e.id = a.enrollment_id
+        """SELECT a.id, a.type, e.access_token FROM accounts a JOIN enrollments e ON e.id = a.enrollment_id
            WHERE a.id = %s""",
         (account_id,),
     ).fetchone()
@@ -245,18 +273,26 @@ def compare_account(conn, account_id, start, end, client=None):
         return {"found": False, "errors": errors}
 
     saved = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id = %s", (account_id,)).fetchall()}
+    uploaded = conn.execute(
+        "SELECT id, date, flow FROM transactions WHERE account_id = %s AND source = 'csv'", (account_id,)).fetchall()
+    taken = set()
     remote_ids = set()
     missing = []
     for t in remote["transactions"]:
         txn_id = f"{account_id}:{t['id']}"
         remote_ids.add(txn_id)
-        if txn_id not in saved:
-            timestamp = t.get("transacted_at") or t.get("posted")
+        timestamp = t.get("transacted_at") or t.get("posted")
+        date = _local_date(timestamp, tz) if timestamp else end
+        upload = None if txn_id in saved else _closest_upload(uploaded, taken, date, to_flow(t["amount"], row["type"]))
+        if upload:
+            taken.add(upload["id"])  # already here from a CSV upload
+        elif txn_id not in saved:
             missing.append({"date": _local_date(timestamp, tz).isoformat() if timestamp else None,
                             "description": t.get("description"), "amount": t.get("amount"),
                             "pending": bool(t.get("pending"))})
     in_range = conn.execute(
-        "SELECT id, date, description, raw_amount FROM transactions WHERE account_id = %s AND date BETWEEN %s AND %s",
+        """SELECT id, date, description, raw_amount FROM transactions
+           WHERE account_id = %s AND source = 'simplefin' AND date BETWEEN %s AND %s""",
         (account_id, start, end),
     ).fetchall()
     return {

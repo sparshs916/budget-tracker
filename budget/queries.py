@@ -89,7 +89,7 @@ def transactions(conn, filters, page, page_size):
     rows = conn.execute(
         f"""
         SELECT t.id, t.date, t.description, t.merchant, t.merchant_key, t.flow, t.raw_amount,
-               t.status, t.type, {EFFECTIVE_CATEGORY} AS category,
+               t.status, t.type, t.source, {EFFECTIVE_CATEGORY} AS category,
                t.override_category IS NOT NULL AS overridden,
                a.name AS account_name, a.last_four, a.institution, a.type AS account_type
         {BASE_FROM}
@@ -109,10 +109,10 @@ def accounts(conn):
         """
         SELECT a.id, a.name, a.type, a.subtype, a.last_four, a.institution, a.include_in_budget,
                a.ledger_balance, a.available_balance, a.status,
-               e.id AS enrollment_id, e.status AS enrollment_status, e.last_error, e.last_synced_at,
+               e.id AS enrollment_id, COALESCE(e.status, 'manual') AS enrollment_status, e.last_error, e.last_synced_at,
                (SELECT COUNT(*) FROM transactions t WHERE t.account_id = a.id) AS transaction_count,
                (SELECT MAX(t.date) FROM transactions t WHERE t.account_id = a.id) AS latest_transaction
-        FROM accounts a JOIN enrollments e ON e.id = a.enrollment_id
+        FROM accounts a LEFT JOIN enrollments e ON e.id = a.enrollment_id
         ORDER BY a.institution, a.type, a.name
         """
     ).fetchall()
@@ -121,4 +121,15 @@ def accounts(conn):
 def enrollments(conn):
     return conn.execute(
         "SELECT id, institution, status, last_error, last_synced_at FROM enrollments ORDER BY created_at"
+    ).fetchall()
+
+
+def imports(conn):
+    return conn.execute(
+        """
+        SELECT i.id, i.account_id, i.filename, i.row_count, i.created_at, a.name AS account_name
+        FROM imports i JOIN accounts a ON a.id = i.account_id
+        ORDER BY i.created_at DESC
+        LIMIT 20
+        """
     ).fetchall()

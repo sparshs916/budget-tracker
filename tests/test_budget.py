@@ -1,5 +1,6 @@
 """Run with a throwaway Postgres:  TEST_DATABASE_URL=postgresql://... pytest"""
 import base64
+import io
 import datetime
 import os
 from decimal import Decimal
@@ -373,3 +374,161 @@ def test_full_resync_refills_history(conn, monkeypatch):
     assert web.post("/api/sync?full=1", headers={"X-CSRF-Token": csrf}).status_code == 200
     conn.rollback()
     assert conn.execute("SELECT 1 FROM transactions WHERE id = %s", (K("cc", "k2"),)).fetchone()
+
+
+# --- CSV uploads ---
+
+from budget import csv_import  # noqa: E402
+
+GOLDEN1 = '''"SAVINGS","*******7022-0"
+"Date","Account","Account Type","Description","Check #","Category","Credit","Debit","Daily Balance"
+"10/06/2026","SAVINGS","Savings","Withdrawal Overdraft transfer to ****022-S9","","Financial Services/Transfers","","-200.00","2515.26"
+"10/01/2026","SAVINGS","Savings","Dividend Through date: 30SEP2026 (Dividend)","","Income/Interest","0.40","","2715.26"
+"09/30/2026","SAVINGS","Savings","Withdrawal-ACH-A-1608460 WEBHealthy Paws (debitpmt)","","Shopping/Pets","","-49.29","2714.86"
+"09/28/2026","SAVINGS","Savings","Deposit-ACH-1296959 HP ENTERPRISE CO (PAYROLL)","","Income/Payroll","2915.90","","3564.15"
+"09/28/2026","SAVINGS","Savings","Withdrawal at G1 Online Transfer 10.00 to share 9","","Financial Services/Transfers","","-10.00",""
+"09/28/2026","SAVINGS","Savings","Withdrawal at G1 Online Transfer 10.00 to share 9","","Financial Services/Transfers","","-10.00",""
+"","","","","Totals:","6 items","2916.30","-269.29",""
+'''
+OLDER = '''"SAVINGS","*******7022-0"
+"Date","Account","Account Type","Description","Check #","Category","Credit","Debit","Daily Balance"
+"09/30/2026","SAVINGS","Savings","Withdrawal-ACH-A-1608460 WEBHealthy Paws (debitpmt)","","Shopping/Pets","","-49.29","2714.86"
+"09/23/2026","SAVINGS","Savings","Withdrawal-ACH-A-987134 WEBALLY (ALLY PAYMT)","","Uncategorized Expense","","-351.75","648.25"
+'''
+
+
+def account_row(conn, key):
+    return conn.execute("SELECT id, name, type, subtype FROM accounts WHERE id = %s", (key,)).fetchone()
+
+
+def upload(conn, key, text, flip=None):
+    account = account_row(conn, key)
+    parsed = csv_import.parse(text.encode())
+    flip = csv_import.suggest_flip(parsed, account["type"]) if flip is None else flip
+    new, dups = csv_import.plan(conn, account, parsed, flip)
+    if new:
+        csv_import.save(conn, account, new, "test.csv")
+    conn.commit()
+    return new, dups
+
+
+def test_parse_golden1_export():
+    p = csv_import.parse(GOLDEN1.encode())
+    assert p["two_columns"] and p["skipped"] == 1  # the Totals line
+    assert len(p["rows"]) == 7 - 1
+    assert sum(r["amount"] for r in p["rows"]) == Decimal("2916.30") - Decimal("269.29")
+    assert p["rows"][0]["date"] == datetime.date(2026, 10, 6) and p["rows"][0]["hint"] == "Financial Services/Transfers"
+
+
+def test_parse_single_amount_column_and_flip_detection():
+    chase = "Transaction Date,Post Date,Description,Category,Type,Amount,Memo\n" \
+            "10/02/2026,10/03/2026,TRADER JOE'S,Groceries,Sale,-45.10,\n" \
+            "10/05/2026,10/05/2026,Payment Thank You-Mobile,,Payment,300.00,\n" \
+            "10/07/2026,10/08/2026,CHEWY.COM,Shopping,Sale,-30.00,\n"
+    apple = "Transaction Date,Clearing Date,Description,Merchant,Category,Type,Amount (USD),Purchased By\n" \
+            "10/02/2026,10/03/2026,UBER *TRIP,Uber,Transportation,Purchase,23.18,Me\n" \
+            "10/04/2026,10/04/2026,ACH DEPOSIT INTERNET TRANSFER,Apple Card,Payment,Payment,-100.00,Me\n" \
+            "10/06/2026,10/07/2026,TRADER JOES,Trader Joe's,Grocery,Purchase,\"$1,045.10\",Me\n"
+    p = csv_import.parse(chase)
+    assert [r["amount"] for r in p["rows"]] == [Decimal("-45.10"), Decimal("300.00"), Decimal("-30.00")]
+    assert not csv_import.suggest_flip(p, "credit")
+    p = csv_import.parse(apple)
+    assert p["rows"][0]["merchant"] == "Uber" and p["rows"][2]["amount"] == Decimal("1045.10")
+    assert csv_import.suggest_flip(p, "credit") and not csv_import.suggest_flip(p, "depository")
+    with pytest.raises(csv_import.CSVImportError):
+        csv_import.parse("just,some\nwords,here\n")
+
+
+def test_reuploading_the_same_file_adds_nothing(conn):
+    new, dups = upload(conn, K("sav"), GOLDEN1)
+    assert len(new) == 6 and not dups  # the two identical $10 transfers are both kept
+    new, dups = upload(conn, K("sav"), GOLDEN1)
+    assert not new and len(dups) == 6 and all(d["reason"] == "Already uploaded" for d in dups)
+    new, dups = upload(conn, K("sav"), GOLDEN1, flip=True)  # toggling the sign still counts as a repeat
+    assert not new
+    assert conn.execute("SELECT COUNT(*) AS n FROM transactions WHERE source = 'csv'").fetchone()["n"] == 6
+
+
+def test_overlapping_exports_only_add_the_new_part(conn):
+    upload(conn, K("sav"), GOLDEN1)
+    new, dups = upload(conn, K("sav"), OLDER)
+    assert [r["description"] for r in new] == ["Withdrawal-ACH-A-987134 WEBALLY (ALLY PAYMT)"]
+    assert len(dups) == 1
+
+
+def test_upload_skips_rows_simplefin_already_has(conn):
+    # Chase card: SimpleFIN has k1..k6. The export words things differently and dates
+    # one purchase by posting date; Netflix (k2) is the only one SimpleFIN lacks.
+    conn.execute("DELETE FROM transactions WHERE id = %s", (K("cc", "k2"),))
+    conn.commit()
+    export = "Transaction Date,Post Date,Description,Category,Type,Amount\n" \
+             "10/03/2026,10/04/2026,TRADER JOE S #123 SACRAMENTO,Groceries,Sale,-45.10\n" \
+             "10/03/2026,10/03/2026,Netflix.com,Entertainment,Sale,-15.49\n" \
+             "10/05/2026,10/05/2026,Payment Thank You - Web,,Payment,300.00\n" \
+             "10/07/2026,10/07/2026,CHEWY.COM,Shopping,Sale,-30.00\n" \
+             "10/08/2026,10/08/2026,CHEWY.COM,Shopping,Return,10.00\n" \
+             "10/09/2026,10/09/2026,CHEWY.COM,Shopping,Sale,-30.00\n"
+    new, dups = upload(conn, K("cc"), export)
+    assert sorted(r["description"] for r in new) == ["CHEWY.COM", "Netflix.com"]  # a second, real $30 Chewy order
+    assert len(dups) == 4
+    s = queries.summary(conn, month_filters())
+    assert amounts(s["expenses"])["Subscriptions"] == Decimal("15.49")
+
+
+def test_simplefin_takes_over_uploaded_rows_instead_of_duplicating(conn):
+    conn.execute("DELETE FROM transactions WHERE account_id = %s", (K("cc"),))
+    conn.commit()
+    upload(conn, K("cc"), "Transaction Date,Description,Amount\n10/02/2026,TRADER JOES 123,-45.10\n"
+                          "10/03/2026,NETFLIX,-15.49\n")
+    netflix = conn.execute("SELECT id FROM transactions WHERE description = 'NETFLIX'").fetchone()["id"]
+    conn.execute("UPDATE transactions SET override_category = 'Entertainment' WHERE id = %s", (netflix,))
+    conn.commit()
+
+    resync(conn, FakeSimpleFIN(OCT))
+    rows = conn.execute("SELECT id, source, override_category FROM transactions WHERE account_id = %s",
+                        (K("cc"),)).fetchall()
+    assert len(rows) == 6 and all(r["source"] == "simplefin" for r in rows)
+    assert {r["id"]: r["override_category"] for r in rows}[K("cc", "k2")] == "Entertainment"
+
+
+def test_sync_never_deletes_uploaded_rows(conn):
+    upload(conn, K("sav"), GOLDEN1)
+    resync(conn, FakeSimpleFIN(OCT))
+    resync(conn, FakeSimpleFIN({}))  # SimpleFIN sends nothing for any account
+    assert conn.execute("SELECT COUNT(*) AS n FROM transactions WHERE account_id = %s AND source = 'csv'",
+                        (K("sav"),)).fetchone()["n"] == 6
+
+
+def test_upload_endpoint_preview_commit_undo_and_new_account(conn):
+    web = app.test_client()
+    csrf = login(web)
+    headers = {"X-CSRF-Token": csrf}
+
+    def post(**form):
+        data = {"file": (io.BytesIO(GOLDEN1.encode()), "golden1.csv"), **form}
+        return web.post("/api/import", data=data, headers=headers, content_type="multipart/form-data")
+
+    preview = post(account_id=K("sav"), commit="0").get_json()
+    assert preview["new_count"] == 6 and preview["duplicate_count"] == 0 and preview["ignored_lines"] == 1
+    conn.rollback()
+    assert conn.execute("SELECT COUNT(*) AS n FROM transactions WHERE source = 'csv'").fetchone()["n"] == 0
+
+    done = post(account_id=K("sav"), commit="1").get_json()
+    assert done["saved"] and done["import_id"]
+    again = post(account_id=K("sav"), commit="0").get_json()
+    assert again["new_count"] == 0 and again["duplicate_count"] == 6
+
+    assert web.delete(f"/api/imports/{done['import_id']}", headers=headers).status_code == 200
+    conn.rollback()
+    assert conn.execute("SELECT COUNT(*) AS n FROM transactions WHERE source = 'csv'").fetchone()["n"] == 0
+
+    made = post(account_id="new", new_name="Apple Card", new_subtype="credit_card", commit="1").get_json()
+    assert made["new_count"] == 6
+    accounts = web.get("/api/accounts").get_json()["accounts"]
+    apple = next(a for a in accounts if a["name"] == "Apple Card")
+    assert apple["enrollment_status"] == "manual" and apple["transaction_count"] == 6
+    assert resync(conn, FakeSimpleFIN(OCT)).get("error") is None  # manual accounts don't disturb syncing
+
+    assert post(account_id="", commit="0").status_code == 400
+    assert web.post("/api/import", data={"file": (io.BytesIO(GOLDEN1.encode()), "x.csv"), "account_id": K("sav")},
+                    content_type="multipart/form-data").status_code == 403  # CSRF

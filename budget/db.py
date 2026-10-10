@@ -72,6 +72,18 @@ CREATE INDEX IF NOT EXISTS login_attempts_created_idx ON login_attempts (created
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type_locked BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE transactions DROP COLUMN IF EXISTS teller_category;
 DELETE FROM enrollments WHERE id LIKE 'enr\_%';
+
+-- CSV uploads. Manual accounts (e.g. a card SimpleFIN can't reach) have no connection.
+ALTER TABLE accounts ALTER COLUMN enrollment_id DROP NOT NULL;
+CREATE TABLE IF NOT EXISTS imports (
+    id          BIGSERIAL PRIMARY KEY,
+    account_id  TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    filename    TEXT,
+    row_count   INTEGER NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'simplefin';  -- simplefin | csv
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS import_id BIGINT REFERENCES imports(id) ON DELETE CASCADE;
 """
 
 _schema_ready = False

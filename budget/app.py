@@ -11,7 +11,7 @@ from flask import Flask, abort, jsonify, redirect, render_template, request, ses
 from flask.json.provider import DefaultJSONProvider
 from werkzeug.security import check_password_hash
 
-from . import config, db, queries
+from . import config, csv_import, db, queries
 from .categorize import CATEGORIES, CATEGORY_NAMES
 from .simplefin import SimpleFINError, claim_setup_token
 from .sync import SUBTYPES, compare_account, recategorize_account, save_connection, sync_all, sync_enrollment
@@ -37,6 +37,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=config.IS_PRODUCTION,
     SESSION_COOKIE_SAMESITE="Lax",
     PERMANENT_SESSION_LIFETIME=datetime.timedelta(days=30),
+    MAX_CONTENT_LENGTH=5 * 1024 * 1024,  # CSV uploads
 )
 
 MAX_FAILURES_PER_IP = 5
@@ -317,6 +318,78 @@ def api_remove_connection(connection_id):
     return jsonify(ok=True)
 
 
+@app.post("/api/import")
+@login_required
+def api_import():
+    """Preview (commit=0) or save (commit=1) a CSV upload into one account."""
+    upload = request.files.get("file")
+    if not upload or not upload.filename:
+        return jsonify(error="Choose a CSV file."), 400
+    try:
+        parsed = csv_import.parse(upload.read())
+    except csv_import.CSVImportError as e:
+        return jsonify(error=str(e)), 400
+
+    form = request.form
+    with db.connect() as conn:
+        if form.get("account_id") == "new":
+            name = (form.get("new_name") or "").strip()[:100]
+            subtype = form.get("new_subtype") or "checking"
+            if not name or subtype not in SUBTYPES:
+                return jsonify(error="Give the new account a name and type."), 400
+            account = {"id": "manual:" + secrets.token_hex(8), "name": name, "type": SUBTYPES[subtype],
+                       "subtype": subtype, "new": True}
+        else:
+            account = conn.execute("SELECT id, name, type, subtype FROM accounts WHERE id = %s",
+                                   (form.get("account_id") or "",)).fetchone()
+            if not account:
+                return jsonify(error="Pick the account these transactions belong to."), 400
+
+        suggested = csv_import.suggest_flip(parsed, account["type"])
+        flip = suggested if form.get("flip", "auto") == "auto" else form.get("flip") == "1"
+        new_rows, duplicates = csv_import.plan(conn, account, parsed, flip)
+
+        result = {
+            "account": account["name"], "flip": flip, "flip_suggested": suggested,
+            "parsed": len(parsed["rows"]), "ignored_lines": parsed["skipped"],
+            "new_count": len(new_rows), "duplicate_count": len(duplicates),
+            "start": min(r["date"] for r in parsed["rows"]), "end": max(r["date"] for r in parsed["rows"]),
+            "new": [_import_row(r) for r in sorted(new_rows, key=lambda r: r["date"], reverse=True)[:200]],
+            "duplicates": [_import_row(r) for r in sorted(duplicates, key=lambda r: r["date"], reverse=True)[:200]],
+        }
+        if form.get("commit") == "1":
+            if account.get("new"):
+                conn.execute(
+                    """INSERT INTO accounts (id, institution, name, type, subtype, status, include_in_budget, type_locked)
+                       VALUES (%s, 'Uploaded', %s, %s, %s, 'open', %s, TRUE)""",
+                    (account["id"], account["name"], account["type"], account["subtype"],
+                     account["subtype"] in ("checking", "credit_card")),
+                )
+            result["import_id"] = csv_import.save(conn, account, new_rows, upload.filename) if new_rows else None
+            result["saved"] = True
+    return jsonify(result)
+
+
+def _import_row(r):
+    return {"date": r["date"], "description": r["description"], "flow": r["flow"], "reason": r.get("reason")}
+
+
+@app.get("/api/imports")
+@login_required
+def api_imports():
+    with db.connect() as conn:
+        return jsonify(imports=queries.imports(conn))
+
+
+@app.delete("/api/imports/<int:import_id>")
+@login_required
+def api_undo_import(import_id):
+    with db.connect() as conn:
+        # Rows a later SimpleFIN sync took over are no longer part of the upload and stay.
+        conn.execute("DELETE FROM imports WHERE id = %s", (import_id,))
+    return jsonify(ok=True)
+
+
 @app.post("/api/sync")
 @login_required
 def api_sync():
@@ -335,6 +408,11 @@ def api_cron_sync():
         return jsonify(error="Unauthorized"), 401
     with db.connect() as conn:
         return jsonify(results=sync_all(conn, today=today()))
+
+
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify(error="That file is too big (5 MB max)."), 413
 
 
 @app.errorhandler(400)

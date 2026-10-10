@@ -77,8 +77,8 @@ KEYWORD_RULES = [
     ("Pet Insurance", _rx(r"trupanion", r"healthy paws", r"embrace pet", r"fetch pet", r"pets best", r"pet insurance", r"lemonade pet", r"nationwide pet")),
     ("Renter's Insurance", _rx(r"lemonade", r"renters? ins\w*", r"assurant", r"sure renters")),
     ("Car Insurance", _rx(r"geico", r"progressive", r"state farm", r"allstate", r"usaa", r"farmers ins\w*", r"liberty mutual", r"auto insurance")),
-    ("Car Payment", _rx(r"auto loan", r"car payment", r"toyota (?:financial|motor credit)", r"honda financial", r"american honda", r"ally auto", r"ally payment", r"tesla financ\w*", r"gm financial", r"ford credit", r"hyundai motor finance", r"nissan motor", r"carmax auto", r"capital one auto")),
-    ("Rent", _rx(r"rent", r"apartments?", r"property (?:management|mgmt)", r"leasing", r"appfolio", r"rentcafe", r"yardi", r"buildium", r"avalon", r"equity residential", r"essex property")),
+    ("Car Payment", _rx(r"auto loan", r"car payment", r"toyota (?:financial|motor credit)", r"honda financial", r"american honda", r"ally auto", r"ally payment", r"ally paymt", r"tesla financ\w*", r"gm financial", r"ford credit", r"hyundai motor finance", r"nissan motor", r"carmax auto", r"capital one auto")),
+    ("Rent", _rx(r"rent", r"apartments?", r"property (?:management|mgmt)", r"leasing", r"appfolio", r"rentcafe", r"yardi", r"buildium", r"avalon", r"equity residential", r"essex property", r"domuso", r"bilt rent")),
     ("Electricity", _rx(r"pg&e", r"pge", r"pacific gas", r"edison", r"smud", r"duke energy", r"con ?ed", r"electric\w*", r"power co\w*", r"dominion energy", r"xcel energy", r"georgia power", r"fpl")),
     ("Other Utilities", _rx(r"water", r"sewer", r"waste management", r"republic services", r"recology", r"trash", r"utilit\w*", r"gas co", r"socalgas", r"so cal gas", r"nicor", r"spire")),
     ("Internet", _rx(r"comcast", r"xfinity", r"spectrum", r"charter comm\w*", r"cox comm\w*", r"sonic\.net", r"google fiber", r"fios", r"at&t internet", r"att internet", r"starlink", r"frontier comm\w*")),
@@ -109,8 +109,43 @@ def merchant_key(merchant, description):
     return " ".join(words) or None
 
 
-def categorize(*, description, merchant, flow, account_type):
-    text = f"{description or ''} {merchant or ''}"
+# Some banks glue "WEB" onto the payee in ACH descriptions ("WEBHealthy Paws").
+_WEB_PREFIX = re.compile(r"(?<![A-Za-z])WEB(?=[A-Za-z])")
+
+# A bank's own category (from a CSV export), used only when nothing better matches.
+HINTS = [
+    (re.compile(r"credit card payment", re.IGNORECASE), "Credit Card Payment"),
+    (re.compile(r"transfer", re.IGNORECASE), "Transfer"),
+    (re.compile(r"payroll|paycheck|salary", re.IGNORECASE), "Income"),
+    (re.compile(r"interest|dividend", re.IGNORECASE), "Other Income"),
+    (re.compile(r"rent|mortgage", re.IGNORECASE), "Rent"),
+    (re.compile(r"pet", re.IGNORECASE), "Pet Food & Supplies"),
+    (re.compile(r"invest", re.IGNORECASE), "Savings"),
+    (re.compile(r"tax", re.IGNORECASE), "Taxes"),
+    (re.compile(r"grocer", re.IGNORECASE), "Groceries"),
+    (re.compile(r"restaurant|dining|fast food|coffee|food & drink", re.IGNORECASE), "Dining Out"),
+    (re.compile(r"gas|fuel", re.IGNORECASE), "Gas"),
+    (re.compile(r"utilit", re.IGNORECASE), "Other Utilities"),
+    (re.compile(r"entertain", re.IGNORECASE), "Entertainment"),
+    (re.compile(r"health|medical|pharmacy", re.IGNORECASE), "Health"),
+    (re.compile(r"travel|airline|hotel", re.IGNORECASE), "Travel"),
+    (re.compile(r"shopping|merchandise", re.IGNORECASE), "Shopping"),
+]
+
+
+def categorize(*, description, merchant, flow, account_type, hint=None):
+    category = _categorize(description=description, merchant=merchant, flow=flow, account_type=account_type)
+    if category in ("Other", "Other Income") and hint:
+        for pattern, hinted in HINTS:
+            if pattern.search(hint):
+                if hinted == "Income" and flow < 0:
+                    break
+                return hinted
+    return category
+
+
+def _categorize(*, description, merchant, flow, account_type):
+    text = _WEB_PREFIX.sub("WEB ", f"{description or ''} {merchant or ''}")
     is_credit = account_type == "credit"
 
     # Money moving between your own accounts.

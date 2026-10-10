@@ -32,6 +32,17 @@ SimpleFIN doesn't say whether an account is checking, savings or a credit card, 
 
 See `.env.example` for all settings.
 
+## CSV uploads
+
+For banks SimpleFIN can't reach (or accounts it only sends balances for), download a CSV from the bank's website and use **Upload CSV**. Pick the account, or create a new one, preview, then import. Every upload can be undone under **Recent uploads**.
+
+Duplicates are skipped two ways:
+
+- Each row gets a fingerprint from its account, date, amount, description and position among identical rows, so re-uploading a file or uploading overlapping date ranges adds nothing twice. Two genuinely identical rows in one file are both kept.
+- A row that matches a transaction the account already has (same amount, within 3 days, paired one-to-one, closest date first) is skipped, whatever the description says. When SimpleFIN later sends a transaction that was uploaded, the sync takes over that row instead of adding a second one, and the sync never deletes uploaded rows.
+
+Card exports that list purchases as positive numbers are detected and flipped; the preview shows the signs so you can check before importing.
+
 ## Security notes
 
 - There is one password. Vercel stores only its scrypt hash. After 5 failed logins from one IP, or 20 in total, login locks for 15 minutes.

@@ -6,3 +6,5 @@ select = ["E", "F", "W"]
 [lint.per-file-ignores]
 # The merchant keyword table reads best one category per line.
 "budget/categorize.py" = ["E501"]
+# Bank-export fixtures are copied verbatim.
+"tests/test_budget.py" = ["E501"]
