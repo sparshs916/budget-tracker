@@ -254,3 +254,79 @@ def test_card_payment_without_the_cards_own_record_is_flagged(book):
     book.add("card", "2026-08-12", "248.22", "INTERNET PAYMENT - THANK YOU")  # uploading the Discover CSV adds it
     book.settle()
     assert book.summary(AUG)["unmatched_transfers"] == []
+
+
+# ---------- best guess: one side is vague about being a transfer ----------
+
+def banks(book, **institutions):
+    for account, name in institutions.items():
+        book.conn.execute("UPDATE accounts SET institution = %s WHERE id = %s", (name, account))
+
+
+def test_transfer_described_vaguely_by_the_receiving_bank_still_pairs(book):
+    # August: Golden 1 says "CAPITAL ONE (TRANSFER)", Capital One just says "THE GOLDEN 1 CREDIT UNION".
+    banks(book, sav="Golden 1 Credit Union", nest="Capital One")
+    book.conn.execute("UPDATE accounts SET include_in_budget = TRUE WHERE id = 'nest'")
+    out = book.add("sav", "2026-08-18", "-3000.00", "Withdrawal-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER) (Capital One Transfer)")
+    inn = book.add("nest", "2026-08-17", "3000.00", "THE GOLDEN 1 CREDIT UNION")
+    assert book.category(inn) == "Other Income"  # before: $3,000 of "income"
+    book.settle()
+    s = book.summary(AUG)
+    assert s["total_income"] == 0 and s["total_expenses"] == 0 and s["unmatched_transfers"] == []
+    assert book.category(out) == book.category(inn) == "Transfer"
+
+
+def test_vague_money_out_pairs_with_a_clear_transfer_in(book):
+    banks(book, chk="Golden 1 Credit Union", sav="Ally Bank")
+    book.add("chk", "2026-09-03", "-75.00", "ALLY BANK $TRANSFER")      # vague, but names the other bank
+    book.add("sav", "2026-09-04", "75.00", "Online Transfer from Golden 1")
+    book.settle()
+    assert book.summary()["total_expenses"] == 0
+
+
+def test_large_vague_bank_to_bank_move_pairs_without_a_bank_name(book):
+    book.add("sav", "2026-09-10", "-1500.00", "Withdrawal Online Transfer")
+    book.add("chk", "2026-09-11", "1500.00", "CREDIT ID NUMBER 88213")  # Other Income on its own
+    book.settle()
+    s = book.summary()
+    assert s["total_income"] == 0 and s["unmatched_transfers"] == []
+
+
+@pytest.mark.parametrize("out_desc,in_account,in_desc", [
+    ("Online Transfer to ...4411", "chk", "GUSTO PAY 123 PAYROLL"),          # a paycheck is never a transfer
+    ("Online Transfer to ...4411", "chk", "Zelle from Jordan"),              # nor a person paying you
+    ("Online Transfer to ...4411", "chk", "MYSTERY CREDIT"),                 # small, and no bank named
+    ("MYSTERY WITHDRAWAL", "chk", "MYSTERY CREDIT"),                         # two unknowns aren't a transfer
+    ("Online Transfer to ...4411", "card", "MERCHANT CREDIT"),               # a card credit, no bank named
+])
+def test_best_guess_leaves_these_alone(book, out_desc, in_account, in_desc):
+    amount = "2915.90" if "GUSTO" in in_desc else "60.00"
+    book.add("sav", "2026-09-10", f"-{amount}", out_desc)
+    inn = book.add(in_account, "2026-09-11", amount, in_desc)
+    before = book.category(inn)
+    book.settle()
+    assert book.category(inn) == before
+
+
+def test_best_guess_respects_your_own_label(book):
+    banks(book, sav="Golden 1 Credit Union", nest="Capital One")
+    book.add("sav", "2026-08-18", "-3000.00", "Withdrawal-ACH WEBCAPITAL ONE (TRANSFER)")
+    inn = book.add("nest", "2026-08-17", "3000.00", "THE GOLDEN 1 CREDIT UNION")
+    book.override(inn, "Other Income")  # e.g. it really was a gift that happened to match
+    book.settle()
+    assert book.category(inn) == "Other Income"
+
+
+def test_a_clear_pair_wins_over_a_vague_one(book):
+    book.add("sav", "2026-09-10", "-500.00", "Online Transfer to CHK")
+    clear = book.add("chk", "2026-09-12", "500.00", "Online Transfer from SAV")
+    vague = book.add("apple", "2026-09-10", "500.00", "SOMETHING")  # closer in time, but vague
+    book.settle()
+    assert book.category(clear) == "Transfer" and book.category(vague) != "Transfer"
+
+
+def test_bank_words_ignore_generic_parts_of_names():
+    assert sync._bank_words("Golden 1 Credit Union") == {"golden"}
+    assert sync._bank_words("Capital One") == {"capital"}
+    assert sync._bank_words("The Bank of America, N.A.") == {"america"}
+    assert sync._bank_words(None) == set() and sync._bank_words("Manual") == set()

@@ -7,7 +7,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from . import config, crypto
-from .categorize import RULES_VERSION, TRANSFER_WORDING, categorize, merchant_key
+from .categorize import _WEB_PREFIX, RULES_VERSION, TRANSFER_WORDING, categorize, merchant_key
 from .simplefin import SimpleFINClient, SimpleFINError, error_messages
 
 log = logging.getLogger(__name__)
@@ -362,6 +362,15 @@ def compare_account(conn, account_id, start, end, client=None):
 
 PAIR_DAYS = 3
 _MOVE_CATEGORIES = ("Transfer", "Credit Card Payment", "Savings")
+# Words in bank names that say nothing about which bank it is.
+_GENERIC_BANK_WORDS = {"bank", "banks", "credit", "union", "federal", "financial", "savings", "checking", "national",
+                       "association", "the", "of", "and", "card", "cards", "services", "company", "trust", "manual",
+                       "one", "com", "www", "online", "direct", "first", "community", "fcu", "na", "usa", "us"}
+
+
+def _bank_words(institution):
+    """'Golden 1 Credit Union' -> {'golden'}; 'Capital One' -> {'capital'}."""
+    return {w for w in re.findall(r"[a-z]+", (institution or "").lower()) if len(w) >= 4 and w not in _GENERIC_BANK_WORDS}
 
 
 def link_transfers(conn):
@@ -375,10 +384,18 @@ def link_transfers(conn):
     card payment if either side is a card. Requiring transfer-like wording on
     both sides keeps a refund and an unrelated payment of the same amount from
     being paired. Your own category choices still win.
+
+    A second, best-guess pass then looks at what's left: one side reads like a
+    transfer and the other is unexplained (Other / Other Income), e.g.
+    "WEBCAPITAL ONE (TRANSFER)" leaving Golden 1 and "The Golden Credit Union"
+    arriving at Capital One. They're paired when one side names the other
+    account's bank, or both are bank accounts and the amount is $100 or more.
+    A wrong guess there can't change Remaining: it hides one money-in and one
+    money-out of the same amount, which cancel anyway.
     """
     rows = conn.execute(
         """SELECT t.id, t.account_id, t.date, t.flow, t.description, t.merchant, t.auto_category,
-                  t.override_category, a.type AS account_type, a.subtype, a.include_in_budget
+                  t.override_category, a.type AS account_type, a.subtype, a.include_in_budget, a.institution
            FROM transactions t JOIN accounts a ON a.id = t.account_id
            WHERE abs(t.flow) >= 1
            ORDER BY t.date, t.id"""
@@ -398,20 +415,47 @@ def link_transfers(conn):
             buckets.setdefault(abs(Decimal(r["flow"])), []).append(r)
 
     pairs = []
-    for group in buckets.values():
-        outs = [r for r in group if r["flow"] < 0]
-        ins = [r for r in group if r["flow"] > 0]
-        used = set()
+    used = set()
+
+    def match(outs, ins, fits=lambda out, inn: True):
         for distance in range(PAIR_DAYS + 1):
             for out in outs:
                 if out["id"] in used:
                     continue
                 for inn in ins:
                     if (inn["id"] not in used and inn["account_id"] != out["account_id"]
-                            and abs((inn["date"] - out["date"]).days) == distance):
+                            and abs((inn["date"] - out["date"]).days) == distance and fits(out, inn)):
                         used.update((out["id"], inn["id"]))
                         pairs.append((out, inn))
                         break
+
+    for group in buckets.values():
+        match([r for r in group if r["flow"] < 0], [r for r in group if r["flow"] > 0])
+
+    # Best guess for the leftovers: a transfer whose other half the other bank describes vaguely.
+    def unexplained(r):
+        return not r["override_category"] and r["auto_category"] in ("Other", "Other Income")
+
+    def names_bank(r, other):
+        text = _WEB_PREFIX.sub("", f"{r['description'] or ''} {r['merchant'] or ''}").lower()
+        words = set(re.findall(r"[a-z]+", text))
+        return bool(words & _bank_words(other["institution"]))
+
+    def fits(out, inn):
+        if names_bank(out, inn) or names_bank(inn, out):
+            return True
+        return out["account_type"] == inn["account_type"] == "depository" and abs(Decimal(out["flow"])) >= 100
+
+    loose = {}
+    for r in rows:
+        if r["id"] not in used and (movable(r) or unexplained(r)):
+            loose.setdefault(abs(Decimal(r["flow"])), []).append(r)
+    for group in loose.values():
+        outs = [r for r in group if r["flow"] < 0]
+        ins = [r for r in group if r["flow"] > 0]
+        # Exactly one side may be the vague one; two vague rows are just two unknowns.
+        match([r for r in outs if movable(r)], [r for r in ins if unexplained(r)], fits)
+        match([r for r in outs if unexplained(r)], [r for r in ins if movable(r)], fits)
 
     updates = []
     for out, inn in pairs:
