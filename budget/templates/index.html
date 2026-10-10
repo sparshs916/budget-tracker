@@ -85,6 +85,7 @@
     <h2>Budget <span class="muted small" id="range-label"></span></h2>
     <table id="summary"></table>
     <p class="muted small" id="excluded"></p>
+    <div id="leaks" class="alert small hidden"></div>
     <p id="ai-row" class="small hidden"><button id="ai-btn">✨ Categorize “Other” with AI</button>
       <span class="muted">Claude suggests a category for merchants the rules couldn’t place. Suggestions are marked “AI”; change any of them like normal.</span></p>
   </section>
@@ -324,6 +325,26 @@ async function loadSummary() {
   $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
     (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
   $("range-label").textContent = `${state.start} → ${state.end}`;
+  renderLeaks(s);
+}
+
+// Transfers and card payments are left out of the totals because the money stays
+// yours. That only holds when the other end is tracked too.
+function renderLeaks(s) {
+  const box = $("leaks");
+  const rows = s.unmatched_transfers || [];
+  if (!rows.length || Math.abs(Number(s.unmatched_total)) < 1) { box.classList.add("hidden"); return; }
+  const net = Number(s.unmatched_total);
+  const fmt = (r) => h("li", {}, `${r.date} · ${r.account} · ${r.description || ""} · `,
+    h("span", { class: Number(r.flow) > 0 ? "in" : "neg" }, (Number(r.flow) > 0 ? "+" : "") + money(r.flow)));
+  box.replaceChildren(
+    h("b", {}, `⚠ ${money(Math.abs(net))} ${net < 0 ? "left" : "came into"} these accounts as transfers or card payments with no matching other half.`),
+    h("p", { style: "margin:.35rem 0" }, net < 0
+      ? "It isn't counted as spending, so if it went somewhere you don't track (a friend, a bill paid from an unticked account), this budget looks better than it is."
+      : "It isn't counted as income."),
+    h("p", { style: "margin:.35rem 0" }, "To fix: tick the account it went to under Accounts, so its spending is counted, or change the category from Transfer to what the money was really for (e.g. Person-to-Person)."),
+    h("details", {}, h("summary", {}, `${rows.length} unmatched`), h("ul", { style: "margin:.3rem 0; padding-left:1.1rem" }, rows.slice(0, 50).map(fmt))));
+  box.classList.remove("hidden");
 }
 
 // ---------- transactions ----------

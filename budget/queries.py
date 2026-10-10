@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 from .categorize import CATEGORIES, CATEGORY_KIND
@@ -85,7 +86,55 @@ def summary(conn, filters):
         "total_spending": total_expenses - savings,
         "total_savings": savings,
         "remaining": total_income - total_expenses,
+        **unmatched_transfers(conn, filters),
     }
+
+
+PAIR_DAYS = 3
+
+
+def unmatched_transfers(conn, filters):
+    """Transfers and card payments whose other half isn't in the accounts being viewed.
+
+    They're left out of the totals on the assumption that both ends are tracked:
+    savings -> checking nets to zero, a card payment's purchases are on the card.
+    If one end isn't tracked, money left (or arrived) without being counted, e.g.
+    savings -> an untracked checking account -> Zelle to a friend.
+    """
+    padded = {**filters, "start": filters["start"] - datetime.timedelta(days=PAIR_DAYS),
+              "end": filters["end"] + datetime.timedelta(days=PAIR_DAYS), "q": None}
+    where, params = _where(padded, include_category=False)
+    rows = conn.execute(
+        f"""
+        SELECT t.id, t.date, t.flow, t.description, t.merchant, a.name AS account_name, a.id AS account_id,
+               {EFFECTIVE_CATEGORY} AS category
+        {BASE_FROM}
+        WHERE {where} AND {EFFECTIVE_CATEGORY} IN ('Credit Card Payment', 'Transfer', 'Savings')
+        ORDER BY t.date, t.id
+        """,
+        params,
+    ).fetchall()
+    # Pair each money-out with a money-in of the same amount in a different account,
+    # closest date first.
+    paired = set()
+    for distance in range(PAIR_DAYS + 1):
+        for out in rows:
+            if out["id"] in paired or out["flow"] >= 0:
+                continue
+            for inn in rows:
+                if (inn["id"] not in paired and inn["flow"] == -out["flow"] and inn["account_id"] != out["account_id"]
+                        and abs((inn["date"] - out["date"]).days) == distance):
+                    paired.update((out["id"], inn["id"]))
+                    break
+    unmatched = [
+        {"date": r["date"], "description": r["merchant"] or r["description"], "account": r["account_name"],
+         "category": r["category"], "flow": r["flow"]}
+        for r in rows if r["id"] not in paired and filters["start"] <= r["date"] <= filters["end"]
+        # Savings is already counted as money out; it's only here to pair with its other half.
+        and r["category"] != "Savings"
+    ]
+    return {"unmatched_transfers": unmatched,
+            "unmatched_total": sum((Decimal(r["flow"]) for r in unmatched), Decimal(0))}
 
 
 def transactions(conn, filters, page, page_size):

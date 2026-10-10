@@ -686,3 +686,23 @@ def test_ask_claude_request_and_parsing(monkeypatch):
 
     Response.stop_reason = "refusal"
     assert ai_categorize.ask_claude(items) == {}
+
+
+def test_unmatched_transfers_flag_money_that_left_untracked(conn):
+    # Budget view (checking + card): the card payment pairs up, the savings transfer counts as Savings.
+    s = queries.summary(conn, month_filters())
+    assert s["unmatched_transfers"] == [] and s["unmatched_total"] == 0
+    # All accounts: savings transfer pairs with its savings-side deposit too.
+    assert queries.summary(conn, month_filters(account="all"))["unmatched_transfers"] == []
+
+    # Your situation: savings and card tracked, checking not. Money moved savings <-> checking
+    # and checking paid the card, but checking's own spending is invisible.
+    conn.execute("UPDATE accounts SET include_in_budget = (id <> %s)", (K("chk"),))
+    s = queries.summary(conn, month_filters())
+    assert sorted((r["account"], r["flow"]) for r in s["unmatched_transfers"]) == [
+        ("Sapphire Preferred", Decimal("300.00")), ("Way2Save Savings", Decimal("500.00"))]
+    assert s["unmatched_total"] == Decimal("800.00")
+
+    # Re-labelling the money for what it was (sent to a friend) clears the warning for it.
+    conn.execute("UPDATE transactions SET override_category = 'Person-to-Person' WHERE id = %s", (K("sav", "s1"),))
+    assert queries.summary(conn, month_filters())["unmatched_total"] == Decimal("300.00")
