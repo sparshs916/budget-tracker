@@ -265,7 +265,9 @@ async function loadTransactions() {
   const from = data.total ? (data.page - 1) * data.page_size + 1 : 0;
   const to = Math.min(data.total, data.page * data.page_size);
   $("page-label").textContent = `${from}–${to} of ${data.total} · net ${money(data.net)}`;
-  $("txn-count").textContent = state.category ? `· ${state.category}` : "";
+  const active = [state.category, state.q && `“${state.q}”`].filter(Boolean);
+  $("txn-count").replaceChildren(...(active.length ? [`· ${active.join(" · ")} `,
+    h("button", { class: "small", onclick: () => { state.q = ""; $("q").value = ""; setCategory(""); } }, "✕ Clear filter")] : []));
   $("prev").disabled = data.page <= 1;
   $("next").disabled = to >= data.total;
 }
@@ -323,7 +325,7 @@ async function loadAccounts() {
   sel.value = prev;
   if (sel.value !== prev) { state.account = "budget"; sel.value = "budget"; }
 
-  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", {}, "Status"))];
+  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"))];
   for (const a of accountsData.accounts) {
     const box = h("input", { type: "checkbox", checked: a.include_in_budget, onchange: async (e) => {
       await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ include_in_budget: e.target.checked }) });
@@ -339,9 +341,11 @@ async function loadAccounts() {
       h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`),
       h("td", {}, type),
       h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
+      h("td", { class: "num small", title: "Synced transactions, and the newest one's date" },
+        a.transaction_count ? `${a.transaction_count} · latest ${a.latest_transaction}` : "none yet"),
       h("td", { class: "small" }, status)));
   }
-  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 5, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
+  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 6, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
   $("accounts").replaceChildren(...rows);
 
   const alerts = accountsData.enrollments.filter((e) => e.status !== "ok").map((e) =>

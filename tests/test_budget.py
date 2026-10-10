@@ -174,9 +174,9 @@ def test_first_sync_fetches_history_in_chunks():
         c.execute("TRUNCATE enrollments CASCADE")
         save_connection(c, ACCESS_URL)
         resync(c, client)
-    assert len(client.calls) == 2  # 90 days of history in 60-day chunks
-    assert client.calls[0][1] == client.calls[1][0]
-    assert all(end - start <= 60 * 86400 + 3600 for start, end in client.calls)
+    assert len(client.calls) == 3  # 90 days of history in 40-day chunks
+    assert all(a[1] == b[0] for a, b in zip(client.calls, client.calls[1:]))
+    assert all(end - start <= 45 * 86400 for start, end in client.calls)
 
 
 def test_resync_drops_vanished_pending(conn):
@@ -198,7 +198,7 @@ def test_bank_added_later_gets_full_history(conn):
         resync(conn, client)
     finally:
         ACCOUNTS.pop()
-    assert len(client.calls) == 3  # recent window, then 90 days of history for the new card
+    assert len(client.calls) == 4  # recent window, then 90 days of history for the new card
     ids = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id = %s", (K("cc2"),)).fetchall()}
     assert ids == {K("cc2", "f1"), K("cc2", "f2")}
     assert conn.execute("SELECT history_synced FROM accounts WHERE id = %s", (K("cc2"),)).fetchone()["history_synced"]

@@ -35,7 +35,7 @@ INVERT_CREDIT_AMOUNTS = _env("INVERT_CREDIT_AMOUNTS", "false").lower() == "true"
 
 # How far back the first sync of a new connection goes, and how many recent
 # days every later sync re-fetches (pending transactions settle and change).
-# SimpleFIN rate-limits requests, and history is fetched in 60-day chunks.
+# SimpleFIN rate-limits requests, and history is fetched in 40-day chunks.
 INITIAL_HISTORY_DAYS = int(_env("INITIAL_HISTORY_DAYS", "90"))
 RESYNC_WINDOW_DAYS = int(_env("RESYNC_WINDOW_DAYS", "21"))
 

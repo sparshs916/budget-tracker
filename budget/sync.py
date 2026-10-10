@@ -11,8 +11,9 @@ from .simplefin import SimpleFINClient, SimpleFINError, error_messages
 
 log = logging.getLogger(__name__)
 
-# Fetch history in chunks so each request stays well inside SimpleFIN's date-range limit.
-CHUNK_DAYS = 60
+# SimpleFIN warns when one request spans more than 45 days, so fetch history in
+# smaller chunks (with room for daylight-saving shifts).
+CHUNK_DAYS = 40
 
 CREDIT_NAME = re.compile(r"credit|card|visa|mastercard|amex|american express|discover|sapphire|freedom|venture|"
                          r"quicksilver|savor|platinum|gold card|double cash|custom cash|bilt", re.IGNORECASE)

@@ -109,7 +109,9 @@ def accounts(conn):
         """
         SELECT a.id, a.name, a.type, a.subtype, a.last_four, a.institution, a.include_in_budget,
                a.ledger_balance, a.available_balance, a.status,
-               e.id AS enrollment_id, e.status AS enrollment_status, e.last_error, e.last_synced_at
+               e.id AS enrollment_id, e.status AS enrollment_status, e.last_error, e.last_synced_at,
+               (SELECT COUNT(*) FROM transactions t WHERE t.account_id = a.id) AS transaction_count,
+               (SELECT MAX(t.date) FROM transactions t WHERE t.account_id = a.id) AS latest_transaction
         FROM accounts a JOIN enrollments e ON e.id = a.enrollment_id
         ORDER BY a.institution, a.type, a.name
         """
