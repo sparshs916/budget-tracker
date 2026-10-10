@@ -1,0 +1,7 @@
+.env
+.venv/
+.claude/
+tests/
+teller-certs/
+teller_certs/
+*.pem

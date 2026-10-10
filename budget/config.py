@@ -7,13 +7,19 @@ load_dotenv()
 
 def _env(name, default=None):
     value = os.getenv(name, default)
-    return value.strip() if isinstance(value, str) else value
+    if not isinstance(value, str):
+        return value
+    value = value.strip()
+    # Values copied from .env into the Vercel dashboard often keep their quotes.
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        value = value[1:-1]
+    return value
 
 
 # Postgres connection string. Vercel's Neon integration sets DATABASE_URL.
 DATABASE_URL = _env("DATABASE_URL") or _env("POSTGRES_URL")
 
-# Login: the hash produced by scripts/hash_password.py
+# Login: the hash produced by scripts/setup_secrets.py
 APP_PASSWORD_HASH = _env("APP_PASSWORD_HASH")
 # Signs the session cookie. Any long random string.
 SECRET_KEY = _env("SECRET_KEY")
