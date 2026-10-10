@@ -1,5 +1,7 @@
 .env
 teller-certs/
+teller_certs/
+*.pem
 data/
 
 # Python
