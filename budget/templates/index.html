@@ -340,6 +340,11 @@ function connect(enrollmentId) {
     environment: TELLER_ENV,
     products: ["transactions", "balance"],
     ...(enrollmentId ? { enrollmentId } : {}),
+    onFailure: (failure) => {
+      // Fires for errors inside Teller's popup (bank down, bad config, etc.).
+      console.error("Teller Connect failure", failure);
+      alert(`Teller couldn't connect: ${failure.message || "unknown error"}\n(type: ${failure.type || "?"}, code: ${failure.code || "?"})`);
+    },
     onSuccess: async (enrollment) => {
       $("sync-status").textContent = "Importing transactions…";
       try {
