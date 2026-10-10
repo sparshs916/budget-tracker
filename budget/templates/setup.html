@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Budget · Setup needed</title><meta name="robots" content="noindex"></head>
+<body style="font-family: system-ui, sans-serif; max-width: 600px; margin: 3rem auto; padding: 0 1rem;">
+  <h1>Setup needed</h1>
+  <p>These environment variables are missing. Add them in Vercel → Project → Settings → Environment Variables, then redeploy. See the README.</p>
+  <ul>{% for name in missing %}<li><code>{{ name }}</code></li>{% endfor %}</ul>
+</body>
+</html>

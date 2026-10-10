@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Budget · Log in</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f5f7; display: grid; place-items: center; min-height: 100vh; margin: 0; }
+    form { background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.08); width: min(320px, 90vw); }
+    h1 { font-size: 1.25rem; margin: 0 0 1rem; }
+    input, button { width: 100%; box-sizing: border-box; padding: .65rem; font-size: 1rem; border-radius: 6px; }
+    input { border: 1px solid #ccc; margin-bottom: .75rem; }
+    button { background: #2459d6; color: #fff; border: 0; cursor: pointer; }
+    .error { color: #b42318; margin-bottom: .75rem; }
+  </style>
+</head>
+<body>
+  <form method="post" action="/login" autocomplete="on">
+    <h1>Budget</h1>
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input type="password" name="password" placeholder="Password" autocomplete="current-password" required autofocus>
+    <button type="submit">Log in</button>
+  </form>
+</body>
+</html>

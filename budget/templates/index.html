@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Budget</title>
+  <style>
+    :root { --bg: #f4f5f7; --card: #fff; --text: #1d2433; --muted: #667085; --line: #e4e7ec;
+            --accent: #2459d6; --green: #067647; --red: #b42318; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; font-size: 14px; }
+    header { background: var(--card); border-bottom: 1px solid var(--line); padding: .75rem 1rem; position: sticky; top: 0; z-index: 2; }
+    .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; max-width: 1200px; margin: 0 auto; }
+    .bar h1 { font-size: 1.1rem; margin: 0 .75rem 0 0; }
+    .spacer { flex: 1; }
+    main { max-width: 1200px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; grid-template-columns: minmax(280px, 380px) 1fr; align-items: start; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } header { position: static; } }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; min-width: 0; }
+    section h2 { font-size: 1rem; margin: 0 0 .75rem; display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+    select, input, button { font: inherit; padding: .4rem .55rem; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: inherit; }
+    button { cursor: pointer; }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button:disabled { opacity: .6; cursor: wait; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .45rem .5rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .in { color: var(--green); }
+    .neg { color: var(--red); }
+    .muted { color: var(--muted); }
+    .small { font-size: 12px; }
+    tr.total td { font-weight: 700; border-top: 2px solid var(--text); }
+    tr.click { cursor: pointer; }
+    tr.click:hover { background: #f8f9fc; }
+    tr.active { background: #eef3ff; }
+    .group td { background: #f8f9fb; font-weight: 600; font-size: 12px; color: var(--muted); }
+    .pill { display: inline-block; padding: 0 .4rem; border-radius: 999px; background: #fff4e5; color: #9a5b00; font-size: 11px; margin-left: .3rem; }
+    .alert { background: #fff4e5; border: 1px solid #f5c26b; border-radius: 8px; padding: .5rem .75rem; margin: 0 auto .5rem; max-width: 1200px; }
+    .scroll { overflow-x: auto; }
+    .txn-desc { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pager { display: flex; justify-content: space-between; align-items: center; margin-top: .75rem; gap: .5rem; flex-wrap: wrap; }
+    .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+    .filters input[type=search] { flex: 1; min-width: 160px; }
+    td select { padding: .2rem .3rem; max-width: 170px; }
+    #custom-range { display: none; gap: .35rem; align-items: center; }
+    #custom-range.show { display: flex; }
+    details summary { cursor: pointer; font-weight: 600; }
+    .full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Budget</h1>
+    <select id="period" aria-label="Period"></select>
+    <span id="custom-range">
+      <input type="date" id="start" aria-label="Start date"> –
+      <input type="date" id="end" aria-label="End date">
+    </span>
+    <select id="account" aria-label="Accounts"></select>
+    <span class="spacer"></span>
+    <span id="sync-status" class="muted small"></span>
+    <button id="sync-btn">Sync now</button>
+    <button id="connect-btn" class="primary">+ Connect account</button>
+    <button id="logout-btn">Log out</button>
+  </div>
+</header>
+<div id="alerts" style="padding: .5rem 1rem 0"></div>
+
+<main>
+  <section>
+    <h2>Budget <span class="muted small" id="range-label"></span></h2>
+    <table id="summary"></table>
+    <p class="muted small" id="excluded"></p>
+  </section>
+
+  <section>
+    <h2>Transactions <span class="muted small" id="txn-count"></span></h2>
+    <div class="filters">
+      <input type="search" id="q" placeholder="Search description or merchant">
+      <select id="category-filter" aria-label="Category"><option value="">All categories</option></select>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Date</th><th>Description</th><th>Account</th><th>Category</th><th class="num">Amount</th></tr></thead>
+        <tbody id="txns"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="muted small" id="page-label"></span>
+      <span>
+        <select id="page-size" aria-label="Rows per page">
+          <option>25</option><option selected>50</option><option>100</option><option>200</option>
+        </select>
+        <button id="prev">‹ Prev</button>
+        <button id="next">Next ›</button>
+      </span>
+    </div>
+  </section>
+
+  <section class="full">
+    <details id="accounts-panel">
+      <summary>Accounts</summary>
+      <p class="muted small">Unchecked accounts are left out of “Budget accounts”. Savings accounts start unchecked so a transfer to savings is counted once, as Savings on checking.</p>
+      <div class="scroll"><table id="accounts"></table></div>
+    </details>
+  </section>
+</main>
+
+<script src="https://cdn.teller.io/connect/connect.js"></script>
+<script>
+const CSRF = {{ csrf|tojson }};
+const CATEGORIES = {{ categories|tojson }};
+const KINDS = {{ category_kinds|tojson }};
+const TODAY = {{ today|tojson }};
+const TELLER_APP_ID = {{ teller_app_id|tojson }};
+const TELLER_ENV = {{ teller_env|tojson }};
+
+const $ = (id) => document.getElementById(id);
+const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+const money = (v) => usd.format(Number(v));
+
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "class") el.className = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) if (c != null) el.append(c);
+  return el;
+}
+
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": CSRF, ...(options.headers || {}) },
+  });
+  if (res.status === 401) { location.href = "/login"; throw new Error("Logged out"); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+// ---------- state (mirrored into the URL so refresh keeps it) ----------
+const params = new URLSearchParams(location.search);
+const state = {
+  period: params.get("period") || "mtd",
+  start: params.get("start") || "",
+  end: params.get("end") || "",
+  account: params.get("account") || "budget",
+  category: params.get("category") || "",
+  q: params.get("q") || "",
+  page: Number(params.get("page") || 1),
+  page_size: Number(params.get("page_size") || 50),
+};
+
+const iso = (d) => d.toISOString().slice(0, 10);
+const parseISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+
+function periodRange(p) {
+  const t = parseISO(TODAY);
+  const y = t.getUTCFullYear(), m = t.getUTCMonth();
+  if (p === "mtd") return [iso(new Date(Date.UTC(y, m, 1))), TODAY];
+  if (p === "last30") return [iso(new Date(t - 29 * 864e5)), TODAY];
+  if (p === "ytd") return [`${y}-01-01`, TODAY];
+  if (p === "lastyear") return [`${y - 1}-01-01`, `${y - 1}-12-31`];
+  if (p.startsWith("m:")) {
+    const [yy, mm] = p.slice(2).split("-").map(Number);
+    return [iso(new Date(Date.UTC(yy, mm - 1, 1))), iso(new Date(Date.UTC(yy, mm, 0)))];
+  }
+  return [state.start || TODAY, state.end || TODAY];
+}
+
+function buildPeriodOptions() {
+  const sel = $("period");
+  const t = parseISO(TODAY);
+  sel.append(h("option", { value: "mtd" }, "This month (to date)"));
+  for (let i = 1; i <= 24; i++) {
+    const d = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - i, 1));
+    const value = `m:${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    sel.append(h("option", { value }, d.toLocaleString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })));
+  }
+  sel.append(h("option", { value: "last30" }, "Last 30 days"));
+  sel.append(h("option", { value: "ytd" }, "Year to date"));
+  sel.append(h("option", { value: "lastyear" }, "Last year"));
+  sel.append(h("option", { value: "custom" }, "Custom range…"));
+  sel.value = state.period;
+  if (sel.value !== state.period) state.period = "mtd", sel.value = "mtd";
+}
+
+function applyPeriod() {
+  const [s, e] = periodRange(state.period);
+  state.start = s; state.end = e;
+  $("start").value = s; $("end").value = e;
+  $("custom-range").classList.toggle("show", state.period === "custom");
+}
+
+function query(extra = {}) {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries({ ...state, ...extra })) if (v !== "" && v != null) p.set(k, v);
+  return p.toString();
+}
+
+function saveURL() { history.replaceState(null, "", "?" + query()); }
+
+// ---------- summary ----------
+async function loadSummary() {
+  const s = await api("/api/summary?" + query());
+  const rows = [];
+  const row = (label, amount, opts = {}) => h("tr", {
+      class: [opts.cls, opts.category ? "click" : "", opts.category && opts.category === state.category ? "active" : ""].join(" "),
+      onclick: opts.category ? () => setCategory(opts.category === state.category ? "" : opts.category) : null,
+      title: opts.count != null ? `${opts.count} transaction${opts.count === 1 ? "" : "s"}` : null,
+    },
+    h("td", {}, label),
+    h("td", { class: "num " + (opts.amountCls || "") }, money(amount)));
+
+  rows.push(h("tr", {}, h("th", {}, "Category"), h("th", { class: "num" }, "Amount")));
+  for (const r of s.income) rows.push(row(r.category, r.amount, { category: r.category, count: r.count, amountCls: "in" }));
+  if (!s.income.length) rows.push(row("Income", 0));
+  for (const r of s.expenses) rows.push(row(r.category, r.amount, { category: r.category, count: r.count }));
+  rows.push(row("Total Expenses", s.total_expenses, { cls: "total" }));
+  rows.push(row("Remaining", s.remaining, { cls: "total", amountCls: Number(s.remaining) < 0 ? "neg" : "in" }));
+  $("summary").replaceChildren(...rows);
+
+  const ex = s.excluded.map((r) => `${r.category} ${money(Math.abs(r.amount))} (${r.count})`).join(" · ");
+  $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
+    (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
+  $("range-label").textContent = `${state.start} → ${state.end}`;
+}
+
+// ---------- transactions ----------
+async function loadTransactions() {
+  const data = await api("/api/transactions?" + query());
+  const tbody = $("txns");
+  if (!data.rows.length) {
+    tbody.replaceChildren(h("tr", {}, h("td", { colspan: 5, class: "muted" }, "No transactions for these filters.")));
+  } else {
+    tbody.replaceChildren(...data.rows.map(txnRow));
+  }
+  const from = data.total ? (data.page - 1) * data.page_size + 1 : 0;
+  const to = Math.min(data.total, data.page * data.page_size);
+  $("page-label").textContent = `${from}–${to} of ${data.total} · net ${money(data.net)}`;
+  $("txn-count").textContent = state.category ? `· ${state.category}` : "";
+  $("prev").disabled = data.page <= 1;
+  $("next").disabled = to >= data.total;
+}
+
+function txnRow(t) {
+  const flow = Number(t.flow);
+  const select = h("select", { "aria-label": "Category", onchange: (e) => changeCategory(t, e.target) },
+    CATEGORIES.map((c) => h("option", { value: c, selected: c === t.category }, c)));
+  const excluded = KINDS[t.category] === "excluded";
+  return h("tr", { class: excluded ? "muted" : "" },
+    h("td", { class: "small", style: "white-space:nowrap" }, t.date),
+    h("td", { class: "txn-desc", title: t.description }, t.merchant || t.description,
+      t.status === "pending" ? h("span", { class: "pill" }, "pending") : null),
+    h("td", { class: "small" }, `${t.account_name || ""}${t.last_four ? " ·" + t.last_four : ""}`),
+    h("td", {}, select),
+    h("td", { class: "num " + (flow > 0 ? "in" : "") }, (flow > 0 ? "+" : "") + money(flow)));
+}
+
+async function changeCategory(t, select) {
+  const name = t.merchant || t.description;
+  const remember = confirm(`Use “${select.value}” for every transaction from “${name}” (past and future)?\n\nOK = all from this merchant · Cancel = just this one`);
+  try {
+    await api(`/api/transactions/${encodeURIComponent(t.id)}/category`, {
+      method: "POST", body: JSON.stringify({ category: select.value, remember }),
+    });
+    await refresh(false);
+  } catch (e) { alert(e.message); select.value = t.category; }
+}
+
+function setCategory(c) {
+  state.category = c; state.page = 1;
+  $("category-filter").value = c;
+  refresh(false);
+}
+
+// ---------- accounts ----------
+let accountsData = { accounts: [], enrollments: [] };
+
+async function loadAccounts() {
+  accountsData = await api("/api/accounts");
+  const sel = $("account");
+  const prev = state.account;
+  const opts = [
+    h("option", { value: "budget" }, "Budget accounts"),
+    h("option", { value: "all" }, "All accounts"),
+    h("option", { value: "type:checking" }, "All checking"),
+    h("option", { value: "type:savings" }, "All savings"),
+    h("option", { value: "type:credit" }, "All credit cards"),
+  ];
+  const group = h("optgroup", { label: "Single account" });
+  for (const a of accountsData.accounts) {
+    group.append(h("option", { value: a.id }, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`));
+  }
+  sel.replaceChildren(...opts, group);
+  sel.value = prev;
+  if (sel.value !== prev) { state.account = "budget"; sel.value = "budget"; }
+
+  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", {}, "Status"))];
+  for (const a of accountsData.accounts) {
+    const box = h("input", { type: "checkbox", checked: a.include_in_budget, onchange: async (e) => {
+      await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ include_in_budget: e.target.checked }) });
+      refresh(false);
+    }});
+    const status = a.enrollment_status === "ok" ? "OK" :
+      h("span", {}, h("span", { class: "neg" }, a.last_error || a.enrollment_status), " ",
+        h("button", { onclick: () => connect(a.enrollment_id) }, "Reconnect"));
+    rows.push(h("tr", {},
+      h("td", {}, box),
+      h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`),
+      h("td", { class: "small" }, a.subtype || a.type),
+      h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
+      h("td", { class: "small" }, status)));
+  }
+  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 5, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
+  $("accounts").replaceChildren(...rows);
+
+  const alerts = accountsData.enrollments.filter((e) => e.status !== "ok").map((e) =>
+    h("div", { class: "alert" }, `${e.institution || "A bank"} needs attention: ${e.last_error || e.status}. `,
+      h("button", { onclick: () => connect(e.id) }, "Reconnect")));
+  if (!accountsData.enrollments.length) {
+    alerts.push(h("div", { class: "alert" }, "No banks connected yet. ", h("button", { class: "primary", onclick: () => connect() }, "Connect your first account")));
+  }
+  $("alerts").replaceChildren(...alerts);
+
+  const times = accountsData.enrollments.map((e) => e.last_synced_at).filter(Boolean).sort();
+  $("sync-status").textContent = times.length ? `Synced ${new Date(times[0]).toLocaleString()}` : "";
+}
+
+// ---------- Teller Connect ----------
+function connect(enrollmentId) {
+  const teller = TellerConnect.setup({
+    applicationId: TELLER_APP_ID,
+    environment: TELLER_ENV,
+    products: ["transactions", "balance"],
+    ...(enrollmentId ? { enrollmentId } : {}),
+    onSuccess: async (enrollment) => {
+      $("sync-status").textContent = "Importing transactions…";
+      try {
+        const r = await api("/api/enrollments", { method: "POST", body: JSON.stringify({
+          accessToken: enrollment.accessToken,
+          enrollmentId: enrollment.enrollment.id,
+          institution: enrollment.enrollment.institution && enrollment.enrollment.institution.name,
+        })});
+        if (r.error) alert(`Connected, but the first sync failed: ${r.error}`);
+      } catch (e) { alert(e.message); }
+      await refresh(true);
+    },
+  });
+  teller.open();
+}
+
+// ---------- wiring ----------
+async function refresh(withAccounts = true) {
+  saveURL();
+  try {
+    if (withAccounts) await loadAccounts();
+    await Promise.all([loadSummary(), loadTransactions()]);
+  } catch (e) { console.error(e); $("alerts").append(h("div", { class: "alert" }, e.message)); }
+}
+
+$("period").addEventListener("change", (e) => { state.period = e.target.value; state.page = 1; applyPeriod(); refresh(false); });
+for (const id of ["start", "end"]) $(id).addEventListener("change", (e) => { state[id] = e.target.value; state.page = 1; refresh(false); });
+$("account").addEventListener("change", (e) => { state.account = e.target.value; state.page = 1; refresh(false); });
+$("category-filter").addEventListener("change", (e) => setCategory(e.target.value));
+let searchTimer;
+$("q").addEventListener("input", (e) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.q = e.target.value; state.page = 1; refresh(false); }, 300); });
+$("page-size").addEventListener("change", (e) => { state.page_size = Number(e.target.value); state.page = 1; refresh(false); });
+$("prev").addEventListener("click", () => { state.page--; refresh(false); });
+$("next").addEventListener("click", () => { state.page++; refresh(false); });
+$("connect-btn").addEventListener("click", () => connect());
+$("sync-btn").addEventListener("click", async (e) => {
+  e.target.disabled = true; e.target.textContent = "Syncing…";
+  try {
+    const r = await api("/api/sync", { method: "POST" });
+    const errors = r.results.filter((x) => x.error);
+    if (errors.length) alert(errors.map((x) => `${x.enrollment}: ${x.error}`).join("\n"));
+  } catch (err) { alert(err.message); }
+  e.target.disabled = false; e.target.textContent = "Sync now";
+  refresh(true);
+});
+$("logout-btn").addEventListener("click", async () => { await api("/logout", { method: "POST" }); location.href = "/login"; });
+
+for (const c of CATEGORIES) $("category-filter").append(h("option", { value: c }, c));
+$("category-filter").value = state.category;
+$("q").value = state.q;
+$("page-size").value = String(state.page_size);
+buildPeriodOptions();
+if (state.period === "custom" && state.start && state.end) {
+  $("start").value = state.start; $("end").value = state.end; $("custom-range").classList.add("show");
+} else applyPeriod();
+refresh(true);
+</script>
+</body>
+</html>
