@@ -43,7 +43,17 @@ def to_flow(raw_amount, account_type):
 
 
 def _local_date(timestamp, tz):
-    return datetime.datetime.fromtimestamp(int(timestamp), tz).date()
+    """The calendar date of a SimpleFIN timestamp.
+
+    Banks report dates, which SimpleFIN sends as midnight UTC. Converted to
+    Pacific time that's the evening before, which moved Sept 1 charges into
+    August and Oct 1 charges into September. A midnight-UTC timestamp is a
+    plain date; anything else is a real moment, read in your time zone.
+    """
+    timestamp = int(timestamp)
+    if timestamp % 86400 == 0:
+        return datetime.datetime.fromtimestamp(timestamp, datetime.timezone.utc).date()
+    return datetime.datetime.fromtimestamp(timestamp, tz).date()
 
 
 def _epoch(date, tz):
@@ -59,7 +69,17 @@ def save_connection(conn, access_url):
     return connection_id
 
 
+DATES_VERSION = "utc-midnight"
+
+
 def sync_all(conn, today=None):
+    # Once after the date fix: re-fetch full history so earlier rows get their dates corrected.
+    meta = conn.execute("SELECT value FROM app_meta WHERE key = 'simplefin_dates'").fetchone()
+    if not meta or meta["value"] != DATES_VERSION:
+        conn.execute("UPDATE accounts SET history_synced = FALSE WHERE enrollment_id IS NOT NULL")
+        conn.execute("""INSERT INTO app_meta (key, value) VALUES ('simplefin_dates', %s)
+                        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""", (DATES_VERSION,))
+        conn.commit()
     enrollments = conn.execute("SELECT * FROM enrollments ORDER BY created_at").fetchall()
     return [sync_enrollment(conn, e, today=today) for e in enrollments]
 

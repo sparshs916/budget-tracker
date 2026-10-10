@@ -12,7 +12,7 @@ Every category has a kind:
 import re
 
 # Bump when the rules below change; existing transactions are then re-categorized.
-RULES_VERSION = "2026-10-10.3"
+RULES_VERSION = "2026-10-10.4"
 
 # Display order of the budget table.
 CATEGORIES = [
@@ -94,7 +94,7 @@ KEYWORD_RULES = [
     ("Other Utilities", _rx(r"water (?:dept|district|utility|util|bill|co)", r"city water", r"sewer", r"waste management", r"republic services", r"recology", r"trash", r"utilit\w*", r"gas co", r"socalgas", r"so cal gas", r"nicor", r"spire")),
     ("Internet", _rx(r"comcast", r"xfinity", r"spectrum", r"charter comm\w*", r"cox comm\w*", r"sonic\.net", r"google fiber", r"fios", r"at&t internet", r"att internet", r"starlink", r"frontier comm\w*")),
     ("Phone", _rx(r"t-mobile", r"tmobile", r"verizon", r"mint mobile", r"visible", r"cricket", r"at&t", r"att\*", r"google fi", r"us mobile")),
-    ("Subscriptions", _rx(r"netflix", r"spotify", r"hulu", r"disney\s?\+?", r"disneyplus", r"apple\.com/bill", r"itunes", r"youtube", r"prime video", r"amazon prime", r"hbo", r"max\.com", r"paramount", r"peacock", r"audible", r"icloud", r"chatgpt", r"openai", r"anthropic", r"claude\.ai", r"adobe", r"microsoft 365", r"dropbox", r"patreon", r"substack", r"nytimes", r"duolingo", r"siriusxm", r"github")),
+    ("Subscriptions", _rx(r"google one", r"google \*google", r"google storage", r"netflix", r"spotify", r"hulu", r"disney\s?\+?", r"disneyplus", r"apple\.com/bill", r"itunes", r"youtube", r"prime video", r"amazon prime", r"hbo", r"max\.com", r"paramount", r"peacock", r"audible", r"icloud", r"chatgpt", r"openai", r"anthropic", r"claude\.ai", r"adobe", r"microsoft 365", r"dropbox", r"patreon", r"substack", r"nytimes", r"duolingo", r"siriusxm", r"github")),
     ("Pet Food & Supplies", _rx(r"chewy", r"petco", r"petsmart", r"pet supplies", r"pet food", r"bark ?box", r"farmer'?s dog", r"ollie", r"veterinar\w*", r"vet clinic", r"banfield", r"vca")),
     ("Gas", _rx(r"gas", r"7-eleven", r"shell", r"chevron", r"arco", r"exxon", r"mobil", r"valero", r"circle k", r"speedway", r"76", r"phillips 66", r"costco gas", r"sunoco", r"marathon petro\w*", r"quiktrip", r"qt", r"wawa", r"sheetz", r"bp", r"texaco", r"gas station", r"fuel")),
     ("Groceries", _rx(r"grocer\w*", r"convenience", r"salumeria", r"nugget", r"trader joe'?s?", r"safeway", r"whole foods", r"wholefds", r"costco", r"kroger", r"aldi", r"sprouts", r"h-e-b", r"heb", r"publix", r"raley'?s", r"lucky", r"food ?4 ?less", r"winco", r"vons", r"albertsons", r"ralphs", r"smart ?& ?final", r"grocery", r"market", r"instacart", r"wegmans", r"stop & shop", r"giant", r"meijer", r"fred meyer", r"99 ranch", r"h mart")),
@@ -141,6 +141,7 @@ HINTS = [
     (re.compile(r"health|medical|pharmacy", re.IGNORECASE), "Health"),
     (re.compile(r"travel|airline|hotel", re.IGNORECASE), "Travel"),
     (re.compile(r"transport", re.IGNORECASE), "Transportation"),
+    (re.compile(r"software|subscription|streaming", re.IGNORECASE), "Subscriptions"),
     (re.compile(r"shopping|merchandise", re.IGNORECASE), "Shopping"),
 ]
 

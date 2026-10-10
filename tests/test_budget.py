@@ -756,3 +756,21 @@ def test_transfers_are_paired_whatever_the_bank_calls_them(conn):
     conn.commit()
     sync.link_transfers(conn)
     assert not conn.execute("SELECT paired_with FROM transactions WHERE id = %s", (K("cc", "x4"),)).fetchone()["paired_with"]
+
+
+def test_export_csv(conn):
+    web = app.test_client()
+    login(web)
+    resp = web.get("/api/export?start=2026-10-01&end=2026-10-09&account=all")
+    assert resp.status_code == 200 and resp.mimetype == "text/csv"
+    rows = list(__import__("csv").reader(io.StringIO(resp.get_data(as_text=True))))
+    assert rows[0][:6] == ["Date", "Account", "Description", "Merchant", "Category", "Amount"]
+    assert len(rows) == 1 + 13
+    assert ["2026-10-02", "Sapphire Preferred", "TRADER JOE'S #123", "Trader Joe's", "Groceries", "-45.10"] in [r[:6] for r in rows]
+
+
+def test_simplefin_midnight_utc_dates_stay_on_their_day():
+    tz = ZoneInfo("America/Los_Angeles")
+    sept1 = int(datetime.datetime(2026, 9, 1, tzinfo=datetime.timezone.utc).timestamp())
+    assert sync._local_date(sept1, tz) == datetime.date(2026, 9, 1)
+    assert sync._local_date(sept1 + 9000, tz) == datetime.date(2026, 8, 31)  # 7:30pm PT the evening before

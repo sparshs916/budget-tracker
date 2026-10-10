@@ -1,5 +1,7 @@
+import csv
 import datetime
 import hashlib
+import io
 import hmac
 import logging
 import secrets
@@ -7,7 +9,7 @@ from decimal import Decimal
 from functools import wraps
 from zoneinfo import ZoneInfo
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, Response, abort, jsonify, redirect, render_template, request, session, url_for
 from flask.json.provider import DefaultJSONProvider
 from werkzeug.security import check_password_hash
 
@@ -224,6 +226,25 @@ def api_transactions():
         result = queries.transactions(conn, filters, page, page_size)
     result.update(page=page, page_size=page_size)
     return jsonify(result)
+
+
+@app.get("/api/export")
+@login_required
+def api_export():
+    """The filtered transactions as CSV, with the category the budget uses."""
+    filters = _filters()
+    with db.connect() as conn:
+        rows = queries.transactions(conn, filters, 1, 100000)["rows"]
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Date", "Account", "Description", "Merchant", "Category", "Amount", "Status", "Source", "Category from"])
+    for r in rows:
+        origin = ("you" if r["overridden"] else "transfer match" if r["paired"] else "AI" if r["ai_suggested"] else "rules")
+        writer.writerow([r["date"], r["account_name"], r["description"], r["merchant"] or "", r["category"],
+                         f"{r['flow']:.2f}", r["status"], r["source"], origin])
+    name = f"transactions-{filters['start']}-to-{filters['end']}.csv"
+    return Response(out.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
 @app.get("/api/accounts")
