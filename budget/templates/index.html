@@ -375,6 +375,19 @@ function setCategory(c) {
 // ---------- accounts ----------
 let accountsData = { accounts: [], enrollments: [] };
 
+function baseLabel(a) {
+  return `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`.trim();
+}
+
+// Banks sometimes report one account twice under the same name; tell the copies apart.
+function accountLabel(a) {
+  const label = baseLabel(a);
+  const twins = accountsData.accounts.filter((b) => baseLabel(b) === label);
+  if (twins.length < 2) return label;
+  const balance = a.ledger_balance != null ? money(a.ledger_balance) : "no balance";
+  return `${label} (${balance} · ${a.transaction_count || 0} transactions)`;
+}
+
 async function loadAccounts() {
   accountsData = await api("/api/accounts");
   const sel = $("account");
@@ -388,7 +401,7 @@ async function loadAccounts() {
   ];
   const group = h("optgroup", { label: "Single account" });
   for (const a of accountsData.accounts) {
-    group.append(h("option", { value: a.id }, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`));
+    group.append(h("option", { value: a.id }, accountLabel(a)));
   }
   sel.replaceChildren(...opts, group);
   sel.value = prev;
@@ -498,7 +511,7 @@ async function fullResync() {
 function openUpload(accountId) {
   const sel = $("upload-account");
   sel.replaceChildren(h("option", { value: "" }, "Choose an account…"),
-    ...accountsData.accounts.map((a) => h("option", { value: a.id }, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`)),
+    ...accountsData.accounts.map((a) => h("option", { value: a.id }, accountLabel(a))),
     h("option", { value: "new" }, "New account (not in SimpleFIN)…"));
   sel.value = accountId || "";
   toggleNewAccount();
