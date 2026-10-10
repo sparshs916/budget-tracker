@@ -330,3 +330,51 @@ def test_bank_words_ignore_generic_parts_of_names():
     assert sync._bank_words("Capital One") == {"capital"}
     assert sync._bank_words("The Bank of America, N.A.") == {"america"}
     assert sync._bank_words(None) == set() and sync._bank_words("Manual") == set()
+
+
+# ---------- a savings account kept outside the budget (Capital One 360) ----------
+
+@pytest.fixture()
+def capital_one(book):
+    banks(book, sav="Golden 1 Credit Union", nest="Capital One")  # nest: savings, not in the budget
+    return book
+
+
+def test_moving_money_into_savings_and_back_shows_what_you_kept(capital_one):
+    book = capital_one
+    book.add("chk", "2026-09-01", "3000.00", "GUSTO PAY 123 PAYROLL")
+    book.add("sav", "2026-09-05", "-1000.00", "Withdrawal-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)")
+    book.add("nest", "2026-09-04", "1000.00", "THE GOLDEN 1 CREDIT UNION")
+    book.add("nest", "2026-09-20", "-300.00", "Withdrawal to GOLDEN 1 CREDIT UNION")
+    back = book.add("sav", "2026-09-21", "300.00", "Deposit-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)")
+    book.add("nest", "2026-09-30", "2.15", "Monthly Interest Paid")  # stays with the savings, not budget income
+    book.settle()
+    s = book.summary()
+    assert s["by"]["Savings"] == Decimal("700.00")  # 1,000 in, 300 back
+    assert s["savings_in"] == Decimal("1000.00") and s["savings_out"] == Decimal("300.00")
+    assert s["total_income"] == Decimal("3000.00") and s["remaining"] == Decimal("2300.00")
+    assert book.category(back) == "Savings" and s["unmatched_transfers"] == []
+
+
+def test_same_moves_with_capital_one_inside_the_budget_just_cancel(capital_one):
+    book = capital_one
+    book.conn.execute("UPDATE accounts SET include_in_budget = TRUE WHERE id = 'nest'")
+    book.add("sav", "2026-09-05", "-1000.00", "Withdrawal-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)")
+    book.add("nest", "2026-09-04", "1000.00", "THE GOLDEN 1 CREDIT UNION")
+    book.add("nest", "2026-09-20", "-300.00", "Withdrawal to GOLDEN 1 CREDIT UNION")
+    book.add("sav", "2026-09-21", "300.00", "Deposit-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)")
+    book.settle()
+    s = book.summary()
+    assert s["total_expenses"] == 0 and s["total_income"] == 0 and "Savings" not in s["by"]
+
+
+def test_checkup_suggests_treating_a_fill_only_account_as_savings(capital_one):
+    book = capital_one
+    book.conn.execute("UPDATE accounts SET include_in_budget = TRUE WHERE id = 'nest'")
+    for day in ("2026-08-04", "2026-09-04"):
+        book.add("sav", day, "-500.00", "Withdrawal-ACH WEBCAPITAL ONE (TRANSFER)")
+        book.add("nest", day, "500.00", "THE GOLDEN 1 CREDIT UNION")
+    book.add("sav", "2026-09-12", "2915.90", "Deposit-ACH HP ENTERPRISE CO (PAYROLL)")  # Golden 1 gets pay: not savings
+    book.settle()
+    found = [i for i in queries.health(book.conn, datetime.date(2026, 10, 10)) if i["kind"] == "savings_account"]
+    assert [i["account_id"] for i in found] == ["nest"] and found[0]["action"] == "make_savings"

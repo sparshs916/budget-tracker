@@ -462,11 +462,13 @@ def link_transfers(conn):
         if "credit" in (out["account_type"], inn["account_type"]):
             out_category = in_category = "Credit Card Payment"
         else:
-            # Between two budget accounts a move nets to zero. Into an account outside the
-            # budget (a savings account you don't count), it shows as "Savings" on the way out.
+            # Between two budget accounts a move nets to zero. With a savings account kept outside
+            # the budget, money going in shows as Savings on the way out, and money coming back
+            # shows as Savings on the way in (a withdrawal), so Savings is what you actually kept.
             out_category = ("Savings" if out["include_in_budget"] and not inn["include_in_budget"]
                             and inn["subtype"] == "savings" else "Transfer")
-            in_category = "Transfer"
+            in_category = ("Savings" if inn["include_in_budget"] and not out["include_in_budget"]
+                           and out["subtype"] == "savings" else "Transfer")
         updates += [(inn["id"], out_category, out["id"]), (out["id"], in_category, inn["id"])]
 
     conn.execute("UPDATE transactions SET paired_with = NULL, pair_category = NULL WHERE paired_with IS NOT NULL")

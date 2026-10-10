@@ -737,7 +737,9 @@ def test_transfers_are_paired_whatever_the_bank_calls_them(conn):
 
     rows = {r["id"].rsplit(":", 1)[1]: r for r in queries.transactions(
         conn, {"start": datetime.date(2026, 9, 1), "end": datetime.date(2026, 9, 30), "account": "all"}, 1, 50)["rows"]}
-    assert rows["x2"]["category"] == "Transfer" and rows["x2"]["paired"]  # not "Fees & Interest"
+    # Savings starts outside the budget, so money pulled from it into checking is a savings
+    # withdrawal (it adds back what putting money in took away), not "Fees & Interest".
+    assert rows["x2"]["category"] == "Savings" and rows["x2"]["paired"]
     assert rows["x1"]["category"] == "Transfer"
     assert rows["x3"]["category"] == rows["x4"]["category"] == "Credit Card Payment"
     assert rows["x7"]["category"] == "Person-to-Person" and not rows["x7"]["paired"]
@@ -746,6 +748,7 @@ def test_transfers_are_paired_whatever_the_bank_calls_them(conn):
     # Budget with savings and checking both tracked: the only spending is the friend payment
     # and the PG&E bill, net of the refund; nothing is flagged as leaking.
     conn.execute("UPDATE accounts SET include_in_budget = TRUE")
+    sync.link_transfers(conn)  # as the app does when you tick an account
     s = queries.summary(conn, {"start": datetime.date(2026, 9, 1), "end": datetime.date(2026, 9, 30), "account": "budget"})
     assert amounts(s["expenses"]) == {"Electricity": Decimal("45.00"), "Shopping": Decimal("-45.00"),
                                       "Person-to-Person": Decimal("1230.00")}

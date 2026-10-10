@@ -236,7 +236,7 @@
   <section class="full">
     <details id="accounts-panel">
       <summary>Accounts</summary>
-      <p class="muted small">Unchecked accounts are left out of “Budget accounts”. Savings accounts start unchecked so a transfer to savings is counted once, as Savings on checking. SimpleFIN doesn’t say what type each account is, so the type is a guess from its name. Fix it here if it’s wrong: it decides how card payments and transfers are counted.</p>
+      <p class="muted small">Unchecked accounts are left out of “Budget accounts”. <b>To track savings</b> (an account you put money away in), set its type to Savings and untick it: money you move into it shows as Savings, money you move back out reduces Savings, and its interest stays with it. Ticked, moves between it and your other accounts just cancel out. SimpleFIN doesn’t say what type each account is, so the type is a guess from its name. Fix it here if it’s wrong: it decides how card payments and transfers are counted.</p>
       <div class="scroll"><table id="accounts"></table></div>
       <p><button id="add-account-btn">+ Add account by hand</button>
         <span class="muted small">For accounts SimpleFIN can't connect (like Apple Card). Fill them with CSV uploads.</span></p>
@@ -669,7 +669,10 @@ async function loadSummary(seq) {
   $("ai-row").classList.toggle("hidden", !hasOther);
 
   const ex = s.excluded.map((r) => `${r.category} ${money(Math.abs(r.amount))} (${r.count})`).join(" · ");
-  $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
+  const saved = Number(s.savings_out)
+    ? `Savings: ${money(s.savings_in)} put in, ${money(s.savings_out)} taken back out, ${money(s.total_savings)} kept. `
+    : "";
+  $("excluded").textContent = saved + (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
     (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
   $("range-label").textContent = searchingAll() ? "all dates" : state.period === "all" ? "all time" : `${state.start} → ${state.end}`;
   const note = $("search-note");
@@ -1609,6 +1612,14 @@ async function loadCheckup(seq) {
     switch (i.action) {
       case "add_account": return h("button", { class: "small", onclick: () => $("add-account-btn").click() }, "+ Add account by hand");
       case "upload": return h("button", { class: "small", onclick: () => openUpload(i.account_id) }, "Upload CSV");
+      case "make_savings": return h("button", { class: "small", onclick: async () => {
+        try {
+          await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: i.account_id, subtype: "savings" }) });
+          await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: i.account_id, include_in_budget: false }) });
+          toast("Now treated as savings.");
+          refresh(true);
+        } catch (err) { alert(err.message); }
+      } }, "Treat it as savings");
       case "tick": return h("button", { class: "small", onclick: () => act("/api/accounts/update", { id: i.account_id, include_in_budget: true },
         "Now counted in the budget.").then(() => refresh(true)) }, "Count it in the budget");
       case "check": return account ? h("button", { class: "small", onclick: (e) => checkAccount(account, e.target) }, "Check") : null;

@@ -140,6 +140,13 @@ def summary(conn, filters):
             # A refund (+) inside an expense category reduces that category.
             expenses.append({"category": name, "kind": kind, "amount": -flow, "count": r["count"]})
 
+    # Savings in each direction, so "net saved" can be shown: deposits into savings kept outside
+    # the budget, and money brought back from it.
+    moves = conn.execute(
+        f"""SELECT COALESCE(SUM(-t.flow) FILTER (WHERE t.flow < 0), 0) AS put_in,
+                   COALESCE(SUM(t.flow) FILTER (WHERE t.flow > 0), 0) AS taken_out
+            {BASE_FROM} WHERE {where} AND {EFFECTIVE_CATEGORY} = 'Savings'""", params).fetchone()
+
     total_income = sum((r["amount"] for r in income), Decimal(0))
     total_expenses = sum((r["amount"] for r in expenses), Decimal(0))
     savings = sum((r["amount"] for r in expenses if r["kind"] == "savings"), Decimal(0))
@@ -152,6 +159,8 @@ def summary(conn, filters):
         "total_spending": total_expenses - savings,
         "total_savings": savings,
         "remaining": total_income - total_expenses,
+        "savings_in": Decimal(moves["put_in"]),
+        "savings_out": Decimal(moves["taken_out"]),
         **unmatched_transfers(conn, filters),
     }
 
@@ -646,6 +655,25 @@ def health(conn, today):
                     f"That's {days - 1} days with nothing on an account that usually has activity every "
                     f"{typical} day{'s' if typical != 1 else ''}. If you used it then, upload a CSV covering those dates.",
                     a, action="upload")
+
+    # An account that only fills up from your other accounts (no paychecks) works like savings.
+    # Counting it as savings shows what you put away; inside the budget, moves to it just cancel out.
+    for a in accounts:
+        if a["type"] != "depository" or not a["include_in_budget"]:
+            continue
+        stats = conn.execute(f"""
+            SELECT COUNT(*) FILTER (WHERE t.flow > 0 AND t.paired_with IS NOT NULL) AS moved_in,
+                   COUNT(*) FILTER (WHERE t.flow < 0 AND t.paired_with IS NULL
+                                    AND {EFFECTIVE_CATEGORY} NOT IN ('Transfer', 'Savings', 'Credit Card Payment')) AS spent,
+                   COUNT(*) FILTER (WHERE {EFFECTIVE_CATEGORY} = 'Income') AS paychecks
+            {BASE_FROM} WHERE t.account_id = %(id)s AND t.date > %(since)s AND NOT t.hidden""",
+            {"id": a["id"], "since": today - datetime.timedelta(days=120)}).fetchone()
+        if stats["moved_in"] >= 2 and not stats["spent"] and not stats["paychecks"]:
+            add("low", "savings_account", f"Count {label(a)} as savings?",
+                f"It only gets money moved from your other accounts ({stats['moved_in']} times in 4 months) and nothing is "
+                "spent from it, so it looks like savings. Right now it's in the budget, so moving money there cancels out "
+                "and you can't see what you saved. Treat it as savings and money you move in shows as Savings, money "
+                "you move back out reduces it, and its interest stays with it.", a, action="make_savings")
 
     # Pending rows that never cleared - often a charge that posted under a different amount, or one that was dropped.
     stale = conn.execute(f"""
