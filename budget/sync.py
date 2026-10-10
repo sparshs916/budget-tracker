@@ -397,7 +397,7 @@ def link_transfers(conn):
         """SELECT t.id, t.account_id, t.date, t.flow, t.description, t.merchant, t.auto_category,
                   t.override_category, a.type AS account_type, a.subtype, a.include_in_budget, a.institution
            FROM transactions t JOIN accounts a ON a.id = t.account_id
-           WHERE abs(t.flow) >= 1
+           WHERE abs(t.flow) >= 1 AND NOT t.hidden
            ORDER BY t.date, t.id"""
     ).fetchall()
 

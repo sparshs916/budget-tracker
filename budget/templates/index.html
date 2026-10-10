@@ -114,6 +114,50 @@
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; }
     .stat { background: var(--subtle); border-radius: 8px; padding: .65rem .8rem; }
     .stat b { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+    nav.tabs { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+    nav.tabs button { white-space: nowrap; }
+    .badge { display: inline-block; min-width: 1.2em; padding: 0 .35em; border-radius: 999px; background: var(--over); color: #fff; font-size: 11px; line-height: 1.5; }
+    .badge.mild { background: var(--warn); }
+    #toast { position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); background: var(--text); color: var(--bg);
+             padding: .55rem .9rem; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; max-width: calc(100vw - 32px); }
+    #toast.on { opacity: .95; }
+    .searchbox { flex: 1; min-width: 180px; display: flex; }
+    .searchbox input { flex: 1; }
+    label.check { display: inline-flex; align-items: center; gap: .3rem; cursor: pointer; }
+    label.check input { margin: 0; }
+    .search-note { background: var(--active); border-radius: 6px; padding: .35rem .55rem; margin: 0 0 .5rem; }
+    .empty { padding: 1rem .5rem; }
+    .empty p { margin: .2rem 0 .6rem; }
+    .empty button { margin: .15rem .25rem .15rem 0; }
+    tr.hidden-row td { text-decoration: line-through; opacity: .55; }
+    tr.hidden-row td:last-child, tr.hidden-row td:nth-child(4) { text-decoration: none; }
+    .row-actions { white-space: nowrap; flex: none; }
+    td.desc-cell { max-width: 300px; }
+    .desc-line { display: flex; align-items: center; gap: .15rem; min-width: 0; }
+    .desc-text { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .desc-line .pill { flex: none; }
+    [data-click] { cursor: pointer; }
+    [data-click]:focus-visible, nav.tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .issue { border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; padding: .7rem .85rem; margin-bottom: .75rem; }
+    .issue.high { border-left-color: var(--over); }
+    .issue.medium { border-left-color: var(--warn); }
+    .issue.low { border-left-color: var(--muted); }
+    .issue h3 { font-size: .95rem; margin: 0 0 .3rem; }
+    .issue p { margin: .2rem 0 .5rem; }
+    .chip { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; padding: 0 .4rem; border-radius: 4px; margin-right: .4rem; vertical-align: 1px; }
+    .chip.high { background: var(--over); color: #fff; }
+    .chip.medium { background: var(--warn); color: #1d2433; }
+    .chip.low { background: var(--track); }
+    .ok-box { background: var(--subtle); border-radius: 8px; padding: 1rem; }
+    a.link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+    select:disabled { opacity: .5; cursor: not-allowed; }
+    @media (max-width: 600px) {
+      .bar { gap: .35rem; }
+      .bar h1 { width: 100%; margin: 0; }
+      #sync-status { display: none; }
+      td.target { width: auto; }
+      .txn-desc, td.desc-cell { max-width: 160px; }
+    }
   </style>
 </head>
 <body>
@@ -124,6 +168,9 @@
       <button data-view="budget">Budget</button>
       <button data-view="trends">Trends</button>
       <button data-view="recurring">Recurring</button>
+      <button data-view="cashflow">Cash flow</button>
+      <button data-view="giving">Giving</button>
+      <button data-view="checkup">Checkup <span class="badge hidden" id="checkup-badge"></span></button>
     </nav>
     <select id="period" aria-label="Period"></select>
     <span id="custom-range">
@@ -141,11 +188,14 @@
   </div>
 </header>
 <div id="alerts" style="padding: .5rem 1rem 0"></div>
+<div id="errors" style="padding: 0 1rem"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <main id="view-budget" class="view">
   <section>
     <h2>Budget <span class="muted small" id="range-label"></span>
       <button class="small" id="targets-btn" title="Set a monthly amount for each category">Set targets</button></h2>
+    <p class="small search-note hidden" id="search-note"></p>
     <table id="summary"></table>
     <p class="small pace hidden" id="pace"></p>
     <p class="muted small" id="excluded"></p>
@@ -157,7 +207,11 @@
   <section>
     <h2>Transactions <span class="muted small" id="txn-count"></span></h2>
     <div class="filters">
-      <input type="search" id="q" placeholder="Search description, merchant or note">
+      <span class="searchbox">
+        <input type="search" id="q" placeholder="Search anything: amazon, groceries, >100, 8/14, savings…" aria-label="Search"
+          title="Matches description, merchant, note, category, account and bank. Amounts: 45.10, >100, <=20, 50..200. Dates: 2026-08, 8/14. Several words must all match; quote a phrase: &quot;whole foods&quot;.">
+      </span>
+      <label class="small check" title="Search every date, not just the period at the top"><input type="checkbox" id="qall"> All dates</label>
       <select id="category-filter" aria-label="Category"><option value="">All categories</option></select>
     </div>
     <div class="scroll">
@@ -167,7 +221,7 @@
       </table>
     </div>
     <div class="pager">
-      <span class="muted small" id="page-label"></span>
+      <span class="muted small" id="page-label" aria-live="polite"></span>
       <span>
         <a id="export-link" href="#" download>Export CSV</a>
         <select id="page-size" aria-label="Rows per page">
@@ -216,6 +270,74 @@
     <p class="muted small">Read-only: this doesn't change the budget. A merchant needs 3 or more charges on a schedule (2 for yearly) to show up.</p>
   </section>
 </div>
+
+<div id="view-cashflow" class="view stack">
+  <section>
+    <h2>Cash flow <span class="muted small">Your budget bank accounts (checking + savings) as one pool, for the next 5 weeks</span></h2>
+    <div id="cf-alert"></div>
+    <div class="cards" id="cf-cards"></div>
+    <div id="cf-chart" style="margin-top:.75rem"></div>
+    <p class="small muted" id="cf-method"></p>
+  </section>
+  <section>
+    <h2>Coming up</h2>
+    <div class="scroll"><table id="cf-events"></table></div>
+  </section>
+  <section>
+    <h2>Accounts in the forecast</h2>
+    <div id="cf-accounts"></div>
+    <p class="small"><label>Warn me when the pool would drop below <input type="number" id="cf-threshold" min="0" step="10" style="width:7rem"></label>
+      <button class="small" id="cf-threshold-save">Save</button></p>
+  </section>
+</div>
+
+<div id="view-giving" class="view stack">
+  <section>
+    <h2>Giving <span><select id="giving-year" aria-label="Year"></select>
+      <a class="small" id="giving-export" href="#" download>Export for taxes</a></span></h2>
+    <div class="cards" id="giving-cards"></div>
+    <div id="giving-goal" style="margin-top:.75rem"></div>
+    <div id="giving-chart" style="margin-top:.75rem"></div>
+  </section>
+  <section>
+    <h2>Where it went</h2>
+    <div class="scroll"><table id="giving-orgs"></table></div>
+    <p class="small muted">Everything in the Giving category, from the accounts chosen at the top. A gift filed under another category won't show; change its category on the Budget page. Whether gifts are tax-deductible depends on the organization and on whether you itemize.</p>
+  </section>
+</div>
+
+<div id="view-checkup" class="view stack">
+  <section>
+    <h2>Checkup <span class="muted small">Things that make the numbers wrong without looking wrong</span>
+      <button class="small" id="checkup-refresh">Re-check</button></h2>
+    <div id="checkup"></div>
+  </section>
+</div>
+
+<dialog id="category-dialog">
+  <form id="category-form" method="dialog">
+    <h2>Change category</h2>
+    <p class="small" id="category-what"></p>
+    <label class="check"><input type="radio" name="scope" value="one" checked> Just this transaction</label><br>
+    <label class="check"><input type="radio" name="scope" value="all"> <span id="category-all-label">Every transaction from this merchant, past and future</span></label>
+    <div class="dialog-buttons" style="margin-top:1rem">
+      <button type="button" id="category-cancel">Cancel</button>
+      <button type="submit" class="primary">Change</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="note-dialog">
+  <form id="note-form" method="dialog">
+    <h2>Note</h2>
+    <p class="small muted" id="note-what"></p>
+    <textarea id="note-text" rows="3" maxlength="500" placeholder="e.g. split with Sam, birthday gift, reimbursable"></textarea>
+    <div class="dialog-buttons" style="margin-top:.75rem">
+      <button type="button" id="note-cancel">Cancel</button>
+      <button type="submit" class="primary">Save note</button>
+    </div>
+  </form>
+</dialog>
 
 <dialog id="connect-dialog">
   <form id="connect-form" method="dialog">
@@ -299,6 +421,8 @@ const CATEGORIES = {{ categories|tojson }};
 const KINDS = {{ category_kinds|tojson }};
 const TODAY = {{ today|tojson }};
 const AI_ENABLED = {{ ai_enabled|tojson }};
+const ALL_START = "2000-01-01";
+const LOADED_ON = new Date().toDateString();
 const SIMPLEFIN_URL = "https://beta-bridge.simplefin.org";
 const ACCOUNT_TYPES = [["checking", "Checking"], ["savings", "Savings"], ["credit_card", "Credit card"], ["other", "Other"]];
 
@@ -329,6 +453,30 @@ async function api(path, options = {}) {
   return data;
 }
 
+function toast(message) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.add("on");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => el.classList.remove("on"), 3200);
+}
+
+// Rows and cells that act like buttons: clickable, and reachable with Tab + Enter.
+function clickable(el, fn, label) {
+  el.dataset.click = "";
+  el.tabIndex = 0;
+  if (label) el.setAttribute("aria-label", label);
+  el.addEventListener("click", fn);
+  el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(e); } });
+  return el;
+}
+
+function showError(e) {
+  console.error(e);
+  $("errors").replaceChildren(h("div", { class: "alert" }, e.message || String(e), " ",
+    h("button", { class: "small", onclick: () => $("errors").replaceChildren() }, "Dismiss")));
+}
+
 // ---------- state (mirrored into the URL so refresh keeps it) ----------
 const params = new URLSearchParams(location.search);
 const state = {
@@ -338,6 +486,7 @@ const state = {
   account: params.get("account") || "budget",
   category: params.get("category") || "",
   q: params.get("q") || "",
+  qall: params.get("qall") === "1",
   page: Number(params.get("page") || 1),
   page_size: Number(params.get("page_size") || 50),
   view: params.get("view") || "budget",
@@ -353,6 +502,7 @@ function periodRange(p) {
   if (p === "last30") return [iso(new Date(t - 29 * 864e5)), TODAY];
   if (p === "ytd") return [`${y}-01-01`, TODAY];
   if (p === "lastyear") return [`${y - 1}-01-01`, `${y - 1}-12-31`];
+  if (p === "all") return [ALL_START, TODAY];
   if (p.startsWith("m:")) {
     const [yy, mm] = p.slice(2).split("-").map(Number);
     return [iso(new Date(Date.UTC(yy, mm - 1, 1))), iso(new Date(Date.UTC(yy, mm, 0)))];
@@ -372,6 +522,7 @@ function buildPeriodOptions() {
   sel.append(h("option", { value: "last30" }, "Last 30 days"));
   sel.append(h("option", { value: "ytd" }, "Year to date"));
   sel.append(h("option", { value: "lastyear" }, "Last year"));
+  sel.append(h("option", { value: "all" }, "All time"));
   sel.append(h("option", { value: "custom" }, "Custom range…"));
   sel.value = state.period;
   if (sel.value !== state.period) state.period = "mtd", sel.value = "mtd";
@@ -384,13 +535,23 @@ function applyPeriod() {
   $("custom-range").classList.toggle("show", state.period === "custom");
 }
 
+// A search with "All dates" ticked looks through everything, whatever the period says.
+const searchingAll = () => Boolean(state.q && state.qall);
+
 function query(extra = {}) {
   const p = new URLSearchParams();
-  for (const [k, v] of Object.entries({ ...state, ...extra })) if (v !== "" && v != null) p.set(k, v);
+  const values = { ...state, qall: state.qall ? "1" : "", ...extra };
+  if (searchingAll() && !("start" in extra)) { values.start = ALL_START; values.end = TODAY; }
+  for (const [k, v] of Object.entries(values)) if (v !== "" && v != null && v !== false) p.set(k, v);
   return p.toString();
 }
 
-function saveURL() { history.replaceState(null, "", "?" + query()); }
+// The URL keeps the period as chosen, not the widened search range.
+function saveURL() {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries({ ...state, qall: state.qall ? "1" : "" })) if (v !== "" && v != null && v !== false) p.set(k, v);
+  history.replaceState(null, "", "?" + p.toString());
+}
 
 // ---------- summary ----------
 let targets = {};
@@ -426,13 +587,15 @@ function meter(spent, target) {
     h("span", { style: `width:${Math.min(100, Math.max(0, ratio * 100))}%` }));
 }
 
-async function loadSummary() {
+async function loadSummary(seq) {
   const [ps, pe, prevLabel] = previousRange();
   const [s, prev, t] = await Promise.all([
     api("/api/summary?" + query()),
-    api("/api/summary?" + query({ start: ps, end: pe })).catch(() => null),
+    // Comparing a search across all dates with "last month" means nothing.
+    searchingAll() ? null : api("/api/summary?" + query({ start: ps, end: pe })).catch(() => null),
     api("/api/targets").catch(() => ({ targets: {} })),
   ]);
+  if (stale(seq)) return;
   targets = t.targets || {};
   const prevBy = {};
   if (prev) for (const r of [...prev.income, ...prev.expenses]) prevBy[r.category] = Number(r.amount);
@@ -466,14 +629,20 @@ async function loadSummary() {
   };
 
   const rows = [];
-  const row = (label, amount, opts = {}) => h("tr", {
-      class: [opts.cls, opts.category ? "click" : "", opts.category && opts.category === state.category ? "active" : ""].join(" "),
-      onclick: opts.category && !editingTargets ? () => setCategory(opts.category === state.category ? "" : opts.category) : null,
-      title: opts.count != null ? `${opts.count} transaction${opts.count === 1 ? "" : "s"}` : null,
-    },
-    h("td", {}, label),
-    h("td", { class: "num " + (opts.amountCls || "") }, money(amount), opts.category ? delta(opts.category, amount, opts.kind) : null),
-    opts.target === false ? (showTargets ? h("td") : null) : targetCell(opts.name || opts.category, amount, opts.kind));
+  const row = (label, amount, opts = {}) => {
+    const tr = h("tr", {
+        class: [opts.cls, opts.category ? "click" : "", opts.category && opts.category === state.category ? "active" : ""].join(" "),
+        title: opts.count != null ? `${opts.count} transaction${opts.count === 1 ? "" : "s"} · click to list them` : null,
+        "aria-current": opts.category && opts.category === state.category ? "true" : null,
+      },
+      h("td", {}, label),
+      h("td", { class: "num " + (opts.amountCls || "") }, money(amount), opts.category ? delta(opts.category, amount, opts.kind) : null),
+      opts.target === false ? (showTargets ? h("td") : null) : targetCell(opts.name || opts.category, amount, opts.kind));
+    if (opts.category && !editingTargets) {
+      clickable(tr, () => setCategory(opts.category === state.category ? "" : opts.category), `Show ${opts.category} transactions`);
+    }
+    return tr;
+  };
 
   rows.push(h("tr", {}, h("th", {}, "Category"), h("th", { class: "num" }, "Amount"),
     showTargets ? h("th", {}, factor === 1 ? "Monthly target" : `Target × ${factor} months`) : null));
@@ -502,7 +671,13 @@ async function loadSummary() {
   const ex = s.excluded.map((r) => `${r.category} ${money(Math.abs(r.amount))} (${r.count})`).join(" · ");
   $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
     (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
-  $("range-label").textContent = `${state.start} → ${state.end}`;
+  $("range-label").textContent = searchingAll() ? "all dates" : state.period === "all" ? "all time" : `${state.start} → ${state.end}`;
+  const note = $("search-note");
+  note.classList.toggle("hidden", !state.q);
+  if (state.q) {
+    note.replaceChildren(`Totals below only count transactions matching “${state.q}”${searchingAll() ? " on any date" : ""}. `,
+      h("a", { class: "link", tabindex: 0, onclick: () => clearSearch() }, "Clear search"));
+  }
   renderPace(s);
   renderLeaks(s);
 }
@@ -513,7 +688,7 @@ function renderPace(s) {
   const t = parseISO(TODAY), st = parseISO(state.start);
   const thisMonth = state.end === TODAY && st.getUTCDate() === 1 && st.getUTCMonth() === t.getUTCMonth() && st.getUTCFullYear() === t.getUTCFullYear();
   const day = t.getUTCDate(), days = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
-  if (!thisMonth || day < 3 || day === days) { box.classList.add("hidden"); return; }
+  if (!thisMonth || state.q || day < 3 || day === days) { box.classList.add("hidden"); return; }
   const projected = Number(s.total_spending) / day * days;
   const planned = Object.entries(targets).filter(([c]) => KINDS[c] === "expense").reduce((a, [, v]) => a + Number(v), 0);
   box.replaceChildren(`📈 Day ${day} of ${days}: spending ${money(s.total_spending)} so far is on pace for about `,
@@ -524,7 +699,7 @@ function renderPace(s) {
 }
 
 $("targets-btn").addEventListener("click", async (e) => {
-  if (!editingTargets) { editingTargets = true; state.category = ""; return loadSummary(); }
+  if (!editingTargets) { editingTargets = true; return setCategory(""); }
   const values = {};
   for (const input of document.querySelectorAll("#summary input[data-category]")) {
     values[input.dataset.category] = input.value === "" ? null : input.value;
@@ -538,6 +713,55 @@ $("targets-btn").addEventListener("click", async (e) => {
   e.target.disabled = false;
 });
 
+// ---------- saying what a transfer with no other half really was ----------
+async function act(path, body, message) {
+  try {
+    await api(path, { method: "POST", body: JSON.stringify(body) });
+    if (message) toast(message);
+    await refresh(false);
+  } catch (err) { showError(err); }
+}
+
+const reviewTransfer = (r) => act("/api/transactions/review", { id: r.id, reviewed: true }, "Marked as your own money. Not counted, no longer flagged.");
+const hideRow = (r, hidden = true) => act("/api/transactions/hide", { id: r.id, hidden },
+  hidden ? "Hidden. It's no longer counted anywhere (undo from the transaction list)." : "Back in the budget.");
+const setRowCategory = (r, category, message) =>
+  act("/api/transactions/category", { id: r.id, category, remember: false }, message || `Now ${category}.`);
+
+// The choices for one flagged row. Every answer is undoable from the transaction list.
+function resolveControls(r) {
+  const into = Number(r.flow) > 0;
+  const pick = h("select", { "aria-label": "What was this?", onchange: async (e) => {
+    const v = e.target.value;
+    if (!v) return;
+    if (v === "__review") return reviewTransfer(r);
+    if (v === "__hide") return hideRow(r);
+    if (v === "Credit Card Payment") {
+      // A payment whose other half is a card you track: say so, and stop flagging it.
+      await api("/api/transactions/category", { method: "POST", body: JSON.stringify({ id: r.id, category: v, remember: false }) }).catch(showError);
+      return reviewTransfer(r);
+    }
+    return setRowCategory(r, v);
+  }},
+    h("option", { value: "" }, "It was really…"),
+    h("optgroup", { label: "Not counted" },
+      h("option", { value: "__review" }, into ? "My own money from an account not tracked here" : "My own money to an account not tracked here"),
+      h("option", { value: "Credit Card Payment" }, into ? "A card payment (on the card's side)" : "A credit card payment"),
+      h("option", { value: "__hide" }, "Not real: a duplicate or stray bank-feed row (hide it)")),
+    h("optgroup", { label: "Counted" },
+      into ? [h("option", { value: "Income" }, "Income (pay)"), h("option", { value: "Other Income" }, "Other income (gift, interest, cash back)"),
+              h("option", { value: "Person-to-Person" }, "A friend paying me back")]
+           : [h("option", { value: "Person-to-Person" }, "Paid a person"), h("option", { value: "Savings" }, "Savings (left the budget on purpose)")]),
+    h("optgroup", { label: into ? "A refund in…" : "Spending on…" },
+      CATEGORIES.filter((c) => KINDS[c] === "expense" && c !== "Person-to-Person").map((c) => h("option", { value: c }, c))));
+  return [
+    h("button", { class: "small", title: into ? "Your own money from an account you don't track here: not income, not spending"
+                                              : "Your own money to an account you don't track here: not spending",
+      onclick: () => reviewTransfer(r) }, "✓ My own money"),
+    pick,
+  ];
+}
+
 // Transfers and card payments are left out of the totals because the money stays
 // yours. That only holds when the other end is tracked too, so each one without a
 // matching other half is listed here with what it could have been.
@@ -546,103 +770,165 @@ function renderLeaks(s) {
   const rows = s.unmatched_transfers || [];
   if (!rows.length) { box.classList.add("hidden"); return; }
   const net = Number(s.unmatched_total);
-  const choices = (r) => Number(r.flow) > 0
-    ? [["Income", "Income (pay, a refund, money owed to you)"], ["Other Income", "Other income (gift, cash back)"]]
-    : [["Person-to-Person", "Paid a person"], ["Savings", "Went to savings I don't track"], ["Other", "Spending (pick the category later)"]];
   const item = (r) => {
     const into = Number(r.flow) > 0;
-    const pick = h("select", { "aria-label": "What was this?", onchange: async (e) => {
-      if (!e.target.value) return;
-      try {
-        await api("/api/transactions/category", { method: "POST", body: JSON.stringify({ id: r.id, category: e.target.value, remember: false }) });
-        await refresh(false);
-      } catch (err) { alert(err.message); }
-    }}, h("option", { value: "" }, "It was really…"), choices(r).map(([v, label]) => h("option", { value: v }, label)));
     return h("div", { class: "leak-row" },
       h("span", {}, `${r.date} · ${r.account} · ${r.description || ""} `,
         h("b", { class: into ? "in" : "neg" }, (into ? "+" : "") + money(r.flow))),
       h("span", { class: "spacer" }),
-      h("button", { title: into ? "Your own money from an account you don't track here: not income, not spending" :
-                                  "Your own money to an account you don't track here: not spending",
-        onclick: async () => {
-          try {
-            await api("/api/transactions/review", { method: "POST", body: JSON.stringify({ id: r.id, reviewed: true }) });
-            await refresh(false);
-          } catch (err) { alert(err.message); }
-        } }, into ? "✓ My own money, came from another account" : "✓ My own money, moved to another account"),
-      pick);
+      resolveControls(r));
   };
   box.replaceChildren(
     h("b", {}, `⚠ ${rows.length} transfer${rows.length === 1 ? "" : "s"} with no matching other half`,
       Math.abs(net) >= 1 ? ` (${money(Math.abs(net))} ${net < 0 ? "out" : "in"})` : ""),
-    h("p", { style: "margin:.35rem 0" }, "None of these are counted as income or spending yet. For each one, say what it was: ",
-      h("b", {}, "my own money"), " if it moved to or from an account of yours the app doesn't track (it stays out of the totals and stops being flagged), or pick what it really was. ",
-      "If the other account is one you track, upload its CSV or tick it under Accounts instead."),
+    h("p", { style: "margin:.35rem 0" }, "None of these are counted yet. Say what each was: ",
+      h("b", {}, "✓ My own money"), " if it moved to or from an account of yours the app doesn't track; ",
+      h("b", {}, "not real"), " if it isn't on your bank statement (hide it); or what it really was. ",
+      "If the other account is one you track, upload its CSV instead so the two halves pair up."),
     ...rows.slice(0, 50).map(item));
   box.classList.remove("hidden");
 }
 
 // ---------- transactions ----------
-async function loadTransactions() {
+async function loadTransactions(seq) {
+  const buttons = [$("prev"), $("next")];
+  buttons.forEach((b) => b.disabled = true);
   const data = await api("/api/transactions?" + query());
+  if (stale(seq)) return;
+  const pages = Math.max(1, Math.ceil(data.total / data.page_size));
+  if (state.page > pages) { state.page = pages; return refresh(false); }  // e.g. the last row on the last page moved away
   const tbody = $("txns");
-  if (!data.rows.length) {
-    tbody.replaceChildren(h("tr", {}, h("td", { colspan: 5, class: "muted" }, "No transactions for these filters.")));
-  } else {
-    tbody.replaceChildren(...data.rows.map(txnRow));
-  }
+  tbody.replaceChildren(...(data.rows.length ? data.rows.map(txnRow) : [h("tr", {}, h("td", { colspan: 5 }, emptyHelp()))]));
   const from = data.total ? (data.page - 1) * data.page_size + 1 : 0;
   const to = Math.min(data.total, data.page * data.page_size);
-  $("page-label").textContent = `${from}–${to} of ${data.total} · net ${money(data.net)}`;
+  $("page-label").textContent = data.total ? `${from}–${to} of ${data.total} · page ${data.page} of ${pages} · net ${money(data.net)}` : "";
   const active = [state.category, state.q && `“${state.q}”`].filter(Boolean);
   $("txn-count").replaceChildren(...(active.length ? [`· ${active.join(" · ")} `,
-    h("button", { class: "small", onclick: () => { state.q = ""; $("q").value = ""; setCategory(""); } }, "✕ Clear filter")] : []));
+    h("button", { class: "small", onclick: () => { clearSearch(false); setCategory(""); } }, "✕ Clear filter")] : []));
   $("export-link").href = "/api/export?" + query({ page: "", page_size: "" });
   $("prev").disabled = data.page <= 1;
   $("next").disabled = to >= data.total;
 }
 
+// Why the list is empty, and the one-click way out.
+function emptyHelp() {
+  const account = accountsData.accounts.find((a) => a.id === state.account);
+  const reasons = [], fixes = [];
+  if (state.category) { reasons.push(`only “${state.category}” is shown`); fixes.push(["Show all categories", () => setCategory("")]); }
+  if (state.q) { reasons.push(`only matches for “${state.q}”`); fixes.push(["Clear search", () => clearSearch()]);
+    if (!state.qall) fixes.push(["Search all dates", () => { state.qall = true; $("qall").checked = true; state.page = 1; refresh(false); }]); }
+  if (account && account.transaction_count && state.period !== "all") {
+    reasons.push(`${account.name} has ${account.transaction_count} transactions, the newest from ${account.latest_transaction}, but none in ${state.start} → ${state.end}`);
+    fixes.push(["Show all of its dates", () => openAccount(account.id)]);
+  } else if (!account && state.period !== "all") {
+    reasons.push(`nothing in ${state.start} → ${state.end} for ${$("account").selectedOptions[0]?.textContent || "these accounts"}`);
+    fixes.push(["Show all time", () => setPeriod("all")]);
+  }
+  if (state.account === "budget" && accountsData.accounts.some((a) => !a.include_in_budget && a.transaction_count)) {
+    fixes.push(["Include accounts left out of the budget", () => { state.account = "all"; $("account").value = "all"; state.page = 1; refresh(false); }]);
+  }
+  return h("div", { class: "empty muted" }, h("b", {}, "No transactions here. "),
+    reasons.length ? h("p", {}, "Because " + reasons.join("; ") + ".") : null,
+    fixes.map(([label, fn]) => h("button", { class: "small", onclick: fn }, label)));
+}
+
 function txnRow(t) {
   const flow = Number(t.flow);
-  const select = h("select", { "aria-label": "Category", onchange: (e) => changeCategory(t, e.target) },
+  const select = h("select", { "aria-label": "Category", disabled: t.hidden, onchange: (e) => changeCategory(t, e.target) },
     CATEGORIES.map((c) => h("option", { value: c, selected: c === t.category }, c)));
   const excluded = KINDS[t.category] === "excluded";
-  return h("tr", { class: excluded ? "muted" : "" },
+  return h("tr", { class: (excluded ? "muted " : "") + (t.hidden ? "hidden-row" : "") },
     h("td", { class: "small", style: "white-space:nowrap" }, t.date),
-    h("td", { class: "txn-desc", title: t.description }, t.merchant || t.description,
+    h("td", { class: "desc-cell" }, h("div", { class: "desc-line" },
+      h("span", { class: "desc-text", title: t.description }, t.merchant || t.description),
       t.status === "pending" ? h("span", { class: "pill" }, "pending") : null,
       t.source === "csv" ? h("span", { class: "pill", title: "From a CSV upload" }, "csv") : null,
-      h("button", { class: "icon small", title: t.note ? "Edit note" : "Add a note", "aria-label": "Note", onclick: () => editNote(t) }, "✎"),
+      h("span", { class: "row-actions" },
+        h("button", { class: "icon small", title: t.note ? "Edit note" : "Add a note", "aria-label": "Note", onclick: () => editNote(t) }, "✎"),
+        t.hidden ? null : h("button", { class: "icon small", title: "Not a real transaction (duplicate or stray bank row): hide it from every total",
+          "aria-label": "Hide", onclick: () => { if (confirm(`Hide “${t.merchant || t.description}” (${money(t.flow)}) from every total? You can bring it back.`)) hideRow(t); } }, "⊘"))),
       t.note ? h("span", { class: "note" }, t.note) : null),
     h("td", { class: "small" }, `${t.account_name || ""}${t.last_four ? " ·" + t.last_four : ""}`),
-    h("td", {}, select, t.ai_suggested ? h("span", { class: "pill", title: "Category suggested by Claude. Pick one to replace it." }, "AI") : null),
+    h("td", {}, t.hidden ? [h("span", { class: "pill" }, "hidden · not counted"), " ",
+        h("button", { class: "small", onclick: () => hideRow(t, false) }, "Unhide")]
+      : [select, t.ai_suggested ? h("span", { class: "pill", title: "Category suggested by Claude. Pick one to replace it." }, "AI") : null]),
     h("td", { class: "num " + (flow > 0 ? "in" : "") }, (flow > 0 ? "+" : "") + money(flow)));
 }
 
-async function editNote(t) {
-  const note = prompt(`Note for ${t.merchant || t.description} (${t.date}, ${money(t.flow)}):`, t.note || "");
-  if (note === null) return;
+let noteFor = null;
+function editNote(t) {
+  noteFor = t;
+  $("note-what").textContent = `${t.merchant || t.description} · ${t.date} · ${money(t.flow)}`;
+  $("note-text").value = t.note || "";
+  $("note-dialog").showModal();
+  $("note-text").focus();
+}
+$("note-cancel").addEventListener("click", () => $("note-dialog").close());
+$("note-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
   try {
-    await api("/api/transactions/note", { method: "POST", body: JSON.stringify({ id: t.id, note }) });
+    await api("/api/transactions/note", { method: "POST", body: JSON.stringify({ id: noteFor.id, note: $("note-text").value }) });
+    $("note-dialog").close();
     await loadTransactions();
-  } catch (e) { alert(e.message); }
-}
+  } catch (err) { alert(err.message); }
+});
 
-async function changeCategory(t, select) {
+let categoryFor = null;
+function changeCategory(t, select) {
+  categoryFor = { t, select, category: select.value };
   const name = t.merchant || t.description;
-  const remember = confirm(`Use “${select.value}” for every transaction from “${name}” (past and future)?\n\nOK = all from this merchant · Cancel = just this one`);
-  try {
-    await api("/api/transactions/category", {
-      method: "POST", body: JSON.stringify({ id: t.id, category: select.value, remember }),
-    });
-    await refresh(false);
-  } catch (e) { alert(e.message); select.value = t.category; }
+  $("category-what").textContent = `“${name}” (${t.date}, ${money(t.flow)}) → ${select.value}`;
+  $("category-all-label").textContent = `Every transaction from “${name}”, past and future`;
+  $("category-form").scope.value = "one";
+  $("category-dialog").showModal();
 }
+$("category-cancel").addEventListener("click", () => $("category-dialog").close());
+$("category-dialog").addEventListener("close", () => {
+  // Cancel or Esc: put the dropdown back.
+  if (categoryFor) categoryFor.select.value = categoryFor.t.category;
+  categoryFor = null;
+});
+$("category-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { t, category } = categoryFor;
+  const remember = $("category-form").scope.value === "all";
+  try {
+    await api("/api/transactions/category", { method: "POST", body: JSON.stringify({ id: t.id, category, remember }) });
+    categoryFor = null;
+    $("category-dialog").close();
+    toast(remember ? `All from “${t.merchant || t.description}” are now ${category}.` : `Now ${category}.`);
+    await refresh(false);
+  } catch (err) { alert(err.message); }
+});
 
 function setCategory(c) {
   state.category = c; state.page = 1;
   $("category-filter").value = c;
   refresh(false);
+}
+
+function clearSearch(reload = true) {
+  clearTimeout(searchTimer);
+  state.q = ""; $("q").value = ""; state.page = 1;
+  if (reload) refresh(false);
+}
+
+function setPeriod(p) {
+  state.period = p; state.page = 1;
+  $("period").value = p;
+  applyPeriod();
+  refresh(false);
+}
+
+// From the Accounts panel or an empty list: everything in one account, every date.
+function openAccount(id) {
+  state.account = id; $("account").value = id;
+  state.category = ""; $("category-filter").value = "";
+  clearSearch(false);
+  state.period = "all"; $("period").value = "all"; applyPeriod();
+  state.page = 1;
+  showView("budget");
+  setTimeout(() => $("txns").closest("section").scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 }
 
 // ---------- accounts ----------
@@ -674,7 +960,7 @@ async function loadAccounts() {
   ];
   const group = h("optgroup", { label: "Single account" });
   for (const a of accountsData.accounts) {
-    group.append(h("option", { value: a.id }, accountLabel(a)));
+    group.append(h("option", { value: a.id }, accountLabel(a) + (a.include_in_budget ? "" : " (not in budget)")));
   }
   sel.replaceChildren(...opts, group);
   sel.value = prev;
@@ -682,28 +968,42 @@ async function loadAccounts() {
 
   const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"))];
   for (const a of accountsData.accounts) {
-    const box = h("input", { type: "checkbox", checked: a.include_in_budget, onchange: async (e) => {
-      await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: a.id, include_in_budget: e.target.checked }) });
-      refresh(false);
+    const box = h("input", { type: "checkbox", checked: a.include_in_budget, "aria-label": `Count ${a.name} in the budget`, onchange: async (e) => {
+      try {
+        await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: a.id, include_in_budget: e.target.checked }) });
+        toast(e.target.checked ? `${a.name} now counts in the budget.` : `${a.name} is left out of the budget.`);
+        refresh(true);
+      } catch (err) { e.target.checked = !e.target.checked; alert(err.message); }
     }});
     const type = h("select", { "aria-label": "Account type", onchange: async (e) => {
-      await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: a.id, subtype: e.target.value }) });
-      refresh(true);
+      try {
+        await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: a.id, subtype: e.target.value }) });
+        refresh(true);
+      } catch (err) { e.target.value = a.subtype; alert(err.message); }
     }}, ACCOUNT_TYPES.map(([v, label]) => h("option", { value: v, selected: v === a.subtype }, label)));
+    const name = clickable(h("a", { class: "link", title: "Show all of this account's transactions" },
+      `${a.institution && a.institution !== "Manual" ? a.institution + " " : ""}${a.name}${a.last_four ? " ·" + a.last_four : ""}`),
+      () => openAccount(a.id));
+    const balance = a.ledger_balance != null ? money(a.ledger_balance) : "—";
     // The full message is in the banner at the top; keep the row narrow so nothing scrolls off screen.
     const status = a.enrollment_status === "ok" ? "OK" : a.enrollment_status === "manual" ? "CSV uploads" :
       h("span", { class: "neg", title: a.last_error || "" }, "Needs attention");
     rows.push(h("tr", {},
       h("td", {}, box),
-      h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""} `,
+      h("td", {}, name, a.include_in_budget ? " " : h("span", { class: "pill", title: "Not counted in “Budget accounts”" }, "not in budget"), " ",
         a.enrollment_status === "manual" ? null : h("button", { class: "small", title: "Compare with what SimpleFIN returns for the selected dates",
           onclick: (e) => checkAccount(a, e.target) }, "Check"), " ",
         h("button", { class: "small", title: "Add transactions from a CSV file", onclick: () => openUpload(a.id) }, "Upload CSV"),
         a.enrollment_status === "manual" ? [" ", h("button", { class: "small", onclick: () => removeAccount(a) }, "Remove")] : null),
       h("td", {}, type),
-      h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
-      h("td", { class: "num small", title: "Synced transactions, and the newest one's date" },
-        a.transaction_count ? `${a.transaction_count} · latest ${a.latest_transaction}` : "none yet"),
+      h("td", { class: "num" }, a.enrollment_status === "manual"
+        ? h("button", { class: "small", title: a.balance_date ? `Typed in on ${a.balance_date}; later transactions are added to it for the forecast`
+                                                              : "Type today's balance so the Cash flow page can use this account",
+            onclick: () => setBalance(a) }, a.ledger_balance != null ? balance : "Set balance")
+        : balance),
+      h("td", { class: "num small" }, a.transaction_count
+        ? clickable(h("a", { class: "link", title: "Show them (all dates)" }, `${a.transaction_count} · latest ${a.latest_transaction}`), () => openAccount(a.id))
+        : "none yet"),
       h("td", { class: "small" }, status)));
   }
   if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 6, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
@@ -721,6 +1021,17 @@ async function loadAccounts() {
 
   const times = accountsData.enrollments.map((e) => e.last_synced_at).filter(Boolean).sort();
   $("sync-status").textContent = times.length ? `Synced ${new Date(times[0]).toLocaleString()}` : "";
+}
+
+async function setBalance(a) {
+  const value = prompt(`Today's balance for ${a.name} (as the bank shows it; a card's balance owed as a negative number):`,
+    a.ledger_balance != null ? a.ledger_balance : "");
+  if (value === null || value.trim() === "") return;
+  try {
+    await api("/api/accounts/balance", { method: "POST", body: JSON.stringify({ id: a.id, balance: value.replace(/[$,\s]/g, "") }) });
+    toast("Balance saved.");
+    refresh(true);
+  } catch (err) { alert(err.message); }
 }
 
 // ---------- SimpleFIN connection ----------
@@ -781,7 +1092,7 @@ async function fullResync() {
 }
 
 // ---------- CSV upload ----------
-function openUpload(accountId) {
+function openUpload(accountId, fresh = true) {
   const sel = $("upload-account");
   sel.replaceChildren(h("option", { value: "" }, "Choose an account…"),
     ...accountsData.accounts.map((a) => h("option", { value: a.id }, accountLabel(a))),
@@ -790,9 +1101,12 @@ function openUpload(accountId) {
   toggleNewAccount();
   $("upload-file").value = "";
   $("upload-flip").value = "auto";
+  $("upload-new-name").value = "";
   resetUploadPreview();
-  loadUploadHistory();
-  $("upload-dialog").showModal();
+  if (fresh) {
+    loadUploadHistory();
+    $("upload-dialog").showModal();
+  }
 }
 
 function toggleNewAccount() {
@@ -873,6 +1187,12 @@ async function commitUpload() {
     await loadUploadHistory();
     $("upload-history").open = true;
     await refresh(true);
+    // A new account now exists: point the dialog at it, so the next file goes there instead of making another.
+    if ($("upload-account").value === "new" && r.account_id) {
+      openUpload(r.account_id, false);
+      $("upload-result").replaceChildren(h("p", {}, h("b", {}, `Imported ${r.new_count} transactions into ${r.account}.`),
+        " Pick another file for the same account, or close."));
+    }
   } catch (e) { $("upload-error").textContent = e.message; }
   button.disabled = false;
 }
@@ -881,11 +1201,15 @@ async function loadUploadHistory() {
   const { imports } = await api("/api/imports");
   $("upload-history-list").replaceChildren(...(imports.length ? imports.map((i) => h("div", { style: "margin:.3rem 0" },
     `${new Date(i.created_at).toLocaleString()} · ${i.account_name} · ${i.row_count} rows · ${i.filename || ""} `,
-    h("button", { class: "small", onclick: async () => {
+    h("button", { class: "small", onclick: async (e) => {
       if (!confirm(`Remove the ${i.row_count} transactions from this upload?`)) return;
-      await api(`/api/imports/${i.id}`, { method: "DELETE" });
-      await loadUploadHistory();
-      await refresh(true);
+      e.target.disabled = true;
+      try {
+        await api(`/api/imports/${i.id}`, { method: "DELETE" });
+        toast("Upload undone.");
+        await loadUploadHistory();
+        await refresh(true);
+      } catch (err) { e.target.disabled = false; alert(err.message); }
     }}, "Undo"))) : [h("p", { class: "muted" }, "No uploads yet.")]));
 }
 
@@ -897,12 +1221,17 @@ $("add-account-btn").addEventListener("click", () => {
 $("account-cancel").addEventListener("click", () => $("account-dialog").close());
 $("account-form").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const button = e.submitter || $("account-form").querySelector("[type=submit]");
+  if (button.disabled) return;
+  button.disabled = true;  // a double click would make two accounts
   try {
     await api("/api/accounts/manual", { method: "POST", body: JSON.stringify({
       name: $("account-name").value, institution: $("account-institution").value, subtype: $("account-type").value }) });
     $("account-dialog").close();
+    toast("Account added. Upload a CSV into it to fill it.");
     await refresh(true);
   } catch (err) { $("account-error").textContent = err.message; }
+  button.disabled = false;
 });
 
 async function removeAccount(a) {
@@ -936,8 +1265,10 @@ $("upload-commit").addEventListener("click", commitUpload);
 
 async function removeConnection(id) {
   if (!confirm("Remove this connection and the transactions from its accounts?")) return;
-  await api(`/api/connections/${encodeURIComponent(id)}`, { method: "DELETE" });
-  refresh(true);
+  try {
+    await api(`/api/connections/${encodeURIComponent(id)}`, { method: "DELETE" });
+    refresh(true);
+  } catch (err) { alert(err.message); }
 }
 
 // ---------- trends ----------
@@ -966,8 +1297,9 @@ function trendChart(months) {
   };
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Income and expenses by month" });
   const step = Math.pow(10, Math.floor(Math.log10((max - min) / 4 || 1)));
-  const tick = Math.ceil((max - min) / 4 / step) * step;
-  for (let v = Math.ceil(min / tick) * tick; v <= max; v += tick) {
+  const tick = Math.max(1, Math.ceil((max - min) / 4 / step) * step);
+  for (let i = Math.ceil(min / tick); i * tick <= max; i++) {
+    const v = i * tick;
     svg.append(el("line", { x1: pad.l, x2: W - pad.r, y1: y(v), y2: y(v), class: v === 0 ? "zero" : "grid" }));
     svg.append(el("text", { x: pad.l - 6, y: y(v) + 4, "text-anchor": "end" }, Math.abs(v) >= 1000 ? `${v / 1000}k` : String(v)));
   }
@@ -994,8 +1326,9 @@ function trendChart(months) {
 
 let trendAverages = {};
 
-async function loadTrends() {
+async function loadTrends(seq) {
   const { months } = await api("/api/trends?" + new URLSearchParams({ months: 12, account: state.account }));
+  if (stale(seq)) return;
   const full = months.filter((m) => !m.partial);
   const avg = (f) => full.length ? full.reduce((a, m) => a + Number(f(m)), 0) / full.length : 0;
   const saved = full.reduce((a, m) => a + Number(m.remaining), 0);
@@ -1030,11 +1363,20 @@ async function loadTrends() {
     h("td", { class: "num" }, money(avg(f)).replace(/\.\d\d$/, "")));
   $("trend-table").replaceChildren(head, ...body, totals("Total Expenses", (m) => m.total_expenses),
     totals("Remaining", (m) => m.remaining, (m) => Number(m.remaining) < 0 ? "neg" : "in"));
+  keyboardify($("trend-table"));
 }
 
 $("avg-targets-btn").addEventListener("click", async () => {
+  // Targets are for the budget, so average the budget accounts whatever the page is showing.
+  let months;
+  try { ({ months } = await api("/api/trends?months=12&account=budget")); } catch (err) { return alert(err.message); }
+  const full = months.filter((m) => !m.partial);
   const values = {};
-  for (const [c, v] of Object.entries(trendAverages)) if (KINDS[c] === "expense" || KINDS[c] === "savings") values[c] = Math.max(0, Math.round(v));
+  for (const c of CATEGORIES) {
+    if (KINDS[c] !== "expense" && KINDS[c] !== "savings") continue;
+    const average = full.length ? full.reduce((a, m) => a + Number(m.categories[c] || 0), 0) / full.length : 0;
+    if (Math.round(average) > 0) values[c] = Math.round(average);  // never wipe a target with a 0
+  }
   if (!Object.keys(values).length) return alert("No full months of spending yet.");
   if (!confirm("Set every category's monthly target to its average over the last full months? You can edit them afterwards on the Budget page.")) return;
   try {
@@ -1044,8 +1386,9 @@ $("avg-targets-btn").addEventListener("click", async () => {
 });
 
 // ---------- recurring ----------
-async function loadRecurring() {
+async function loadRecurring(seq) {
   const { recurring } = await api("/api/recurring?" + new URLSearchParams({ account: state.account }));
+  if (stale(seq)) return;
   const monthly = recurring.reduce((a, r) => a + Number(r.monthly_cost), 0);
   const soon = recurring.filter((r) => r.next_date >= TODAY && (parseISO(r.next_date) - parseISO(TODAY)) / 864e5 <= 14);
   const stat = (label, value) => h("div", { class: "stat" }, h("span", { class: "muted small" }, label), h("b", {}, value));
@@ -1074,16 +1417,247 @@ async function loadRecurring() {
   }
   if (!recurring.length) rows.push(h("tr", {}, h("td", { colspan: 7, class: "muted" }, "Nothing recurring found yet. It needs a few months of history.")));
   $("recurring").replaceChildren(...rows);
+  keyboardify($("recurring"));
 }
 
+// ---------- shared chart bits ----------
+const SVGNS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs = {}, text) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const shortMoney = (v) => Math.abs(v) >= 1000 ? `${Math.round(v / 100) / 10}k` : String(Math.round(v));
+
+// Anything marked .click inside: reachable with Tab, Enter acts like a click.
+function keyboardify(root) {
+  for (const el of root.querySelectorAll(".click")) {
+    if (el.tabIndex >= 0 && el.dataset.kb) continue;
+    el.tabIndex = 0; el.dataset.kb = "1";
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter") el.click(); });
+  }
+}
+
+// ---------- cash flow ----------
+function cashChart(f) {
+  const W = 760, H = 220, pad = { l: 56, r: 10, t: 10, b: 24 };
+  const vals = f.series.map((p) => Number(p.balance));
+  const threshold = Number(f.threshold);
+  const max = Math.max(...vals, threshold, 1), min = Math.min(...vals, 0);
+  const span = max - min || 1;
+  const x = (i) => pad.l + i / Math.max(1, f.series.length - 1) * (W - pad.l - pad.r);
+  const y = (v) => pad.t + (max - v) / span * (H - pad.t - pad.b);
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Projected balance" });
+  const step = Math.pow(10, Math.floor(Math.log10(span / 4)));
+  const tick = Math.max(1, Math.ceil(span / 4 / step) * step);
+  for (let i = Math.ceil(min / tick); i * tick <= max; i++) {
+    svg.append(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: y(i * tick), y2: y(i * tick), class: i === 0 ? "zero" : "grid" }));
+    svg.append(svgEl("text", { x: pad.l - 6, y: y(i * tick) + 4, "text-anchor": "end" }, shortMoney(i * tick)));
+  }
+  if (threshold > 0) svg.append(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: y(threshold), y2: y(threshold),
+    stroke: "var(--warn)", "stroke-dasharray": "5 4" }));
+  svg.append(svgEl("path", { d: f.series.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(Number(p.balance))}`).join(""),
+    fill: "none", stroke: "var(--accent)", "stroke-width": 2 }));
+  f.series.forEach((p, i) => {
+    const d = parseISO(p.date);
+    if (d.getUTCDate() === 1 || i === 0) svg.append(svgEl("text", { x: x(i), y: H - 6, "text-anchor": "middle" },
+      d.toLocaleString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })));
+    const g = svgEl("g");
+    g.append(svgEl("title", {}, `${p.date}: ${money(p.balance)}`));
+    g.append(svgEl("circle", { cx: x(i), cy: y(Number(p.balance)), r: p.date === f.low.date ? 4.5 : 2,
+      fill: p.date === f.low.date ? "var(--over)" : "var(--accent)" }));
+    svg.append(g);
+  });
+  return svg;
+}
+
+async function loadCashflow(seq) {
+  const f = await api("/api/forecast");
+  if (stale(seq)) return;
+  $("cf-threshold").value = Number(f.threshold);
+  const stat = (label, value, cls = "", sub = "") => h("div", { class: "stat" }, h("span", { class: "muted small" }, label),
+    h("b", { class: cls }, value), sub ? h("span", { class: "small muted" }, sub) : null);
+  if (!f.accounts.length) {
+    $("cf-alert").replaceChildren(h("div", { class: "ok-box" }, h("b", {}, "No balances to start from. "),
+      "The forecast needs today's balance of your checking and savings. SimpleFIN sends it for connected accounts; for accounts you added by hand, use ",
+      h("b", {}, "Set balance"), " under Accounts on the Budget page.",
+      f.missing_balance.length ? h("p", {}, "Missing a balance: " + f.missing_balance.map((a) => a.name).join(", ")) : null));
+    for (const id of ["cf-cards", "cf-chart", "cf-events", "cf-accounts", "cf-method"]) $(id).replaceChildren();
+    return;
+  }
+  const low = f.low, threshold = Number(f.threshold);
+  const lowDays = Math.round((parseISO(low.date) - parseISO(TODAY)) / 864e5);
+  $("cf-alert").replaceChildren(Number(low.balance) < threshold
+    ? h("div", { class: "alert" }, h("b", {}, `⚠ Cash could get low around ${low.date}: about ${money(low.balance)}. `),
+        `That's under your ${money(threshold)} warning line. Moving money into checking before then, or holding off on a big purchase, would avoid it.`)
+    : h("p", { class: "small in" }, `✓ Stays above your ${money(threshold)} warning line for the next ${f.days} days.`));
+  $("cf-cards").replaceChildren(
+    stat("Cash now", money(f.start_balance), "", `${f.accounts.length} account${f.accounts.length === 1 ? "" : "s"}`),
+    stat("Lowest point", money(low.balance), Number(low.balance) < threshold ? "neg" : "", lowDays ? `${low.date}, in ${lowDays} days` : "today"),
+    stat(`In ${f.days} days`, money(f.end_balance), Number(f.end_balance) < Number(f.start_balance) ? "neg" : "in"),
+    stat("Everyday spending", `${money(f.daily_spending)}/day`, "", "from these accounts, last 90 days"));
+  $("cf-chart").replaceChildren(cashChart(f));
+  $("cf-method").textContent = "An estimate: scheduled pay and bills found from your history, card payments at your recent monthly average " +
+    "on the day you usually pay, and everyday spending spread evenly. Transfers between these accounts cancel out. " +
+    "Card purchases show up when you pay the card, not when you buy.";
+  const events = f.events.map((e) => h("tr", {},
+    h("td", { class: "small", style: "white-space:nowrap" }, e.date),
+    h("td", { class: "txn-desc", title: e.name }, e.name),
+    h("td", { class: "small muted" }, e.kind === "income" ? "pay" : e.kind === "cards" ? "cards" : e.frequency),
+    h("td", { class: "num " + (Number(e.amount) > 0 ? "in" : "") }, (Number(e.amount) > 0 ? "+" : "") + money(e.amount))));
+  $("cf-events").replaceChildren(h("tr", {}, h("th", {}, "Date"), h("th", {}, "What"), h("th", {}, "How often"), h("th", { class: "num" }, "Amount")),
+    ...(events.length ? events : [h("tr", {}, h("td", { colspan: 4, class: "muted" }, "Nothing scheduled found yet."))]));
+  $("cf-accounts").replaceChildren(h("ul", { class: "small", style: "margin:.2rem 0; padding-left:1.1rem" },
+    f.accounts.map((a) => h("li", {}, `${a.name}${a.last_four ? " ·" + a.last_four : ""}: ${money(a.balance)}`,
+      a.balance_date ? h("span", { class: "muted" }, ` (typed in ${a.balance_date}, plus transactions since)`) : null)),
+    f.missing_balance.map((a) => h("li", { class: "neg" }, `${a.name}: no balance, left out. `,
+      a.manual ? h("a", { class: "link", onclick: () => setBalance(a) }, "Set balance") : "SimpleFIN didn't send one."))),
+    h("p", { class: "small muted" }, "Checking and savings accounts ticked “in budget” under Accounts."));
+}
+
+$("cf-threshold-save").addEventListener("click", async () => {
+  try {
+    await api("/api/settings/low-balance", { method: "POST", body: JSON.stringify({ amount: $("cf-threshold").value || 0 }) });
+    toast("Saved.");
+    loadCashflow();
+  } catch (err) { alert(err.message); }
+});
+
+// ---------- giving ----------
+function givingChart(byMonth, year) {
+  const W = 760, H = 150, pad = { l: 48, r: 8, t: 8, b: 22 };
+  const vals = byMonth.map(Number), max = Math.max(...vals, 1);
+  const slot = (W - pad.l - pad.r) / 12, bw = slot * 0.6;
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Giving by month" });
+  svg.append(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: H - pad.b, y2: H - pad.b, class: "zero" }));
+  svg.append(svgEl("text", { x: pad.l - 6, y: pad.t + 8, "text-anchor": "end" }, shortMoney(max)));
+  vals.forEach((v, i) => {
+    const x = pad.l + slot * i + (slot - bw) / 2, hgt = Math.max(0, v) / max * (H - pad.t - pad.b);
+    const g = svgEl("g");
+    const name = new Date(Date.UTC(year, i, 1)).toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+    g.append(svgEl("title", {}, `${name}: ${money(v)}`));
+    g.append(svgEl("rect", { x, y: H - pad.b - hgt, width: bw, height: hgt, rx: 2, fill: "var(--income-bar)" }));
+    g.append(svgEl("text", { x: x + bw / 2, y: H - 6, "text-anchor": "middle" }, name));
+    svg.append(g);
+  });
+  return svg;
+}
+
+async function loadGiving(seq) {
+  const sel = $("giving-year");
+  if (!sel.options.length) {
+    const y = parseISO(TODAY).getUTCFullYear();
+    for (let i = 0; i < 6; i++) sel.append(h("option", { value: y - i }, String(y - i)));
+  }
+  const year = sel.value;
+  const g = await api("/api/giving?" + new URLSearchParams({ year, account: state.account }));
+  if (stale(seq)) return;
+  $("giving-export").href = "/api/giving/export?" + new URLSearchParams({ year, account: state.account });
+  const stat = (label, value, sub = "") => h("div", { class: "stat" }, h("span", { class: "muted small" }, label),
+    h("b", {}, value), sub ? h("span", { class: "small muted" }, sub) : null);
+  const thisYear = Number(year) === parseISO(TODAY).getUTCFullYear();
+  $("giving-cards").replaceChildren(
+    stat(thisYear ? "Given this year" : `Given in ${year}`, money(g.given), `${g.gifts.length} gift${g.gifts.length === 1 ? "" : "s"}`),
+    stat("Share of income", g.percent != null ? `${g.percent}%` : "—", `of ${money(g.income)} income`),
+    stat(`${Number(year) - 1}${thisYear ? " (same months)" : ""}`, money(g.last_year)),
+    stat("Organizations", String(g.organizations.length)));
+  const goal = g.goal_percent != null ? Number(g.goal_percent) : null;
+  const input = h("input", { type: "number", min: 0, max: 100, step: "0.5", value: goal ?? "", placeholder: "e.g. 10", style: "width:5rem",
+    "aria-label": "Giving goal, percent of income" });
+  const parts = [h("label", { class: "small" }, "Goal: ", input, " % of income "),
+    h("button", { class: "small", onclick: async () => {
+      try {
+        await api("/api/giving/goal", { method: "POST", body: JSON.stringify({ percent: input.value }) });
+        toast(input.value ? "Goal saved." : "Goal removed.");
+        loadGiving();
+      } catch (err) { alert(err.message); }
+    } }, "Save")];
+  if (goal && Number(g.income) > 0) {
+    const target = Number(g.income) * goal / 100;
+    parts.push(h("div", { style: "margin-top:.5rem" }, meter(Number(g.given), target),
+      h("span", { class: "small muted" }, `${money(g.given)} of ${money(target)} (${goal}% of income so far)`)));
+  }
+  $("giving-goal").replaceChildren(...parts);
+  $("giving-chart").replaceChildren(givingChart(g.by_month, Number(year)));
+  const rows = g.organizations.map((o) => h("tr", { class: "click", title: "Show these gifts", onclick: () => {
+      state.q = o.name.slice(0, 40); $("q").value = state.q; state.qall = true; $("qall").checked = true;
+      setCategoryQuiet("Giving"); showView("budget");
+    } },
+    h("td", { class: "txn-desc" }, o.name), h("td", { class: "num small" }, `${o.count}×`),
+    h("td", { class: "small" }, o.last_date), h("td", { class: "num" }, money(o.total))));
+  $("giving-orgs").replaceChildren(h("tr", {}, h("th", {}, "Organization"), h("th", { class: "num" }, "Gifts"), h("th", {}, "Latest"),
+    h("th", { class: "num" }, "Total")), ...(rows.length ? rows : [h("tr", {}, h("td", { colspan: 4, class: "muted" }, "No gifts in the Giving category this year."))]));
+  keyboardify($("giving-orgs"));
+}
+$("giving-year").addEventListener("change", () => loadGiving());
+
+function setCategoryQuiet(c) { state.category = c; $("category-filter").value = c; state.page = 1; }
+
+// ---------- checkup ----------
+async function loadCheckup(seq) {
+  const { issues } = await api("/api/health");
+  if (stale(seq)) return;
+  updateBadge(issues);
+  if (!issues.length) {
+    $("checkup").replaceChildren(h("div", { class: "ok-box" }, h("b", {}, "✓ Nothing looks off. "),
+      "Every card you pay is in the app, accounts are up to date, and every transfer has its other half."));
+    return;
+  }
+  const action = (i) => {
+    const account = accountsData.accounts.find((a) => a.id === i.account_id);
+    switch (i.action) {
+      case "add_account": return h("button", { class: "small", onclick: () => $("add-account-btn").click() }, "+ Add account by hand");
+      case "upload": return h("button", { class: "small", onclick: () => openUpload(i.account_id) }, "Upload CSV");
+      case "tick": return h("button", { class: "small", onclick: () => act("/api/accounts/update", { id: i.account_id, include_in_budget: true },
+        "Now counted in the budget.").then(() => refresh(true)) }, "Count it in the budget");
+      case "check": return account ? h("button", { class: "small", onclick: (e) => checkAccount(account, e.target) }, "Check") : null;
+      case "simplefin": return h("a", { href: SIMPLEFIN_URL, target: "_blank", rel: "noopener" }, "Open SimpleFIN");
+      default: return null;
+    }
+  };
+  const rowItem = (r) => h("div", { class: "leak-row" },
+    h("span", {}, `${r.date} · ${r.account || ""} · ${r.description || ""} `,
+      h("b", { class: Number(r.flow) > 0 ? "in" : "neg" }, (Number(r.flow) > 0 ? "+" : "") + money(r.flow)),
+      r.twin_date ? h("span", { class: "muted" }, ` (also on ${r.twin_date})`) : null),
+    h("span", { class: "spacer" }),
+    r.id ? (r.unmatched ? resolveControls(r) : h("button", { class: "small", onclick: () => hideRow(r) }, "Hide it (not real)")) : null);
+  $("checkup").replaceChildren(...issues.map((i) => h("div", { class: "issue " + i.severity },
+    h("h3", {}, h("span", { class: "chip " + i.severity }, i.severity === "high" ? "fix" : i.severity === "medium" ? "check" : "fyi"), i.title),
+    h("p", { class: "small" }, i.detail),
+    action(i),
+    i.account_id && i.action !== "tick" ? [" ", h("button", { class: "small", onclick: () => openAccount(i.account_id) }, "Show its transactions")] : null,
+    i.rows.length ? h("details", { open: i.rows.length <= 6 }, h("summary", { class: "small" }, `${i.rows.length} transaction${i.rows.length === 1 ? "" : "s"}`),
+      i.rows.map(rowItem)) : null)));
+}
+
+function updateBadge(issues) {
+  const serious = issues.filter((i) => i.severity !== "low");
+  const badge = $("checkup-badge");
+  badge.textContent = serious.length;
+  badge.classList.toggle("hidden", !serious.length);
+  badge.classList.toggle("mild", !issues.some((i) => i.severity === "high"));
+  badge.title = `${serious.length} thing${serious.length === 1 ? "" : "s"} to check`;
+}
+const refreshBadge = () => api("/api/health").then((r) => updateBadge(r.issues)).catch(() => {});
+$("checkup-refresh").addEventListener("click", () => loadCheckup());
+
 // ---------- pages and theme ----------
+const VIEWS = ["budget", "trends", "recurring", "cashflow", "giving", "checkup"];
 function showView(view, withAccounts = false) {
-  state.view = ["budget", "trends", "recurring"].includes(view) ? view : "budget";
-  for (const b of document.querySelectorAll("nav.tabs button")) b.classList.toggle("on", b.dataset.view === state.view);
-  for (const v of ["budget", "trends", "recurring"]) $("view-" + v).classList.toggle("on", v === state.view);
-  // The period only applies to the Budget page.
-  for (const id of ["period", "custom-range"]) $(id).style.visibility = state.view === "budget" ? "" : "hidden";
-  state.page = state.view === "budget" ? state.page : 1;
+  state.view = VIEWS.includes(view) ? view : "budget";
+  for (const b of document.querySelectorAll("nav.tabs button")) {
+    b.classList.toggle("on", b.dataset.view === state.view);
+    b.setAttribute("aria-current", b.dataset.view === state.view ? "page" : "false");
+  }
+  for (const v of VIEWS) $("view-" + v).classList.toggle("on", v === state.view);
+  // The period is for the Budget page; the account choice for pages that list transactions.
+  const periodApplies = state.view === "budget";
+  const accountApplies = !["cashflow", "checkup"].includes(state.view);
+  for (const id of ["period", "start", "end"]) $(id).disabled = !periodApplies;
+  $("period").title = periodApplies ? "" : "This page has its own dates";
+  $("account").disabled = !accountApplies;
+  $("account").title = accountApplies ? "" : "This page uses your budget's checking and savings";
   refresh(withAccounts);
 }
 for (const b of document.querySelectorAll("nav.tabs button")) b.addEventListener("click", () => showView(b.dataset.view));
@@ -1103,24 +1677,50 @@ $("theme-btn").addEventListener("click", () => {
 applyTheme(theme());
 
 // ---------- wiring ----------
+// Each refresh gets a number; an answer that arrives after a newer refresh started is dropped,
+// so a slow search can't overwrite the list for the filter you picked after it.
+let refreshSeq = 0;
+const stale = (seq) => seq != null && seq !== refreshSeq;
+
 async function refresh(withAccounts = true) {
+  const seq = ++refreshSeq;
   saveURL();
   try {
-    if (withAccounts) await loadAccounts();
-    if (state.view === "trends") await loadTrends();
-    else if (state.view === "recurring") await loadRecurring();
-    else await Promise.all([loadSummary(), loadTransactions()]);
-  } catch (e) { console.error(e); $("alerts").append(h("div", { class: "alert" }, e.message)); }
+    if (withAccounts) { await loadAccounts(); refreshBadge(); }
+    if (stale(seq)) return;
+    $("errors").replaceChildren();
+    if (state.view === "trends") await loadTrends(seq);
+    else if (state.view === "recurring") await loadRecurring(seq);
+    else if (state.view === "cashflow") await loadCashflow(seq);
+    else if (state.view === "giving") await loadGiving(seq);
+    else if (state.view === "checkup") await loadCheckup(seq);
+    else await Promise.all([loadSummary(seq), loadTransactions(seq)]);
+  } catch (e) { if (!stale(seq)) showError(e); }
 }
 
-$("period").addEventListener("change", (e) => { state.period = e.target.value; state.page = 1; applyPeriod(); refresh(false); });
-for (const id of ["start", "end"]) $(id).addEventListener("change", (e) => { state[id] = e.target.value; state.page = 1; refresh(false); });
+$("period").addEventListener("change", (e) => setPeriod(e.target.value));
+for (const id of ["start", "end"]) $(id).addEventListener("change", (e) => {
+  if (!e.target.value) { e.target.value = state[id]; return; }  // cleared: keep the last good date
+  state[id] = e.target.value; state.page = 1; refresh(false);
+});
 $("account").addEventListener("change", (e) => { state.account = e.target.value; state.page = 1; refresh(false); });
 $("category-filter").addEventListener("change", (e) => setCategory(e.target.value));
 let searchTimer;
-$("q").addEventListener("input", (e) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.q = e.target.value; state.page = 1; refresh(false); }, 300); });
+const runSearch = () => { clearTimeout(searchTimer); state.q = $("q").value.trim(); state.page = 1; refresh(false); };
+$("q").addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 300); });
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); if (e.key === "Escape") clearSearch(); });
+$("q").addEventListener("search", runSearch);  // the field's own ✕ button
+$("qall").addEventListener("change", (e) => { state.qall = e.target.checked; state.page = 1; if (state.q) refresh(false); else saveURL(); });
+// "/" jumps to search, like most sites.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName) && !document.querySelector("dialog[open]")) {
+    e.preventDefault();
+    if (state.view !== "budget") showView("budget");
+    $("q").focus();
+  }
+});
 $("page-size").addEventListener("change", (e) => { state.page_size = Number(e.target.value); state.page = 1; refresh(false); });
-$("prev").addEventListener("click", () => { state.page--; refresh(false); });
+$("prev").addEventListener("click", () => { if (state.page > 1) { state.page--; refresh(false); } });
 $("next").addEventListener("click", () => { state.page++; refresh(false); });
 $("connect-btn").addEventListener("click", () => connect());
 $("sync-btn").addEventListener("click", async (e) => {
@@ -1129,15 +1729,21 @@ $("sync-btn").addEventListener("click", async (e) => {
     const r = await api("/api/sync", { method: "POST" });
     const errors = r.results.filter((x) => x.error);
     if (errors.length) alert(errors.map((x) => `${x.enrollment}: ${x.error}`).join("\n"));
+    else toast("Synced.");
   } catch (err) { alert(err.message); }
   e.target.disabled = false; e.target.textContent = "Sync now";
   refresh(true);
 });
-$("logout-btn").addEventListener("click", async () => { await api("/logout", { method: "POST" }); location.href = "/login"; });
+$("logout-btn").addEventListener("click", async () => { await api("/logout", { method: "POST" }).catch(() => {}); location.href = "/login"; });
+// Left open overnight: "this month" and "today" moved, so start fresh.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && new Date().toDateString() !== LOADED_ON) location.reload();
+});
 
 for (const c of CATEGORIES) $("category-filter").append(h("option", { value: c }, c));
 $("category-filter").value = state.category;
 $("q").value = state.q;
+$("qall").checked = state.qall;
 $("page-size").value = String(state.page_size);
 buildPeriodOptions();
 if (state.period === "custom" && state.start && state.end) {

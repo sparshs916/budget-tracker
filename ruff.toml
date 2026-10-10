@@ -10,3 +10,5 @@ select = ["E", "F", "W"]
 "tests/test_budget.py" = ["E501"]
 # The frozen-math fixture reads best one row per line.
 "tests/test_golden.py" = ["E501"]
+# Reuses the conn fixture from test_features (pytest injects it by name).
+"tests/test_tools.py" = ["F811", "E501"]

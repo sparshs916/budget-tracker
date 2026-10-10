@@ -109,6 +109,10 @@ CREATE TABLE IF NOT EXISTS budget_targets (
 -- (e.g. money from an account you don't track); it stops being flagged.
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS transfer_reviewed BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS note TEXT;
+-- You said this row isn't real (a duplicate or a stray bank-feed row): kept, shown greyed, never counted.
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE;
+-- Manual accounts: a balance you typed in, and the day it was true.
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance_date DATE;
 """
 
 _schema_ready = False

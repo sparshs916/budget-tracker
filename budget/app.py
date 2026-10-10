@@ -44,7 +44,9 @@ app.config.update(
 )
 
 MAX_FAILURES_PER_IP = 5
-MAX_FAILURES_TOTAL = 20
+# Across all addresses: high enough that a stranger can't lock you out with a few tries,
+# low enough to stop a spread-out guessing attack.
+MAX_FAILURES_TOTAL = 200
 LOCKOUT_MINUTES = 15
 
 
@@ -241,11 +243,18 @@ def api_export():
                      "Note"])
     for r in rows:
         origin = ("you" if r["overridden"] else "transfer match" if r["paired"] else "AI" if r["ai_suggested"] else "rules")
-        writer.writerow([r["date"], r["account_name"], r["description"], r["merchant"] or "", r["category"],
-                         f"{r['flow']:.2f}", r["status"], r["source"], origin, r["note"] or ""])
+        category = "Hidden (not counted)" if r["hidden"] else r["category"]
+        writer.writerow([r["date"], _cell(r["account_name"]), _cell(r["description"]), _cell(r["merchant"]), category,
+                         f"{r['flow']:.2f}", r["status"], r["source"], origin, _cell(r["note"])])
     name = f"transactions-{filters['start']}-to-{filters['end']}.csv"
     return Response(out.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+
+def _cell(text):
+    """Bank text can start with = + - @; spreadsheets would run it as a formula."""
+    text = text or ""
+    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
 @app.get("/api/accounts")
@@ -406,6 +415,118 @@ def api_trends():
         return jsonify(months=queries.trends(conn, min(end, t), months, request.args.get("account") or "budget"))
 
 
+@app.post("/api/transactions/hide")
+@login_required
+def api_hide_transaction():
+    """Hide a row that isn't real (a duplicate, or a stray row from the bank feed), or bring it back."""
+    body = request.get_json(force=True)
+    with db.connect() as conn:
+        updated = conn.execute("UPDATE transactions SET hidden = %s WHERE id = %s RETURNING id",
+                               (bool(body.get("hidden", True)), body.get("id", ""))).fetchone()
+        conn.commit()
+        if updated:
+            _relink(conn)
+    if not updated:
+        return jsonify(error="Not found"), 404
+    return jsonify(ok=True)
+
+
+@app.get("/api/health")
+@login_required
+def api_health():
+    with db.connect() as conn:
+        return jsonify(issues=queries.health(conn, today()))
+
+
+@app.get("/api/forecast")
+@login_required
+def api_forecast():
+    days = min(90, max(7, request.args.get("days", 35, type=int)))
+    with db.connect() as conn:
+        return jsonify(queries.forecast(conn, today(), days))
+
+
+def _money_arg(value, low=0, high=10_000_000):
+    try:
+        amount = Decimal(str(value)).quantize(Decimal("0.01"))
+    except ArithmeticError:
+        return None
+    return amount if amount.is_finite() and low <= amount <= high else None
+
+
+@app.post("/api/settings/low-balance")
+@login_required
+def api_low_balance():
+    amount = _money_arg(request.get_json(force=True).get("amount"))
+    if amount is None:
+        return jsonify(error="Enter an amount from 0 to 10,000,000"), 400
+    with db.connect() as conn:
+        queries.set_setting(conn, "low_balance_alert", amount)
+    return jsonify(ok=True)
+
+
+@app.post("/api/accounts/balance")
+@login_required
+def api_set_balance():
+    """For accounts added by hand: today's balance, so the cash-flow forecast can use it."""
+    body = request.get_json(force=True)
+    amount = _money_arg(body.get("balance"), low=-10_000_000)
+    if amount is None:
+        return jsonify(error="Enter the balance as a number"), 400
+    with db.connect() as conn:
+        updated = conn.execute(
+            """UPDATE accounts SET ledger_balance = %s, balance_date = %s
+               WHERE id = %s AND enrollment_id IS NULL RETURNING id""",
+            (amount, today(), body.get("id", ""))).fetchone()
+    if not updated:
+        return jsonify(error="Only accounts you added by hand take a typed balance; SimpleFIN sends the others."), 400
+    return jsonify(ok=True)
+
+
+def _year_arg():
+    year = request.args.get("year", today().year, type=int)
+    if not 2000 <= year <= today().year:
+        abort(400, "Pick a year from 2000 to this year")
+    return year
+
+
+@app.get("/api/giving")
+@login_required
+def api_giving():
+    with db.connect() as conn:
+        return jsonify(queries.giving(conn, _year_arg(), today(), request.args.get("account") or "budget"))
+
+
+@app.post("/api/giving/goal")
+@login_required
+def api_giving_goal():
+    value = request.get_json(force=True).get("percent")
+    percent = None if value in (None, "") else _money_arg(value, high=100)
+    if value not in (None, "") and percent is None:
+        return jsonify(error="Enter a percentage from 0 to 100, or leave it blank"), 400
+    with db.connect() as conn:
+        queries.set_setting(conn, "giving_goal_pct", percent if percent else None)
+    return jsonify(ok=True)
+
+
+@app.get("/api/giving/export")
+@login_required
+def api_giving_export():
+    """Every gift in the year, for tax records."""
+    year = _year_arg()
+    with db.connect() as conn:
+        data = queries.giving(conn, year, today(), request.args.get("account") or "budget")
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Date", "Organization", "Amount", "Account", "Note"])
+    for g in data["gifts"]:
+        writer.writerow([g["date"], _cell(g["name"]), f"{g['amount']:.2f}", _cell(g["account"]), _cell(g["note"])])
+    writer.writerow([])
+    writer.writerow(["Total", "", f"{data['given']:.2f}", "", ""])
+    return Response(out.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="giving-{year}.csv"'})
+
+
 @app.get("/api/recurring")
 @login_required
 def api_recurring():
@@ -551,6 +672,7 @@ def api_import():
         }
         if form.get("commit") == "1":
             result["import_id"] = csv_import.save(conn, account, new_rows, upload.filename) if new_rows else None
+            result["account_id"] = account["id"]
             result["saved"] = True
             conn.commit()
             result["ai_categorized"] = _auto_categorize(conn, limit=100)
