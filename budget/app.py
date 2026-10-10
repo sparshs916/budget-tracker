@@ -14,7 +14,8 @@ from werkzeug.security import check_password_hash
 from . import config, csv_import, db, queries
 from .categorize import CATEGORIES, CATEGORY_NAMES
 from .simplefin import SimpleFINError, claim_setup_token
-from .sync import SUBTYPES, compare_account, recategorize_account, save_connection, sync_all, sync_enrollment
+from .sync import (SUBTYPES, compare_account, recategorize_account, recategorize_all_if_rules_changed, save_connection,
+                   sync_all, sync_enrollment)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -90,6 +91,24 @@ def check_config():
     missing = config.missing_settings()
     if missing:
         return render_template("setup.html", missing=missing), 503
+
+
+_rules_checked = False
+
+
+@app.before_request
+def apply_new_category_rules():
+    global _rules_checked
+    if _rules_checked or not request.path.startswith("/api/"):
+        return
+    _rules_checked = True
+    try:
+        with db.connect() as conn:
+            changed = recategorize_all_if_rules_changed(conn)
+        if changed:
+            logging.info("Re-categorized %s transactions for new rules", changed)
+    except Exception:
+        logging.exception("Re-categorizing failed")
 
 
 @app.after_request
@@ -385,7 +404,7 @@ def api_import():
 
         suggested = csv_import.suggest_flip(parsed, account["type"])
         flip = suggested if form.get("flip", "auto") == "auto" else form.get("flip") == "1"
-        new_rows, duplicates = csv_import.plan(conn, account, parsed, flip)
+        new_rows, duplicates, not_in_file = csv_import.plan(conn, account, parsed, flip)
 
         result = {
             "account": account["name"], "flip": flip, "flip_suggested": suggested,
@@ -394,6 +413,7 @@ def api_import():
             "start": min(r["date"] for r in parsed["rows"]), "end": max(r["date"] for r in parsed["rows"]),
             "new": [_import_row(r) for r in sorted(new_rows, key=lambda r: r["date"], reverse=True)[:200]],
             "duplicates": [_import_row(r) for r in sorted(duplicates, key=lambda r: r["date"], reverse=True)[:200]],
+            "not_in_file": [_import_row(r) for r in sorted(not_in_file, key=lambda r: r["date"], reverse=True)[:200]],
         }
         if form.get("commit") == "1":
             result["import_id"] = csv_import.save(conn, account, new_rows, upload.filename) if new_rows else None

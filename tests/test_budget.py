@@ -405,7 +405,7 @@ def upload(conn, key, text, flip=None):
     account = account_row(conn, key)
     parsed = csv_import.parse(text.encode())
     flip = csv_import.suggest_flip(parsed, account["type"]) if flip is None else flip
-    new, dups = csv_import.plan(conn, account, parsed, flip)
+    new, dups, _ = csv_import.plan(conn, account, parsed, flip)
     if new:
         csv_import.save(conn, account, new, "test.csv")
     conn.commit()
@@ -578,3 +578,35 @@ def test_manual_accounts_and_apple_card_upload(conn):
     assert web.post("/api/accounts/delete", json={"id": made["id"]}, headers=headers).status_code == 200
     conn.rollback()
     assert not conn.execute("SELECT 1 FROM transactions WHERE account_id = %s", (made["id"],)).fetchone()
+
+
+def test_upload_lists_app_transactions_missing_from_the_statement(conn):
+    # The statement has everything SimpleFIN sent except the pending Blue Bottle charge.
+    statement = "Transaction Date,Description,Amount\n" \
+                "10/02/2026,TRADER JOE S,-45.10\n10/03/2026,NETFLIX,-15.49\n10/05/2026,Payment Thank You,300.00\n" \
+                "10/07/2026,CHEWY,-30.00\n10/08/2026,CHEWY RETURN,10.00\n"
+    account = account_row(conn, K("cc"))
+    new, dups, not_in_file = csv_import.plan(conn, account, csv_import.parse(statement), False)
+    assert not new and len(dups) == 5
+    assert [(r["description"], r["flow"]) for r in not_in_file] == []  # Blue Bottle (10/09) is after the file ends
+    statement += "10/09/2026,SOMETHING ELSE,-1.00\n"
+    new, dups, not_in_file = csv_import.plan(conn, account, csv_import.parse(statement), False)
+    assert [r["description"] for r in new] == ["SOMETHING ELSE"]
+    assert [(r["description"], r["flow"]) for r in not_in_file] == [("TST* BLUE BOTTLE", Decimal("-12.00"))]
+
+
+def test_chase_html_entities_are_decoded():
+    p = csv_import.parse("Transaction Date,Description,Amount\n09/05/2026,H&amp;M 0765CALIFORNIA,-28.25\n")
+    assert p["rows"][0]["description"] == "H&M 0765CALIFORNIA"
+
+
+def test_rules_change_recategorizes_existing_rows_but_not_your_choices(conn):
+    conn.execute("UPDATE transactions SET auto_category = 'Other Utilities' WHERE id = %s", (K("cc", "k2"),))  # an old, wrong rule
+    conn.execute("UPDATE transactions SET auto_category = 'Rent', override_category = 'Shopping' WHERE id = %s", (K("cc", "k1"),))
+    conn.execute("DELETE FROM app_meta")
+    conn.commit()
+    assert sync.recategorize_all_if_rules_changed(conn) >= 2
+    rows = {r["id"]: r for r in conn.execute("SELECT id, auto_category, override_category FROM transactions").fetchall()}
+    assert rows[K("cc", "k2")]["auto_category"] == "Subscriptions"
+    assert rows[K("cc", "k1")]["override_category"] == "Shopping"  # your choice stays
+    assert sync.recategorize_all_if_rules_changed(conn) == 0  # only once per rules version

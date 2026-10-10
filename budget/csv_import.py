@@ -21,6 +21,7 @@ so a CSV row is taken over (not duplicated) when SimpleFIN later sends it.
 import csv
 import datetime
 import hashlib
+import html
 import io
 import re
 from decimal import Decimal, InvalidOperation
@@ -107,7 +108,8 @@ def parse(data):
     category_col = _find(header, _CATEGORY_COLUMNS, used=used)
 
     def cell(row, i):
-        return row[i].strip() if i is not None and i < len(row) else ""
+        # Some banks (Chase) write "&" as "&amp;" in their CSVs.
+        return html.unescape(row[i]).strip() if i is not None and i < len(row) else ""
 
     rows, skipped = [], 0
     for row in lines[header_index + 1:]:
@@ -148,7 +150,12 @@ def _normalize(text):
 
 
 def plan(conn, account, parsed, flip):
-    """Split parsed rows into new rows and duplicates, without writing anything."""
+    """Split parsed rows into new rows and duplicates, without writing anything.
+
+    Also returns the account's existing transactions inside the file's date
+    range that no row in the file accounts for, so a statement can be used to
+    reconcile what SimpleFIN sent.
+    """
     occurrences = {}
     rows = []
     for r in sorted(parsed["rows"], key=lambda r: r["date"]):
@@ -168,16 +175,17 @@ def plan(conn, account, parsed, flip):
         if r["id"] in already:
             r["reason"] = "Already uploaded"
 
+    file_start, file_end = rows[0]["date"], rows[-1]["date"]
+    start = file_start - datetime.timedelta(days=MATCH_DAYS)
+    end = file_end + datetime.timedelta(days=MATCH_DAYS)
+    candidates = conn.execute(
+        """SELECT id, date, flow, description FROM transactions
+           WHERE account_id = %s AND date BETWEEN %s AND %s AND NOT (id = ANY(%s))
+           ORDER BY date, id""",
+        (account["id"], start, end, ids),
+    ).fetchall()
+    claimed = set()
     if new:
-        start = min(r["date"] for r in new) - datetime.timedelta(days=MATCH_DAYS)
-        end = max(r["date"] for r in new) + datetime.timedelta(days=MATCH_DAYS)
-        candidates = conn.execute(
-            """SELECT id, date, flow, description FROM transactions
-               WHERE account_id = %s AND date BETWEEN %s AND %s AND NOT (id = ANY(%s))
-               ORDER BY date, id""",
-            (account["id"], start, end, ids),
-        ).fetchall()
-        claimed = set()
         matched = {}
         # Exact-date matches first, then 1, 2, 3 days apart, so the closest pairing wins.
         for distance in range(MATCH_DAYS + 1):
@@ -199,7 +207,9 @@ def plan(conn, account, parsed, flip):
             else:
                 still_new.append(r)
         new = still_new
-    return new, duplicates
+    not_in_file = [{"date": c["date"], "description": c["description"], "flow": Decimal(c["flow"])}
+                   for c in candidates if c["id"] not in claimed and file_start <= c["date"] <= file_end]
+    return new, duplicates, not_in_file
 
 
 def save(conn, account, new_rows, filename):
@@ -211,15 +221,15 @@ def save(conn, account, new_rows, filename):
     for r in new_rows:
         conn.execute(
             """INSERT INTO transactions (id, account_id, date, description, merchant, merchant_key, raw_amount,
-                                         flow, status, auto_category, source, import_id)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'posted', %s, 'csv', %s)
+                                         flow, status, auto_category, source, import_id, bank_category)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'posted', %s, 'csv', %s, %s)
                ON CONFLICT (id) DO NOTHING""",
             (
                 r["id"], account["id"], r["date"], r["description"], r["merchant"],
                 merchant_key(r["merchant"], r["description"]), r["amount"], r["flow"],
                 categorize(description=r["description"], merchant=r["merchant"], flow=r["flow"],
                            account_type=account["type"], hint=r["hint"]),
-                import_id,
+                import_id, r["hint"],
             ),
         )
     return import_id

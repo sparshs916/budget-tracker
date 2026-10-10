@@ -1,4 +1,5 @@
 import datetime
+import html
 import logging
 import re
 import secrets
@@ -6,7 +7,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 from . import config, crypto
-from .categorize import categorize, merchant_key
+from .categorize import RULES_VERSION, categorize, merchant_key
 from .simplefin import SimpleFINClient, SimpleFINError, error_messages
 
 log = logging.getLogger(__name__)
@@ -186,7 +187,9 @@ def _save_account(conn, enrollment, account, window_start, tz, prune):
     for t in account["transactions"]:
         timestamp = t.get("transacted_at") or t.get("posted")
         date = _local_date(timestamp, tz) if timestamp else datetime.datetime.now(tz).date()
-        merchant = t.get("payee") or None
+        merchant = html.unescape(t["payee"]) if t.get("payee") else None
+        if t.get("description"):
+            t["description"] = html.unescape(t["description"])
         flow = to_flow(t["amount"], account_type)
         txn_id = f"{account['key']}:{t['id']}"
         if txn_id not in existing_ids and not t.get("pending"):
@@ -245,15 +248,46 @@ def recategorize_account(conn, account_id):
     """Re-run the automatic categories after an account's type changes."""
     account = conn.execute("SELECT type FROM accounts WHERE id = %s", (account_id,)).fetchone()
     rows = conn.execute(
-        "SELECT id, description, merchant, raw_amount FROM transactions WHERE account_id = %s", (account_id,)
+        "SELECT id, description, merchant, raw_amount, flow, source, bank_category FROM transactions WHERE account_id = %s",
+        (account_id,),
     ).fetchall()
     for r in rows:
-        flow = to_flow(r["raw_amount"], account["type"])
+        # SimpleFIN amounts are normalized by account type; uploads were signed when imported.
+        flow = to_flow(r["raw_amount"], account["type"]) if r["source"] == "simplefin" else Decimal(r["flow"])
         conn.execute(
             "UPDATE transactions SET flow = %s, auto_category = %s WHERE id = %s",
             (flow, categorize(description=r["description"], merchant=r["merchant"], flow=flow,
-                              account_type=account["type"]), r["id"]),
+                              account_type=account["type"], hint=r["bank_category"]), r["id"]),
         )
+
+
+def recategorize_all_if_rules_changed(conn):
+    """Re-run the automatic categories once after the rules change. Your own
+    category choices (per transaction or per merchant) are untouched."""
+    row = conn.execute("SELECT value FROM app_meta WHERE key = 'rules_version'").fetchone()
+    if row and row["value"] == RULES_VERSION:
+        return 0
+    rows = conn.execute(
+        """SELECT t.id, t.description, t.merchant, t.flow, t.auto_category, t.bank_category, a.type
+           FROM transactions t JOIN accounts a ON a.id = t.account_id"""
+    ).fetchall()
+    changes = []
+    for r in rows:
+        new = categorize(description=r["description"], merchant=r["merchant"], flow=Decimal(r["flow"]),
+                         account_type=r["type"], hint=r["bank_category"])
+        # Uploads from before bank categories were stored may have been categorized by
+        # one; don't downgrade those to Other.
+        if new != r["auto_category"] and not (new in ("Other", "Other Income") and r["bank_category"] is None):
+            changes.append((new, r["id"]))
+    with conn.cursor() as cur:
+        cur.executemany("UPDATE transactions SET auto_category = %s WHERE id = %s", changes)
+    conn.execute(
+        """INSERT INTO app_meta (key, value) VALUES ('rules_version', %s)
+           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value""",
+        (RULES_VERSION,),
+    )
+    conn.commit()
+    return len(changes)
 
 
 def compare_account(conn, account_id, start, end, client=None):

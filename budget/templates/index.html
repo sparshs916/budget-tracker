@@ -575,6 +575,10 @@ async function previewUpload() {
     ];
     if (r.new.length) parts.push(h("b", { class: "small" }, "Will be added"), previewTable(r.new, false));
     if (r.duplicates.length) parts.push(h("b", { class: "small" }, "Skipped as duplicates"), previewTable(r.duplicates, true));
+    if (r.not_in_file.length) parts.push(
+      h("b", { class: "small" }, `In the app for these dates but not in this file (${r.not_in_file.length})`),
+      h("p", { class: "small muted", style: "margin:.2rem 0" }, "If this file is a complete statement, these are extra: often a pending charge whose final amount changed, or one dated just outside the file. Nothing here is changed by importing."),
+      previewTable(r.not_in_file, false));
     $("upload-result").replaceChildren(...parts);
     if (r.new_count) {
       $("upload-commit").textContent = `Import ${r.new_count} transaction${r.new_count === 1 ? "" : "s"}`;
