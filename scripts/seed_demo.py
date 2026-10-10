@@ -1,9 +1,9 @@
-"""Load ~3 months of fake transactions so the app can be tried without Teller.
+"""Load ~3 months of fake transactions so the app can be tried without SimpleFIN.
 
     python scripts/seed_demo.py
 
-Goes through the real sync code with a fake Teller client. Only touches the
-"demo" enrollment, so it is safe to run against a database with real data,
+Goes through the real sync code with a fake SimpleFIN server. Only touches the
+"demo" connection, so it is safe to run against a database with real data,
 but don't: demo rows would show up in your budget.
 """
 import datetime
@@ -13,10 +13,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from budget import db  # noqa: E402
-from budget.sync import save_enrollment, sync_enrollment  # noqa: E402
+from zoneinfo import ZoneInfo  # noqa: E402
 
-ENROLLMENT = "demo-enrollment"
+from budget import config, crypto, db  # noqa: E402
+from budget.sync import sync_enrollment  # noqa: E402
+
+CONNECTION = "demo-connection"
+TZ = ZoneInfo(config.TIMEZONE)
 
 
 def build(today):
@@ -24,21 +27,28 @@ def build(today):
     chk, cc, sav = [], [], []
     n = 0
 
-    def add(target, date, amount, description, type="card_payment", category=None, merchant=None):
+    def add(target, date, amount, description, type=None, category=None, merchant=None):
+        # Amounts below are written as "money out of checking is negative, card
+        # purchases are positive"; SimpleFIN uses + for money into every account.
         nonlocal n
         if date > today:
             return
         n += 1
-        status = "pending" if (today - date).days < 2 else "posted"
-        target.append({"id": f"demo_{n}", "date": date.isoformat(), "amount": f"{amount:.2f}",
-                       "description": description, "type": type, "status": status,
-                       "details": {"category": category, "counterparty": {"name": merchant}}})
+        if target is cc:
+            amount = -amount
+        stamp = int(datetime.datetime.combine(date, datetime.time(12), TZ).timestamp())
+        pending = (today - date).days < 2
+        t = {"id": f"demo_{n}", "amount": f"{amount:.2f}", "description": description,
+             "transacted_at": stamp, "posted": 0 if pending else stamp, "pending": pending}
+        if merchant:
+            t["payee"] = merchant
+        target.append(t)
 
     first = (today.replace(day=1) - datetime.timedelta(days=62)).replace(day=1)
     month = first
     while month <= today:
         d = lambda day: month.replace(day=day)  # noqa: E731
-        # Checking (Teller: money out is negative)
+        # Checking
         add(chk, d(1), 2701.00, "ACME CORP PAYROLL PPD", "ach", "income")
         add(chk, d(15), 2701.00, "ACME CORP PAYROLL PPD", "ach", "income")
         add(chk, d(1), -1650.00, "ESSEX PROPERTY RENT WEB PMT", "ach")
@@ -53,7 +63,7 @@ def build(today):
         add(sav, d(2), 500.00, "Online Transfer from CHK ...1199", "transfer")
         add(sav, d(16), 500.00, "Online Transfer from CHK ...1199", "transfer")
         add(sav, d(28), 3.12, "Interest Payment", "interest")
-        # Credit card (Teller: purchases positive, payments negative)
+        # Credit card (purchases written positive here, flipped in add())
         card_total = 0.0
         recurring = [
             (4, 55.00, "COMCAST CABLE COMM", "utilities", "Comcast"),
@@ -91,38 +101,31 @@ def build(today):
     return {"demo_chk": chk, "demo_sav": sav, "demo_cc": cc}
 
 
-class FakeTeller:
+class FakeSimpleFIN:
     def __init__(self, txns):
         self.txns = txns
 
-    def accounts(self):
-        def account(id, name, type, subtype, last_four):
-            return {"id": id, "enrollment_id": ENROLLMENT, "name": name, "type": type, "subtype": subtype,
-                    "last_four": last_four, "status": "open", "institution": {"name": "Demo Bank"},
-                    "links": {"transactions": "x", "balances": "x"}}
-        return [
-            account("demo_chk", "Everyday Checking", "depository", "checking", "1199"),
-            account("demo_sav", "High Yield Savings", "depository", "savings", "4821"),
-            account("demo_cc", "Sapphire Card", "credit", "credit_card", "7310"),
-        ]
-
-    def balances(self, account_id):
-        return {"demo_chk": {"ledger": "3412.55", "available": "3412.55"},
-                "demo_sav": {"ledger": "12500.00", "available": "12500.00"},
-                "demo_cc": {"ledger": "842.17", "available": "9157.83"}}[account_id]
-
-    def transactions(self, account_id, start_date=None):
-        return list(reversed(self.txns[account_id]))
+    def accounts(self, start, end):
+        def account(id, name, balance):
+            return {"org": {"domain": "demo.bank", "name": "Demo Bank", "sfin-url": "https://demo.invalid"},
+                    "id": id, "name": name, "currency": "USD", "balance": balance, "balance-date": end,
+                    "transactions": [t for t in self.txns[id] if start <= (t["posted"] or t["transacted_at"]) < end]}
+        return {"errors": [], "accounts": [
+            account("demo_chk", "Everyday Checking", "3412.55"),
+            account("demo_sav", "High Yield Savings", "12500.00"),
+            account("demo_cc", "Sapphire Card", "-842.17"),
+        ]}
 
 
 def main():
-    today = datetime.date.today()
+    today = datetime.datetime.now(TZ).date()
     with db.connect() as conn:
-        conn.execute("DELETE FROM enrollments WHERE id = %s", (ENROLLMENT,))
-        save_enrollment(conn, ENROLLMENT, "Demo Bank", "demo-token")
+        conn.execute("DELETE FROM enrollments WHERE id = %s", (CONNECTION,))
+        conn.execute("INSERT INTO enrollments (id, institution, access_token) VALUES (%s, 'Demo Bank', %s)",
+                     (CONNECTION, crypto.encrypt("https://demo:demo@demo.invalid/simplefin")))
         conn.commit()
-        enrollment = conn.execute("SELECT * FROM enrollments WHERE id = %s", (ENROLLMENT,)).fetchone()
-        result = sync_enrollment(conn, enrollment, today=today, client=FakeTeller(build(today)))
+        connection = conn.execute("SELECT * FROM enrollments WHERE id = %s", (CONNECTION,)).fetchone()
+        result = sync_enrollment(conn, connection, today=today, client=FakeSimpleFIN(build(today)))
     print(f"Loaded {result['transactions']} demo transactions across {result['accounts']} accounts.")
 
 

@@ -5,11 +5,11 @@ from psycopg.rows import dict_row
 
 from . import config
 
-SCHEMA = """
+SCHEMA = r"""
 CREATE TABLE IF NOT EXISTS enrollments (
     id              TEXT PRIMARY KEY,
     institution     TEXT,
-    access_token    TEXT NOT NULL,          -- Fernet-encrypted
+    access_token    TEXT NOT NULL,          -- Fernet-encrypted SimpleFIN access URL
     status          TEXT NOT NULL DEFAULT 'ok',
     last_error      TEXT,
     last_synced_at  TIMESTAMPTZ,
@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     currency          TEXT,
     status            TEXT,
     include_in_budget BOOLEAN NOT NULL DEFAULT TRUE,
+    type_locked       BOOLEAN NOT NULL DEFAULT FALSE,  -- type was set by hand
     ledger_balance    NUMERIC(14,2),
     available_balance NUMERIC(14,2),
     history_synced    BOOLEAN NOT NULL DEFAULT FALSE,
@@ -40,11 +41,10 @@ CREATE TABLE IF NOT EXISTS transactions (
     description       TEXT,
     merchant          TEXT,
     merchant_key      TEXT,
-    raw_amount        NUMERIC(14,2) NOT NULL,   -- exactly as Teller sent it
+    raw_amount        NUMERIC(14,2) NOT NULL,   -- exactly as the provider sent it
     flow              NUMERIC(14,2) NOT NULL,   -- + money in, - money out
     type              TEXT,
     status            TEXT,
-    teller_category   TEXT,
     auto_category     TEXT NOT NULL,
     override_category TEXT,
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -67,6 +67,11 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS login_attempts_created_idx ON login_attempts (created_at);
+
+-- Upgrades for databases created before the switch from Teller to SimpleFIN.
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type_locked BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE transactions DROP COLUMN IF EXISTS teller_category;
+DELETE FROM enrollments WHERE id LIKE 'enr\_%';
 """
 
 _schema_ready = False

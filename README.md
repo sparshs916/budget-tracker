@@ -1,6 +1,6 @@
 # budget-tracker
 
-A one-page personal budget, password-protected for a single user. It pulls bank and credit card transactions from [Teller](https://teller.io), sorts them into categories, and shows two things:
+A one-page personal budget, password-protected for a single user. It pulls bank and credit card transactions from [SimpleFIN Bridge](https://beta-bridge.simplefin.org) ($15/year), sorts them into categories, and shows two things:
 
 - **Budget table**: income, each expense category, total expenses and what remains, for any month or date range. Click a row to filter the transactions to that category.
 - **Transactions**: searchable and paginated, filterable by account, account type and category. Change a category inline, for that one transaction or for every transaction from that merchant.
@@ -9,7 +9,7 @@ The app is Flask on Vercel with Postgres (Neon) for storage. A Vercel cron syncs
 
 ## How the math works
 
-Teller signs amounts differently by account type. On checking and savings, money out is negative. On credit cards, a purchase is positive (it raises what you owe) and a payment or refund is negative. Each transaction is stored as `raw_amount` (exactly what Teller sent) and as `flow`, with one convention for every account: **+ is money in, − is money out**.
+SimpleFIN uses one sign convention for every account: positive means money came into the account, so a card purchase is negative and a card payment is positive. Each transaction is stored as `raw_amount` (exactly what SimpleFIN sent) and as `flow`, where **+ is money in and − is money out**.
 
 - **Income** is the sum of `flow` over the income categories.
 - **Each expense line** is `−flow` summed over that category, so a refund lowers the category.
@@ -17,19 +17,18 @@ Teller signs amounts differently by account type. On checking and savings, money
 - **Savings** is money moved from checking into savings or investing. It is listed as its own line and included in Total Expenses, like the spreadsheet. Savings accounts start outside "Budget accounts" so the incoming side of that transfer isn't counted too. You can change this under **Accounts**.
 - **Pending** transactions count. When one posts, the next sync replaces it.
 
-If credit card purchases show up as income, set `CREDIT_PURCHASES_ARE_POSITIVE=false`.
+SimpleFIN doesn't say whether an account is checking, savings or a credit card, so the app guesses from the account name and balance. The type decides how card payments and transfers are counted, so fix any wrong guess in the **Accounts** panel; your choice sticks across syncs. If card purchases still show up as income, set `INVERT_CREDIT_AMOUNTS=true`.
 
 ## Setup
 
-1. **Teller**: in the [Teller dashboard](https://teller.io), copy your **Application ID** and download your **certificate.pem** and **private_key.pem**. Use the `development` environment for real accounts on the free tier.
-2. **Secrets**: run this locally:
+1. **Secrets**: run this locally. It asks for a login password and appends the secret env vars to `.env`:
    ```bash
    pip install -r requirements.txt
-   python scripts/setup_secrets.py path/to/certificate.pem path/to/private_key.pem
+   python scripts/setup_secrets.py >> .env
    ```
-   It asks for a login password and prints every secret env var.
-3. **Vercel**: import this GitHub repo as a new project. Under **Storage**, add a **Neon Postgres** database; that sets `DATABASE_URL`. Under **Settings → Environment Variables**, add the output of step 2 plus `TELLER_APP_ID` and `TELLER_ENV=development`, then deploy.
-4. Open the site, log in, and click **+ Connect account** for each bank.
+2. **Vercel**: import this GitHub repo as a new project (Framework Preset: Flask). Under **Storage**, add a **Neon Postgres** database; that sets `DATABASE_URL`. Under **Settings → Environment Variables**, add the four values from step 1, then deploy.
+3. **SimpleFIN**: sign up at [SimpleFIN Bridge](https://beta-bridge.simplefin.org) and link your banks there. Then create a new app connection there and copy its setup token.
+4. Open the site, log in, click **+ Connect account** and paste the setup token. Each token works once; the app stores the resulting access URL encrypted.
 
 See `.env.example` for all settings.
 
@@ -37,7 +36,7 @@ See `.env.example` for all settings.
 
 - There is one password. Vercel stores only its scrypt hash. After 5 failed logins from one IP, or 20 in total, login locks for 15 minutes.
 - The session cookie is signed, HttpOnly, Secure and SameSite=Lax, and lasts 30 days. Every write needs a CSRF token. Changing `APP_PASSWORD_HASH` logs out every session.
-- Teller access tokens are encrypted in the database with `TOKEN_ENCRYPTION_KEY`, so a leaked database alone exposes no bank access.
+- The SimpleFIN access URL is encrypted in the database with `TOKEN_ENCRYPTION_KEY`, so a leaked database alone exposes no bank data. SimpleFIN access is read-only: it cannot move money.
 - The cron endpoint only runs when the request carries `CRON_SECRET`.
 
 ## Local development

@@ -23,5 +23,4 @@ from budget.categorize import categorize
     ("AMAZON MKTPL REFUND", 25, "credit", "Shopping"),
 ])
 def test_categorize(description, flow, account_type, expected):
-    assert categorize(description=description, merchant=None, teller_category=None, teller_type=None,
-                      flow=flow, account_type=account_type) == expected
+    assert categorize(description=description, merchant=None, flow=flow, account_type=account_type) == expected

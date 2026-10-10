@@ -1,4 +1,4 @@
-"""Turn a Teller transaction into one budget category.
+"""Turn a bank transaction into one budget category.
 
 Every category has a kind:
   income   - counted in Income
@@ -98,37 +98,6 @@ KEYWORD_RULES = [
     ("Taxes", _rx(r"irs", r"franchise tax", r"tax payment", r"dept of revenue", r"treas tax")),
 ]
 
-TELLER_CATEGORY_MAP = {
-    "accommodation": "Travel",
-    "advertising": "Other",
-    "bar": "Dining Out",
-    "charity": "Giving",
-    "clothing": "Shopping",
-    "dining": "Dining Out",
-    "education": "Education",
-    "electronics": "Shopping",
-    "entertainment": "Entertainment",
-    "fuel": "Gas",
-    "general": "Other",
-    "groceries": "Groceries",
-    "health": "Health",
-    "home": "Shopping",
-    "income": "Income",
-    "insurance": "Other",
-    "investment": "Savings",
-    "loan": "Other",
-    "office": "Shopping",
-    "phone": "Phone",
-    "service": "Other",
-    "shopping": "Shopping",
-    "software": "Subscriptions",
-    "sport": "Entertainment",
-    "tax": "Taxes",
-    "transport": "Transportation",
-    "transportation": "Transportation",
-    "utilities": "Other Utilities",
-}
-
 _NOISE = re.compile(r"[^a-z&' ]+")
 
 
@@ -140,14 +109,12 @@ def merchant_key(merchant, description):
     return " ".join(words) or None
 
 
-def categorize(*, description, merchant, teller_category, teller_type, flow, account_type):
+def categorize(*, description, merchant, flow, account_type):
     text = f"{description or ''} {merchant or ''}"
-    teller_type = (teller_type or "").lower()
     is_credit = account_type == "credit"
 
     # Money moving between your own accounts.
-    if is_credit and flow > 0 and (teller_type in ("payment", "transfer") or CARD_PAYMENT.search(text)
-                                   or re.search(r"\bpayment\b", text, re.I)):
+    if is_credit and flow > 0 and (CARD_PAYMENT.search(text) or re.search(r"\b(?:payment|pymt|pmt)\b", text, re.IGNORECASE)):
         return "Credit Card Payment"
     if not is_credit and flow < 0 and CARD_PAYMENT.search(text) and not SAVINGS.search(text):
         return "Credit Card Payment"
@@ -164,12 +131,6 @@ def categorize(*, description, merchant, teller_category, teller_type, flow, acc
     for category, pattern in KEYWORD_RULES:
         if pattern.search(text):
             return category
-
-    mapped = TELLER_CATEGORY_MAP.get((teller_category or "").lower())
-    if mapped == "Income" and flow < 0:
-        mapped = None
-    if mapped:
-        return mapped
 
     if flow > 0 and not is_credit:
         return "Other Income"

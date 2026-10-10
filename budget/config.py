@@ -23,29 +23,20 @@ DATABASE_URL = _env("DATABASE_URL") or _env("POSTGRES_URL")
 APP_PASSWORD_HASH = _env("APP_PASSWORD_HASH")
 # Signs the session cookie. Any long random string.
 SECRET_KEY = _env("SECRET_KEY")
-# Fernet key used to encrypt Teller access tokens at rest.
+# Fernet key used to encrypt SimpleFIN access URLs at rest.
 TOKEN_ENCRYPTION_KEY = _env("TOKEN_ENCRYPTION_KEY")
 # Vercel sends "Authorization: Bearer $CRON_SECRET" on cron requests.
 CRON_SECRET = _env("CRON_SECRET")
 
-# Teller
-TELLER_APP_ID = _env("TELLER_APP_ID")
-TELLER_ENV = _env("TELLER_ENV", "development")  # sandbox | development | production
-# PEM contents of certificate.pem / private_key.pem (raw or base64-encoded).
-TELLER_CERT = _env("TELLER_CERT")
-TELLER_PRIVATE_KEY = _env("TELLER_PRIVATE_KEY")
-TELLER_BASE_URL = "https://api.teller.io"
+# SimpleFIN amounts already use one convention for every account: positive
+# means money came into the account, so a card purchase is negative. Set to
+# "true" only if your card purchases show up as income.
+INVERT_CREDIT_AMOUNTS = _env("INVERT_CREDIT_AMOUNTS", "false").lower() == "true"
 
-# Teller reports credit card purchases as positive amounts (they increase what
-# you owe) and payments/refunds as negative. Depository accounts are the
-# opposite: money out is negative. We flip credit amounts so every stored
-# "flow" means the same thing: negative = money left you, positive = came in.
-# Set to "false" if your card purchases show up as income.
-CREDIT_PURCHASES_ARE_POSITIVE = _env("CREDIT_PURCHASES_ARE_POSITIVE", "true").lower() != "false"
-
-# How far back the first sync of a new account goes, and how many recent days
-# every later sync re-fetches (pending transactions settle and change).
-INITIAL_HISTORY_DAYS = int(_env("INITIAL_HISTORY_DAYS", "365"))
+# How far back the first sync of a new connection goes, and how many recent
+# days every later sync re-fetches (pending transactions settle and change).
+# SimpleFIN rate-limits requests, and history is fetched in 60-day chunks.
+INITIAL_HISTORY_DAYS = int(_env("INITIAL_HISTORY_DAYS", "90"))
 RESYNC_WINDOW_DAYS = int(_env("RESYNC_WINDOW_DAYS", "21"))
 
 # Dates are bucketed into months in this zone.
@@ -60,8 +51,5 @@ def missing_settings():
         "APP_PASSWORD_HASH": APP_PASSWORD_HASH,
         "SECRET_KEY": SECRET_KEY,
         "TOKEN_ENCRYPTION_KEY": TOKEN_ENCRYPTION_KEY,
-        "TELLER_APP_ID": TELLER_APP_ID,
-        "TELLER_CERT": TELLER_CERT,
-        "TELLER_PRIVATE_KEY": TELLER_PRIVATE_KEY,
     }
     return [k for k, v in required.items() if not v]

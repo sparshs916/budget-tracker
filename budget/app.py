@@ -13,7 +13,8 @@ from werkzeug.security import check_password_hash
 
 from . import config, db, queries
 from .categorize import CATEGORIES, CATEGORY_NAMES
-from .sync import save_enrollment, sync_all, sync_enrollment
+from .simplefin import SimpleFINError, claim_setup_token
+from .sync import SUBTYPES, recategorize_account, save_connection, sync_all, sync_enrollment
 
 logging.basicConfig(level=logging.INFO)
 
@@ -157,8 +158,6 @@ def index():
         categories=CATEGORY_NAMES,
         category_kinds=dict(CATEGORIES),
         today=today().isoformat(),
-        teller_app_id=config.TELLER_APP_ID,
-        teller_env=config.TELLER_ENV,
     )
 
 
@@ -217,8 +216,20 @@ def api_accounts():
 def api_update_account(account_id):
     body = request.get_json(force=True)
     with db.connect() as conn:
-        conn.execute("UPDATE accounts SET include_in_budget = %s WHERE id = %s",
-                     (bool(body.get("include_in_budget")), account_id))
+        if "subtype" in body:
+            subtype = body["subtype"]
+            if subtype not in SUBTYPES:
+                return jsonify(error="Unknown account type"), 400
+            # A hand-picked type sticks across syncs and resets the budget default for it.
+            conn.execute(
+                """UPDATE accounts SET subtype = %s, type = %s, type_locked = TRUE, include_in_budget = %s
+                   WHERE id = %s""",
+                (subtype, SUBTYPES[subtype], subtype in ("checking", "credit_card"), account_id),
+            )
+            recategorize_account(conn, account_id)
+        if "include_in_budget" in body:
+            conn.execute("UPDATE accounts SET include_in_budget = %s WHERE id = %s",
+                         (bool(body["include_in_budget"]), account_id))
     return jsonify(ok=True)
 
 
@@ -248,20 +259,37 @@ def api_set_category(txn_id):
     return jsonify(ok=True)
 
 
-@app.post("/api/enrollments")
+@app.post("/api/connections")
 @login_required
-def api_add_enrollment():
-    body = request.get_json(force=True)
-    token = body.get("accessToken")
-    enrollment_id = body.get("enrollmentId")
-    if not token or not enrollment_id:
-        return jsonify(error="accessToken and enrollmentId are required"), 400
+def api_add_connection():
+    token = (request.get_json(force=True).get("setupToken") or "").strip()
+    if not token:
+        return jsonify(error="Paste a SimpleFIN setup token."), 400
+    try:
+        access_url = claim_setup_token(token)
+    except SimpleFINError as e:
+        return jsonify(error=e.message), 400
     with db.connect() as conn:
-        save_enrollment(conn, enrollment_id, body.get("institution"), token)
+        # Save before syncing: the setup token only works once.
+        connection_id = save_connection(conn, access_url)
         conn.commit()
-        enrollment = conn.execute("SELECT * FROM enrollments WHERE id = %s", (enrollment_id,)).fetchone()
-        result = sync_enrollment(conn, enrollment, today=today())
+        connection = conn.execute("SELECT * FROM enrollments WHERE id = %s", (connection_id,)).fetchone()
+        result = sync_enrollment(conn, connection, today=today())
+        # Connections whose accounts all moved to this one are leftovers from a reconnect.
+        conn.execute(
+            """DELETE FROM enrollments e WHERE e.id <> %s
+               AND NOT EXISTS (SELECT 1 FROM accounts a WHERE a.enrollment_id = e.id)""",
+            (connection_id,),
+        )
     return jsonify(result)
+
+
+@app.delete("/api/connections/<connection_id>")
+@login_required
+def api_remove_connection(connection_id):
+    with db.connect() as conn:
+        conn.execute("DELETE FROM enrollments WHERE id = %s", (connection_id,))
+    return jsonify(ok=True)
 
 
 @app.post("/api/sync")

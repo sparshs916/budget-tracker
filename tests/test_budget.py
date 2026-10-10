@@ -1,7 +1,9 @@
 """Run with a throwaway Postgres:  TEST_DATABASE_URL=postgresql://... pytest"""
+import base64
 import datetime
 import os
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 import pytest
 from cryptography.fernet import Fernet
@@ -16,80 +18,93 @@ os.environ.update({
     "SECRET_KEY": "test-secret",
     "TOKEN_ENCRYPTION_KEY": Fernet.generate_key().decode(),
     "CRON_SECRET": "cron-secret",
-    "TELLER_APP_ID": "app_test",
-    "TELLER_CERT": "x",
-    "TELLER_PRIVATE_KEY": "x",
 })
 
-from budget import db, queries  # noqa: E402
+from budget import app as app_module, db, queries, simplefin, sync  # noqa: E402
 from budget.app import app  # noqa: E402
-from budget.sync import save_enrollment, sync_enrollment  # noqa: E402
+from budget.sync import save_connection, sync_enrollment  # noqa: E402
 
 TODAY = datetime.date(2026, 10, 9)
+TZ = ZoneInfo("America/Los_Angeles")
+ACCESS_URL = "https://user:secretpass@bridge.example/simplefin"
 
 
-def txn(id, date, amount, description, type="card_payment", category=None, merchant=None, status="posted"):
-    return {"id": id, "date": date, "amount": amount, "description": description, "type": type,
-            "status": status, "details": {"category": category, "counterparty": {"name": merchant}}}
+def K(account, txn=None):
+    """Stored ids: accounts are keyed by org + id, transactions by account + id."""
+    return f"chase.com:{account}" + (f":{txn}" if txn else "")
 
 
-class FakeTeller:
-    def __init__(self, txns):
-        self.txns = txns
+def ts(date):
+    return int(datetime.datetime.combine(datetime.date.fromisoformat(date), datetime.time(12), TZ).timestamp())
 
-    def accounts(self):
-        return [
-            {"id": "chk", "enrollment_id": "enr", "name": "Checking", "type": "depository", "subtype": "checking",
-             "last_four": "1111", "status": "open", "institution": {"name": "Bank"},
-             "links": {"transactions": "x", "balances": "x"}},
-            {"id": "sav", "enrollment_id": "enr", "name": "Savings", "type": "depository", "subtype": "savings",
-             "last_four": "2222", "status": "open", "institution": {"name": "Bank"},
-             "links": {"transactions": "x", "balances": "x"}},
-            {"id": "cc", "enrollment_id": "enr", "name": "Sapphire", "type": "credit", "subtype": "credit_card",
-             "last_four": "3333", "status": "open", "institution": {"name": "Bank"},
-             "links": {"transactions": "x", "balances": "x"}},
-        ]
 
-    def balances(self, account_id):
-        return {"ledger": "100.00", "available": "90.00"}
-
-    def transactions(self, account_id, start_date=None):
-        return list(self.txns.get(account_id, []))
+# SimpleFIN convention: positive = money into the account, on every account
+# type. A card purchase is negative; a card payment is positive.
+def txn(id, date, amount, description, payee=None, pending=False):
+    t = {"id": id, "amount": amount, "description": description, "transacted_at": ts(date),
+         "posted": 0 if pending else ts(date), "pending": pending}
+    if payee:
+        t["payee"] = payee
+    return t
 
 
 OCT = {
     "chk": [
-        txn("c1", "2026-10-01", "2701.00", "ACME CORP PAYROLL", type="ach", category="income"),
-        txn("c2", "2026-10-02", "-1650.00", "ESSEX PROPERTY RENT", type="ach"),
-        txn("c3", "2026-10-03", "-500.00", "Online Transfer to SAV ...2222", type="transfer"),
-        txn("c4", "2026-10-05", "-300.00", "CHASE CREDIT CRD AUTOPAY", type="ach"),
-        txn("c5", "2026-10-06", "-92.00", "PGANDE WEB ONLINE PG&E", type="ach"),
-        txn("c6", "2026-09-28", "-999.00", "Old September thing", type="ach"),
+        txn("c1", "2026-10-01", "2701.00", "ACME CORP PAYROLL"),
+        txn("c2", "2026-10-02", "-1650.00", "ESSEX PROPERTY RENT"),
+        txn("c3", "2026-10-03", "-500.00", "Online Transfer to SAV ...2222"),
+        txn("c4", "2026-10-05", "-300.00", "CHASE CREDIT CRD AUTOPAY"),
+        txn("c5", "2026-10-06", "-92.00", "PGANDE WEB ONLINE PG&E"),
+        txn("c6", "2026-09-28", "-999.00", "Old September thing"),
     ],
     "sav": [
-        txn("s1", "2026-10-03", "500.00", "Online Transfer from CHK ...1111", type="transfer"),
-        txn("s2", "2026-10-04", "2.10", "Interest", type="interest"),
+        txn("s1", "2026-10-03", "500.00", "Online Transfer from CHK ...1111"),
+        txn("s2", "2026-10-04", "2.10", "Interest"),
     ],
     "cc": [
-        # Teller: credit purchases positive, payments/refunds negative.
-        txn("k1", "2026-10-02", "45.10", "TRADER JOE'S #123", category="groceries", merchant="Trader Joe's"),
-        txn("k2", "2026-10-03", "15.49", "NETFLIX.COM", category="entertainment", merchant="Netflix"),
-        txn("k3", "2026-10-05", "-300.00", "AUTOMATIC PAYMENT - THANK YOU", type="payment"),
-        txn("k4", "2026-10-07", "30.00", "CHEWY.COM", category="shopping", merchant="Chewy"),
-        txn("k5", "2026-10-08", "-10.00", "CHEWY.COM refund", category="shopping", merchant="Chewy"),
-        txn("k6", "2026-10-09", "12.00", "TST* BLUE BOTTLE", category="dining", status="pending"),
+        txn("k1", "2026-10-02", "-45.10", "TRADER JOE'S #123", payee="Trader Joe's"),
+        txn("k2", "2026-10-03", "-15.49", "NETFLIX.COM", payee="Netflix"),
+        txn("k3", "2026-10-05", "300.00", "AUTOMATIC PAYMENT - THANK YOU"),
+        txn("k4", "2026-10-07", "-30.00", "CHEWY.COM", payee="Chewy"),
+        txn("k5", "2026-10-08", "10.00", "CHEWY.COM refund", payee="Chewy"),
+        txn("k6", "2026-10-09", "-12.00", "TST* BLUE BOTTLE", pending=True),
     ],
 }
+ACCOUNTS = [
+    ("chk", "Everyday Checking", "3412.55"),
+    ("sav", "Way2Save Savings", "12500.00"),
+    ("cc", "Sapphire Preferred", "-842.17"),
+]
+
+
+class FakeSimpleFIN:
+    def __init__(self, txns, errors=()):
+        self.txns = txns
+        self.errors = list(errors)
+        self.calls = []
+
+    def accounts(self, start, end):
+        self.calls.append((start, end))
+        return {
+            "errors": self.errors,
+            "accounts": [
+                {"org": {"domain": "chase.com", "name": "Chase", "sfin-url": "https://bridge.example/simplefin"},
+                 "id": id, "name": name, "currency": "USD", "balance": balance, "balance-date": ts("2026-10-09"),
+                 "transactions": [t for t in self.txns.get(id, [])
+                                  if start <= (t["posted"] or t["transacted_at"]) < end]}
+                for id, name, balance in ACCOUNTS
+            ],
+        }
 
 
 @pytest.fixture()
 def conn():
     with db.connect() as c:
         c.execute("TRUNCATE enrollments, accounts, transactions, merchant_rules, login_attempts CASCADE")
-        save_enrollment(c, "enr", "Bank", "token_abc")
+        save_connection(c, ACCESS_URL)
         c.commit()
         enrollment = c.execute("SELECT * FROM enrollments").fetchone()
-        result = sync_enrollment(c, enrollment, today=TODAY, client=FakeTeller(OCT))
+        result = sync_enrollment(c, enrollment, today=TODAY, client=FakeSimpleFIN(OCT))
         assert "error" not in result
         yield c
 
@@ -102,9 +117,22 @@ def amounts(rows):
     return {r["category"]: r["amount"] for r in rows}
 
 
-def test_token_encrypted_at_rest(conn):
+def resync(conn, client):
+    enrollment = conn.execute("SELECT * FROM enrollments").fetchone()
+    return sync_enrollment(conn, enrollment, today=TODAY, client=client)
+
+
+def test_access_url_encrypted_at_rest(conn):
     stored = conn.execute("SELECT access_token FROM enrollments").fetchone()["access_token"]
-    assert "token_abc" not in stored
+    assert "secretpass" not in stored
+
+
+def test_account_types_guessed_from_names(conn):
+    rows = {r["id"]: r for r in conn.execute("SELECT * FROM accounts").fetchall()}
+    assert (rows[K("chk")]["subtype"], rows[K("chk")]["include_in_budget"]) == ("checking", True)
+    assert (rows[K("sav")]["subtype"], rows[K("sav")]["include_in_budget"]) == ("savings", False)
+    assert (rows[K("cc")]["type"], rows[K("cc")]["include_in_budget"]) == ("credit", True)
+    assert rows[K("cc")]["ledger_balance"] == Decimal("-842.17")
 
 
 def test_categories_and_math(conn):
@@ -128,23 +156,67 @@ def test_categories_and_math(conn):
 
 def test_savings_account_excluded_by_default_but_viewable(conn):
     rows = queries.transactions(conn, month_filters(), 1, 50)["rows"]
-    assert not any(r["id"].startswith("s") for r in rows)
-    sav = queries.summary(conn, month_filters(account="sav"))
+    assert not any(r["id"].startswith(K("sav")) for r in rows)
+    sav = queries.summary(conn, month_filters(account=K("sav")))
     assert amounts(sav["excluded"]) == {"Transfer": Decimal("-500.00")}
 
 
 def test_credit_purchase_is_money_out(conn):
-    r = conn.execute("SELECT flow, raw_amount FROM transactions WHERE id = 'k1'").fetchone()
-    assert r["raw_amount"] == Decimal("45.10") and r["flow"] == Decimal("-45.10")
+    r = conn.execute("SELECT flow, raw_amount, status FROM transactions WHERE id = %s", (K("cc", "k1"),)).fetchone()
+    assert r["raw_amount"] == Decimal("-45.10") and r["flow"] == Decimal("-45.10")
+    pending = conn.execute("SELECT status, date FROM transactions WHERE id = %s", (K("cc", "k6"),)).fetchone()
+    assert pending["status"] == "pending" and pending["date"] == TODAY
+
+
+def test_first_sync_fetches_history_in_chunks():
+    client = FakeSimpleFIN(OCT)
+    with db.connect() as c:
+        c.execute("TRUNCATE enrollments CASCADE")
+        save_connection(c, ACCESS_URL)
+        resync(c, client)
+    assert len(client.calls) == 2  # 90 days of history in 60-day chunks
+    assert client.calls[0][1] == client.calls[1][0]
+    assert all(end - start <= 60 * 86400 + 3600 for start, end in client.calls)
 
 
 def test_resync_drops_vanished_pending(conn):
-    enrollment = conn.execute("SELECT * FROM enrollments").fetchone()
     posted = dict(OCT, cc=[t for t in OCT["cc"] if t["id"] != "k6"]
-                  + [txn("k6b", "2026-10-09", "12.50", "TST* BLUE BOTTLE", category="dining")])
-    sync_enrollment(conn, enrollment, today=TODAY, client=FakeTeller(posted))
-    ids = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id='cc'").fetchall()}
-    assert "k6" not in ids and "k6b" in ids
+                  + [txn("k6b", "2026-10-09", "-12.50", "TST* BLUE BOTTLE")])
+    client = FakeSimpleFIN(posted)
+    resync(conn, client)
+    assert len(client.calls) == 1  # later syncs only re-fetch the recent window
+    ids = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id = %s", (K("cc"),)).fetchall()}
+    assert K("cc", "k6") not in ids and K("cc", "k6b") in ids
+
+
+def test_bank_errors_are_reported_and_keep_existing_rows(conn):
+    result = resync(conn, FakeSimpleFIN({}, errors=["Chase: You must reauthenticate."]))
+    assert result["error"] == "Chase: You must reauthenticate."
+    e = conn.execute("SELECT status, last_error FROM enrollments").fetchone()
+    assert (e["status"], e["last_error"]) == ("attention", "Chase: You must reauthenticate.")
+    assert conn.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"] == 14
+
+
+def test_changing_account_type_sticks_and_recategorizes(conn):
+    client = app.test_client()
+    csrf = login(client)
+    payment = K("cc", "k3")
+    category = lambda: queries.transactions(conn, month_filters(account="all", q="AUTOMATIC"), 1, 5)["rows"][0]["category"]  # noqa: E731
+    assert category() == "Credit Card Payment"
+
+    resp = client.post(f"/api/accounts/{K('cc')}", json={"subtype": "checking"}, headers={"X-CSRF-Token": csrf})
+    assert resp.status_code == 200
+    conn.rollback()
+    assert category() == "Other Income"
+
+    resync(conn, FakeSimpleFIN(OCT))
+    row = conn.execute("SELECT subtype, type_locked FROM accounts WHERE id = %s", (K("cc"),)).fetchone()
+    assert (row["subtype"], row["type_locked"]) == ("checking", True)
+
+    client.post(f"/api/accounts/{K('cc')}", json={"subtype": "credit_card"}, headers={"X-CSRF-Token": csrf})
+    conn.rollback()
+    assert category() == "Credit Card Payment"
+    assert conn.execute("SELECT 1 FROM transactions WHERE id = %s", (payment,)).fetchone()
 
 
 def test_pagination_and_filters(conn):
@@ -158,6 +230,15 @@ def test_pagination_and_filters(conn):
     assert queries.transactions(conn, month_filters(q="chewy"), 1, 50)["total"] == 2
 
 
+def login(client):
+    client.get("/login")
+    with client.session_transaction() as s:
+        csrf = s["csrf"]
+    assert client.post("/login", data={"password": "correct horse battery", "csrf": csrf}).status_code == 302
+    with client.session_transaction() as s:
+        return s["csrf"]
+
+
 def test_web_flow(conn):
     client = app.test_client()
     assert client.get("/").status_code == 302
@@ -167,18 +248,16 @@ def test_web_flow(conn):
     with client.session_transaction() as s:
         csrf = s["csrf"]
     assert client.post("/login", data={"password": "nope", "csrf": csrf}).status_code == 200
-    resp = client.post("/login", data={"password": "correct horse battery", "csrf": csrf})
-    assert resp.status_code == 302
-    with client.session_transaction() as s:
-        csrf = s["csrf"]
+    csrf = login(client)
 
     assert client.get("/").status_code == 200
     s = client.get("/api/summary?start=2026-10-01&end=2026-10-09").get_json()
     assert s["total_income"] == "2701.00"
 
     # Mutations need the CSRF header.
-    assert client.post("/api/transactions/k4/category", json={"category": "Shopping"}).status_code == 403
-    resp = client.post("/api/transactions/k4/category", json={"category": "Shopping", "remember": True},
+    chewy = K("cc", "k4")
+    assert client.post(f"/api/transactions/{chewy}/category", json={"category": "Shopping"}).status_code == 403
+    resp = client.post(f"/api/transactions/{chewy}/category", json={"category": "Shopping", "remember": True},
                        headers={"X-CSRF-Token": csrf})
     assert resp.status_code == 200
     s = client.get("/api/summary?start=2026-10-01&end=2026-10-09").get_json()
@@ -186,6 +265,24 @@ def test_web_flow(conn):
     assert exp["Shopping"] == "20.00" and "Pet Food & Supplies" not in exp
 
     assert client.get("/api/cron/sync").status_code == 401
+
+
+def test_connect_with_setup_token(conn, monkeypatch):
+    claimed = []
+    monkeypatch.setattr(app_module, "claim_setup_token", lambda token: claimed.append(token) or ACCESS_URL)
+    monkeypatch.setattr(sync, "SimpleFINClient", lambda url: FakeSimpleFIN(OCT))
+    client = app.test_client()
+    csrf = login(client)
+
+    resp = client.post("/api/connections", json={"setupToken": "  abc  "}, headers={"X-CSRF-Token": csrf})
+    assert resp.status_code == 200 and resp.get_json()["accounts"] == 3
+    assert claimed == ["abc"]
+    # The accounts moved to the new connection, so the old, now-empty one is cleaned up.
+    conn.rollback()
+    assert conn.execute("SELECT COUNT(*) AS n FROM enrollments").fetchone()["n"] == 1
+
+    resp = client.post("/api/connections", json={"setupToken": ""}, headers={"X-CSRF-Token": csrf})
+    assert resp.status_code == 400
 
 
 def test_login_lockout(conn):
@@ -196,3 +293,37 @@ def test_login_lockout(conn):
     for _ in range(5):
         client.post("/login", data={"password": "bad", "csrf": csrf})
     assert client.post("/login", data={"password": "correct horse battery", "csrf": csrf}).status_code == 429
+
+
+# --- SimpleFIN client (no database needed, but kept here with the other sync tests) ---
+
+class FakeResponse:
+    def __init__(self, status, text=""):
+        self.status_code, self.text = status, text
+
+
+def test_claim_setup_token(monkeypatch):
+    token = base64.b64encode(b"https://bridge.example/simplefin/claim/XYZ").decode()
+    posts = []
+    monkeypatch.setattr(simplefin.requests, "post",
+                        lambda url, timeout: posts.append(url) or FakeResponse(200, ACCESS_URL + "\n"))
+    assert simplefin.claim_setup_token(token) == ACCESS_URL
+    assert posts == ["https://bridge.example/simplefin/claim/XYZ"]
+
+    monkeypatch.setattr(simplefin.requests, "post", lambda url, timeout: FakeResponse(403))
+    with pytest.raises(simplefin.SimpleFINError, match="already used"):
+        simplefin.claim_setup_token(token)
+    with pytest.raises(simplefin.SimpleFINError, match="doesn't look like"):
+        simplefin.claim_setup_token("not a token!")
+    with pytest.raises(simplefin.SimpleFINError, match="doesn't look like"):
+        simplefin.claim_setup_token(base64.b64encode(b"http://insecure.example/claim").decode())
+
+
+def test_client_keeps_credentials_out_of_url():
+    c = simplefin.SimpleFINClient(ACCESS_URL)
+    assert c.base_url == "https://bridge.example/simplefin"
+    assert c.auth == ("user", "secretpass")
+
+
+def test_error_messages_accepts_both_formats():
+    assert simplefin.error_messages({"errors": ["a"], "errlist": [{"msg": "b"}, "c"]}) == ["a", "b", "c"]

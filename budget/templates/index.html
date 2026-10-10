@@ -47,6 +47,11 @@
     #custom-range.show { display: flex; }
     details summary { cursor: pointer; font-weight: 600; }
     .full { grid-column: 1 / -1; }
+    dialog { border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; width: min(480px, calc(100vw - 32px)); }
+    dialog h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
+    dialog ol { padding-left: 1.2rem; line-height: 1.5; }
+    dialog textarea { width: 100%; font: 12px ui-monospace, monospace; padding: .5rem; border: 1px solid var(--line); border-radius: 6px; }
+    .dialog-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
   </style>
 </head>
 <body>
@@ -102,20 +107,36 @@
   <section class="full">
     <details id="accounts-panel">
       <summary>Accounts</summary>
-      <p class="muted small">Unchecked accounts are left out of “Budget accounts”. Savings accounts start unchecked so a transfer to savings is counted once, as Savings on checking.</p>
+      <p class="muted small">Unchecked accounts are left out of “Budget accounts”. Savings accounts start unchecked so a transfer to savings is counted once, as Savings on checking. SimpleFIN doesn’t say what type each account is, so the type is a guess from its name. Fix it here if it’s wrong: it decides how card payments and transfers are counted.</p>
       <div class="scroll"><table id="accounts"></table></div>
     </details>
   </section>
 </main>
 
-<script src="https://cdn.teller.io/connect/connect.js"></script>
+<dialog id="connect-dialog">
+  <form id="connect-form" method="dialog">
+    <h2>Connect your banks</h2>
+    <ol class="small">
+      <li>Log in to <a href="https://beta-bridge.simplefin.org" target="_blank" rel="noopener">SimpleFIN Bridge</a> and link your banks there.</li>
+      <li>In SimpleFIN, create a new app connection and copy its setup token.</li>
+      <li>Paste it below. Each token works once.</li>
+    </ol>
+    <textarea id="setup-token" rows="4" placeholder="Paste setup token" autocomplete="off" spellcheck="false" required></textarea>
+    <p class="neg small" id="connect-error"></p>
+    <div class="dialog-buttons">
+      <button type="button" id="connect-cancel">Cancel</button>
+      <button type="submit" class="primary" id="connect-submit">Connect</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
 const CSRF = {{ csrf|tojson }};
 const CATEGORIES = {{ categories|tojson }};
 const KINDS = {{ category_kinds|tojson }};
 const TODAY = {{ today|tojson }};
-const TELLER_APP_ID = {{ teller_app_id|tojson }};
-const TELLER_ENV = {{ teller_env|tojson }};
+const SIMPLEFIN_URL = "https://beta-bridge.simplefin.org";
+const ACCOUNT_TYPES = [["checking", "Checking"], ["savings", "Savings"], ["credit_card", "Credit card"], ["other", "Other"]];
 
 const $ = (id) => document.getElementById(id);
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
@@ -308,13 +329,15 @@ async function loadAccounts() {
       await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ include_in_budget: e.target.checked }) });
       refresh(false);
     }});
-    const status = a.enrollment_status === "ok" ? "OK" :
-      h("span", {}, h("span", { class: "neg" }, a.last_error || a.enrollment_status), " ",
-        h("button", { onclick: () => connect(a.enrollment_id) }, "Reconnect"));
+    const type = h("select", { "aria-label": "Account type", onchange: async (e) => {
+      await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ subtype: e.target.value }) });
+      refresh(true);
+    }}, ACCOUNT_TYPES.map(([v, label]) => h("option", { value: v, selected: v === a.subtype }, label)));
+    const status = a.enrollment_status === "ok" ? "OK" : h("span", { class: "neg" }, a.last_error || a.enrollment_status);
     rows.push(h("tr", {},
       h("td", {}, box),
       h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`),
-      h("td", { class: "small" }, a.subtype || a.type),
+      h("td", {}, type),
       h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
       h("td", { class: "small" }, status)));
   }
@@ -322,8 +345,10 @@ async function loadAccounts() {
   $("accounts").replaceChildren(...rows);
 
   const alerts = accountsData.enrollments.filter((e) => e.status !== "ok").map((e) =>
-    h("div", { class: "alert" }, `${e.institution || "A bank"} needs attention: ${e.last_error || e.status}. `,
-      h("button", { onclick: () => connect(e.id) }, "Reconnect")));
+    h("div", { class: "alert" }, `Bank sync needs attention: ${e.last_error || e.status} `,
+      h("a", { href: SIMPLEFIN_URL, target: "_blank", rel: "noopener" }, "Open SimpleFIN"),
+      e.status === "reconnect" ? [" · ", h("button", { onclick: () => connect() }, "Paste a new token"), " ",
+        h("button", { onclick: () => removeConnection(e.id) }, "Remove this connection")] : null));
   if (!accountsData.enrollments.length) {
     alerts.push(h("div", { class: "alert" }, "No banks connected yet. ", h("button", { class: "primary", onclick: () => connect() }, "Connect your first account")));
   }
@@ -333,40 +358,35 @@ async function loadAccounts() {
   $("sync-status").textContent = times.length ? `Synced ${new Date(times[0]).toLocaleString()}` : "";
 }
 
-// ---------- Teller Connect ----------
-function connect(enrollmentId) {
-  const teller = TellerConnect.setup({
-    applicationId: TELLER_APP_ID,
-    environment: TELLER_ENV,
-    products: ["transactions", "balance"],
-    ...(enrollmentId ? { enrollmentId } : {}),
-    onFailure: (failure) => {
-      // Fires for errors inside Teller's popup (bank down, bad config, etc.).
-      console.error("Teller Connect failure", failure);
-      alert(`Teller couldn't connect: ${failure.message || "unknown error"}\n(type: ${failure.type || "?"}, code: ${failure.code || "?"})`);
-    },
-    onSuccess: async (payload) => {
-      // Log the shape (minus the token) so a mismatch is easy to spot.
-      console.log("Teller Connect success", { ...payload, accessToken: payload.accessToken ? "[hidden]" : undefined });
-      const enrollment = payload.enrollment || {};
-      const body = {
-        accessToken: payload.accessToken,
-        enrollmentId: enrollment.id || payload.enrollmentId,
-        institution: (enrollment.institution && enrollment.institution.name) || null,
-      };
-      if (!body.accessToken || !body.enrollmentId) {
-        alert("Teller connected but sent back data this page didn't expect. Open the browser console and send the 'Teller Connect success' line.");
-        return;
-      }
-      $("sync-status").textContent = "Importing transactions…";
-      try {
-        const r = await api("/api/enrollments", { method: "POST", body: JSON.stringify(body) });
-        if (r.error) alert(`Connected, but the first sync failed: ${r.error}`);
-      } catch (e) { alert(`Saving the connection failed: ${e.message}`); }
-      await refresh(true);
-    },
-  });
-  teller.open();
+// ---------- SimpleFIN connection ----------
+function connect() {
+  $("setup-token").value = "";
+  $("connect-error").textContent = "";
+  $("connect-dialog").showModal();
+}
+
+$("connect-cancel").addEventListener("click", () => $("connect-dialog").close());
+$("connect-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const button = $("connect-submit");
+  button.disabled = true; button.textContent = "Connecting… (can take a minute)";
+  $("connect-error").textContent = "";
+  try {
+    const r = await api("/api/connections", { method: "POST", body: JSON.stringify({ setupToken: $("setup-token").value }) });
+    $("connect-dialog").close();
+    if (r.error) alert(`Connected, but SimpleFIN reported a problem: ${r.error}`);
+    await refresh(true);
+  } catch (err) {
+    $("connect-error").textContent = err.message;
+  } finally {
+    button.disabled = false; button.textContent = "Connect";
+  }
+});
+
+async function removeConnection(id) {
+  if (!confirm("Remove this connection and the transactions from its accounts?")) return;
+  await api(`/api/connections/${encodeURIComponent(id)}`, { method: "DELETE" });
+  refresh(true);
 }
 
 // ---------- wiring ----------
