@@ -345,16 +345,24 @@ function connect(enrollmentId) {
       console.error("Teller Connect failure", failure);
       alert(`Teller couldn't connect: ${failure.message || "unknown error"}\n(type: ${failure.type || "?"}, code: ${failure.code || "?"})`);
     },
-    onSuccess: async (enrollment) => {
+    onSuccess: async (payload) => {
+      // Log the shape (minus the token) so a mismatch is easy to spot.
+      console.log("Teller Connect success", { ...payload, accessToken: payload.accessToken ? "[hidden]" : undefined });
+      const enrollment = payload.enrollment || {};
+      const body = {
+        accessToken: payload.accessToken,
+        enrollmentId: enrollment.id || payload.enrollmentId,
+        institution: (enrollment.institution && enrollment.institution.name) || null,
+      };
+      if (!body.accessToken || !body.enrollmentId) {
+        alert("Teller connected but sent back data this page didn't expect. Open the browser console and send the 'Teller Connect success' line.");
+        return;
+      }
       $("sync-status").textContent = "Importing transactions…";
       try {
-        const r = await api("/api/enrollments", { method: "POST", body: JSON.stringify({
-          accessToken: enrollment.accessToken,
-          enrollmentId: enrollment.enrollment.id,
-          institution: enrollment.enrollment.institution && enrollment.enrollment.institution.name,
-        })});
+        const r = await api("/api/enrollments", { method: "POST", body: JSON.stringify(body) });
         if (r.error) alert(`Connected, but the first sync failed: ${r.error}`);
-      } catch (e) { alert(e.message); }
+      } catch (e) { alert(`Saving the connection failed: ${e.message}`); }
       await refresh(true);
     },
   });
