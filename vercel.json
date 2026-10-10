@@ -1,10 +1,4 @@
 {
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 60,
-      "includeFiles": "budget/**"
-    }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [{ "path": "/api/cron/sync", "schedule": "0 13 * * *" }]
 }

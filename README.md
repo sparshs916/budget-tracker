@@ -45,6 +45,6 @@ See `.env.example` for all settings.
 ```bash
 cp .env.example .env   # fill in
 pip install -r requirements.txt
-flask --app api/index run --debug
+flask run --debug
 TEST_DATABASE_URL=postgresql://... pytest   # tests need an empty, throwaway Postgres DB
 ```
