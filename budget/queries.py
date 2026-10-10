@@ -43,7 +43,7 @@ def _where(filters, include_category=True):
         clauses.append(f"{EFFECTIVE_CATEGORY} = %(category)s")
         params["category"] = filters["category"]
     if filters.get("q"):
-        clauses.append("(t.description ILIKE %(q)s OR t.merchant ILIKE %(q)s)")
+        clauses.append("(t.description ILIKE %(q)s OR t.merchant ILIKE %(q)s OR t.note ILIKE %(q)s)")
         params["q"] = f"%{filters['q']}%"
     return " AND ".join(clauses), params
 
@@ -108,7 +108,7 @@ def unmatched_transfers(conn, filters):
     rows = conn.execute(
         f"""
         SELECT t.id, t.date, t.flow, t.description, t.merchant, a.name AS account_name, a.id AS account_id,
-               {EFFECTIVE_CATEGORY} AS category
+               t.transfer_reviewed, {EFFECTIVE_CATEGORY} AS category
         {BASE_FROM}
         WHERE {where} AND {EFFECTIVE_CATEGORY} IN ('Credit Card Payment', 'Transfer', 'Savings')
         ORDER BY t.date, t.id
@@ -128,11 +128,13 @@ def unmatched_transfers(conn, filters):
                     paired.update((out["id"], inn["id"]))
                     break
     unmatched = [
-        {"date": r["date"], "description": r["merchant"] or r["description"], "account": r["account_name"],
+        {"id": r["id"], "date": r["date"], "description": r["merchant"] or r["description"], "account": r["account_name"],
          "category": r["category"], "flow": r["flow"]}
         for r in rows if r["id"] not in paired and filters["start"] <= r["date"] <= filters["end"]
         # Savings is already counted as money out; it's only here to pair with its other half.
         and r["category"] != "Savings"
+        # You said this one is fine (its other half is in an account you don't track).
+        and not r["transfer_reviewed"]
     ]
     return {"unmatched_transfers": unmatched,
             "unmatched_total": sum((Decimal(r["flow"]) for r in unmatched), Decimal(0))}
@@ -149,7 +151,7 @@ def transactions(conn, filters, page, page_size):
                t.override_category IS NOT NULL AS overridden,
                (t.override_category IS NULL AND r.category IS NULL AND t.pair_category IS NULL
                 AND {AI_CATEGORY} IS NOT NULL) AS ai_suggested,
-               t.paired_with IS NOT NULL AS paired,
+               t.paired_with IS NOT NULL AS paired, t.note,
                a.name AS account_name, a.last_four, a.institution, a.type AS account_type
         {BASE_FROM}
         WHERE {where}
@@ -192,3 +194,115 @@ def imports(conn):
         LIMIT 20
         """
     ).fetchall()
+
+
+# ---------- display-only views (they read the budget, never change it) ----------
+
+def targets(conn):
+    return {r["category"]: r["amount"] for r in conn.execute("SELECT category, amount FROM budget_targets").fetchall()}
+
+
+def set_targets(conn, values):
+    """values: {category: amount or None}. None or 0 removes the target."""
+    for category, amount in values.items():
+        if amount is None or Decimal(amount) == 0:
+            conn.execute("DELETE FROM budget_targets WHERE category = %s", (category,))
+        else:
+            conn.execute(
+                """INSERT INTO budget_targets (category, amount) VALUES (%s, %s)
+                   ON CONFLICT (category) DO UPDATE SET amount = EXCLUDED.amount, updated_at = now()""",
+                (category, Decimal(amount)))
+
+
+def month_start(d, back=0):
+    index = d.year * 12 + d.month - 1 - back
+    return datetime.date(index // 12, index % 12 + 1, 1)
+
+
+def month_end(d):
+    return month_start(d, -1) - datetime.timedelta(days=1)
+
+
+def trends(conn, end, months, account="budget"):
+    """One summary() per calendar month, oldest first, so every number matches
+    what the budget table shows for that month."""
+    out = []
+    for back in range(months - 1, -1, -1):
+        start = month_start(end, back)
+        last = min(month_end(start), end)
+        s = summary(conn, {"start": start, "end": last, "account": account})
+        out.append({
+            "month": start.strftime("%Y-%m"), "start": start, "end": last, "partial": last < month_end(start),
+            "total_income": s["total_income"], "total_expenses": s["total_expenses"],
+            "total_spending": s["total_spending"], "total_savings": s["total_savings"], "remaining": s["remaining"],
+            "categories": {r["category"]: r["amount"] for r in s["income"] + s["expenses"]},
+        })
+    return out
+
+
+def recurring(conn, today, account="budget"):
+    """Charges that repeat on a schedule (subscriptions, bills, rent), found from
+    the last 13 months of money out. Counted spending is untouched; this only reads it."""
+    where, params = _where({"start": month_start(today, 13), "end": today, "account": account}, include_category=False)
+    rows = conn.execute(
+        f"""
+        SELECT t.date, t.flow, t.merchant_key, COALESCE(t.merchant, t.description) AS name, {EFFECTIVE_CATEGORY} AS category
+        {BASE_FROM}
+        WHERE {where} AND t.flow < 0 AND t.merchant_key IS NOT NULL AND t.status IS DISTINCT FROM 'pending'
+        ORDER BY t.date
+        """,
+        params,
+    ).fetchall()
+    groups = {}
+    for r in rows:
+        if CATEGORY_KIND.get(r["category"]) in ("excluded", "savings"):  # moves, not costs
+            continue
+        groups.setdefault(r["merchant_key"], []).append(r)
+
+    found = []
+    for charges in groups.values():
+        # Several charges on one day (e.g. two Amazon orders) count as one visit.
+        by_day = {}
+        for c in charges:
+            by_day.setdefault(c["date"], []).append(-c["flow"])
+        dates = sorted(by_day)
+        if len(dates) < 2:
+            continue
+        gaps = [(b - a).days for a, b in zip(dates, dates[1:])]
+        gap = sorted(gaps)[len(gaps) // 2]
+        if 25 <= gap <= 35 and len(dates) >= 3:
+            frequency, per_year = "monthly", 12
+        elif 6 <= gap <= 8 and len(dates) >= 4:
+            frequency, per_year = "weekly", 52
+        elif 12 <= gap <= 16 and len(dates) >= 3:
+            frequency, per_year = "every 2 weeks", 26
+        elif 85 <= gap <= 95 and len(dates) >= 2:
+            frequency, per_year = "quarterly", 4
+        elif 350 <= gap <= 380:
+            frequency, per_year = "yearly", 1
+        else:
+            continue
+        # Regular timing alone isn't enough: most gaps must fit the schedule...
+        if sum(1 for g in gaps if abs(g - gap) <= max(3, gap * 0.2)) < len(gaps) * 0.6:
+            continue
+        amounts = [sum(by_day[d]) for d in dates]
+        typical = sorted(amounts)[len(amounts) // 2]
+        # ...and amounts must be steady (a bill can vary; groceries vary far more).
+        if sum(1 for a in amounts if abs(a - typical) <= max(Decimal(2), typical * Decimal("0.35"))) < len(amounts) * 0.6:
+            continue
+        # A schedule that stopped two cycles ago is probably cancelled.
+        if (today - dates[-1]).days > gap * 2 + 5:
+            continue
+        last = amounts[-1]
+        previous = sorted(amounts[:-1])[(len(amounts) - 1) // 2]
+        changed = abs(last - previous) >= max(Decimal("0.50"), previous * Decimal("0.03"))
+        found.append({
+            "name": charges[-1]["name"], "category": charges[-1]["category"], "frequency": frequency,
+            "typical": typical, "last_amount": last, "last_date": dates[-1], "count": len(dates),
+            "next_date": dates[-1] + datetime.timedelta(days=gap),
+            "monthly_cost": (typical * per_year / 12).quantize(Decimal("0.01")),
+            "yearly_cost": (typical * per_year).quantize(Decimal("0.01")),
+            "price_change": (last - previous) if changed else None,
+        })
+    found.sort(key=lambda r: -r["monthly_cost"])
+    return found

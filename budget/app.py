@@ -14,7 +14,7 @@ from flask.json.provider import DefaultJSONProvider
 from werkzeug.security import check_password_hash
 
 from . import ai_categorize, config, csv_import, db, queries
-from .categorize import CATEGORIES, CATEGORY_NAMES
+from .categorize import CATEGORIES, CATEGORY_KIND, CATEGORY_NAMES
 from .simplefin import SimpleFINError, claim_setup_token
 from .sync import (SUBTYPES, compare_account, link_transfers, recategorize_account, recategorize_all_if_rules_changed,
                    save_connection, sync_all, sync_enrollment)
@@ -237,11 +237,12 @@ def api_export():
         rows = queries.transactions(conn, filters, 1, 100000)["rows"]
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["Date", "Account", "Description", "Merchant", "Category", "Amount", "Status", "Source", "Category from"])
+    writer.writerow(["Date", "Account", "Description", "Merchant", "Category", "Amount", "Status", "Source", "Category from",
+                     "Note"])
     for r in rows:
         origin = ("you" if r["overridden"] else "transfer match" if r["paired"] else "AI" if r["ai_suggested"] else "rules")
         writer.writerow([r["date"], r["account_name"], r["description"], r["merchant"] or "", r["category"],
-                         f"{r['flow']:.2f}", r["status"], r["source"], origin])
+                         f"{r['flow']:.2f}", r["status"], r["source"], origin, r["note"] or ""])
     name = f"transactions-{filters['start']}-to-{filters['end']}.csv"
     return Response(out.getvalue(), mimetype="text/csv",
                     headers={"Content-Disposition": f'attachment; filename="{name}"'})
@@ -331,6 +332,85 @@ def api_set_category():
         conn.commit()
         _relink(conn)
     return jsonify(ok=True)
+
+
+@app.post("/api/transactions/review")
+@login_required
+def api_review_transfer():
+    """Mark a transfer with no matching other half as checked (its other end is an
+    account you don't track), or flag it again. Totals are unaffected either way."""
+    body = request.get_json(force=True)
+    with db.connect() as conn:
+        updated = conn.execute("UPDATE transactions SET transfer_reviewed = %s WHERE id = %s RETURNING id",
+                               (bool(body.get("reviewed", True)), body.get("id", ""))).fetchone()
+    if not updated:
+        return jsonify(error="Not found"), 404
+    return jsonify(ok=True)
+
+
+@app.post("/api/transactions/note")
+@login_required
+def api_note():
+    body = request.get_json(force=True)
+    note = (body.get("note") or "").strip()[:500] or None
+    with db.connect() as conn:
+        updated = conn.execute("UPDATE transactions SET note = %s WHERE id = %s RETURNING id",
+                               (note, body.get("id", ""))).fetchone()
+    if not updated:
+        return jsonify(error="Not found"), 404
+    return jsonify(ok=True)
+
+
+@app.get("/api/targets")
+@login_required
+def api_targets():
+    with db.connect() as conn:
+        return jsonify(targets=queries.targets(conn))
+
+
+@app.post("/api/targets")
+@login_required
+def api_set_targets():
+    values = request.get_json(force=True).get("targets")
+    if not isinstance(values, dict):
+        return jsonify(error="Send {targets: {category: amount}}"), 400
+    clean = {}
+    for category, amount in values.items():
+        if CATEGORY_KIND.get(category) not in ("expense", "savings"):
+            return jsonify(error=f"Can't set a target for {category}"), 400
+        if amount in (None, ""):
+            clean[category] = None
+            continue
+        try:
+            value = Decimal(str(amount)).quantize(Decimal("0.01"))
+        except ArithmeticError:
+            return jsonify(error=f"{category}: not a number"), 400
+        if not value.is_finite() or value < 0 or value > 10_000_000:
+            return jsonify(error=f"{category}: enter an amount from 0 to 10,000,000"), 400
+        clean[category] = value
+    with db.connect() as conn:
+        queries.set_targets(conn, clean)
+        return jsonify(targets=queries.targets(conn))
+
+
+@app.get("/api/trends")
+@login_required
+def api_trends():
+    t = today()
+    try:
+        end = datetime.date.fromisoformat(request.args.get("end") or t.isoformat())
+    except ValueError:
+        abort(400, "Dates must be YYYY-MM-DD")
+    months = min(24, max(1, request.args.get("months", 12, type=int)))
+    with db.connect() as conn:
+        return jsonify(months=queries.trends(conn, min(end, t), months, request.args.get("account") or "budget"))
+
+
+@app.get("/api/recurring")
+@login_required
+def api_recurring():
+    with db.connect() as conn:
+        return jsonify(recurring=queries.recurring(conn, today(), request.args.get("account") or "budget"))
 
 
 def _relink(conn):

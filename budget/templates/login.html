@@ -5,14 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Budget · Log in</title>
+  <script>try { const t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f4f5f7; display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    form { background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.08); width: min(320px, 90vw); }
+    :root { --bg: #f4f5f7; --card: #fff; --text: #1d2433; --line: #ccc; --accent: #2459d6; --red: #b42318; color-scheme: light; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --bg: #0f1117; --card: #181b23; --text: #e6e8ee; --line: #343a48; --accent: #5b8cff; --red: #f97066; color-scheme: dark; }
+    }
+    :root[data-theme="dark"] { --bg: #0f1117; --card: #181b23; --text: #e6e8ee; --line: #343a48; --accent: #5b8cff; --red: #f97066; color-scheme: dark; }
+    body { font-family: system-ui, sans-serif; color: var(--text); background: var(--bg); display: grid; place-items: center; min-height: 100vh; margin: 0; }
+    form { background: var(--card); padding: 2rem; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.08); width: min(320px, 90vw); }
     h1 { font-size: 1.25rem; margin: 0 0 1rem; }
     input, button { width: 100%; box-sizing: border-box; padding: .65rem; font-size: 1rem; border-radius: 6px; }
-    input { border: 1px solid #ccc; margin-bottom: .75rem; }
-    button { background: #2459d6; color: #fff; border: 0; cursor: pointer; }
-    .error { color: #b42318; margin-bottom: .75rem; }
+    input { border: 1px solid var(--line); background: var(--bg); color: var(--text); margin-bottom: .75rem; }
+    button { background: var(--accent); color: #fff; border: 0; cursor: pointer; }
+    .error { color: var(--red); margin-bottom: .75rem; }
   </style>
 </head>
 <body>

@@ -98,6 +98,17 @@ CREATE TABLE IF NOT EXISTS ai_categories (
     created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (merchant_key, direction)
 );
+-- Display-only extras; none of these change how the budget is counted.
+-- Monthly spending targets shown next to each category.
+CREATE TABLE IF NOT EXISTS budget_targets (
+    category   TEXT PRIMARY KEY,
+    amount     NUMERIC(14,2) NOT NULL CHECK (amount >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- You looked at a transfer with no matching other half and said it's fine
+-- (e.g. money from an account you don't track); it stops being flagged.
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS transfer_reviewed BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS note TEXT;
 """
 
 _schema_ready = False

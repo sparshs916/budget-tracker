@@ -5,20 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Budget</title>
+  <script>
+    // Before first paint, so dark mode never flashes white.
+    try { const t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
   <style>
     :root { --bg: #f4f5f7; --card: #fff; --text: #1d2433; --muted: #667085; --line: #e4e7ec;
-            --accent: #2459d6; --green: #067647; --red: #b42318; }
+            --accent: #2459d6; --green: #067647; --red: #b42318; --input: #fff; --hover: #f8f9fc; --active: #eef3ff;
+            --subtle: #f8f9fb; --pill-bg: #fff4e5; --pill-text: #9a5b00; --alert-bg: #fff4e5; --alert-line: #f5c26b;
+            --track: #eaecf0; --ok: #12b76a; --warn: #f79009; --over: #f04438; --expense-bar: #f97066; --income-bar: #32d583;
+            color-scheme: light; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f1117; --card: #181b23; --text: #e6e8ee; --muted: #98a2b3; --line: #2c313d;
+        --accent: #5b8cff; --green: #47cd89; --red: #f97066; --input: #11141a; --hover: #202430; --active: #1f2a44;
+        --subtle: #1d212b; --pill-bg: #3a2a10; --pill-text: #fdb022; --alert-bg: #2a2111; --alert-line: #7a5512;
+        --track: #2c313d; color-scheme: dark; }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0f1117; --card: #181b23; --text: #e6e8ee; --muted: #98a2b3; --line: #2c313d;
+      --accent: #5b8cff; --green: #47cd89; --red: #f97066; --input: #11141a; --hover: #202430; --active: #1f2a44;
+      --subtle: #1d212b; --pill-bg: #3a2a10; --pill-text: #fdb022; --alert-bg: #2a2111; --alert-line: #7a5512;
+      --track: #2c313d; color-scheme: dark; }
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; font-size: 14px; }
     header { background: var(--card); border-bottom: 1px solid var(--line); padding: .75rem 1rem; position: sticky; top: 0; z-index: 2; }
     .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; max-width: 1200px; margin: 0 auto; }
     .bar h1 { font-size: 1.1rem; margin: 0 .75rem 0 0; }
     .spacer { flex: 1; }
-    main { max-width: 1200px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; grid-template-columns: minmax(280px, 380px) 1fr; align-items: start; }
-    @media (max-width: 900px) { main { grid-template-columns: 1fr; } header { position: static; } }
+    #view-budget { max-width: 1200px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; grid-template-columns: minmax(300px, 400px) 1fr; align-items: start; }
+    @media (max-width: 900px) { #view-budget { grid-template-columns: 1fr; } header { position: static; } }
     section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; min-width: 0; }
     section h2 { font-size: 1rem; margin: 0 0 .75rem; display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
-    select, input, button { font: inherit; padding: .4rem .55rem; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: inherit; }
+    select, input, button { font: inherit; padding: .4rem .55rem; border: 1px solid var(--line); border-radius: 6px; background: var(--input); color: inherit; }
     button { cursor: pointer; }
     button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     button:disabled { opacity: .6; cursor: wait; }
@@ -32,11 +51,11 @@
     .small { font-size: 12px; }
     tr.total td { font-weight: 700; border-top: 2px solid var(--text); }
     tr.click { cursor: pointer; }
-    tr.click:hover { background: #f8f9fc; }
-    tr.active { background: #eef3ff; }
-    .group td { background: #f8f9fb; font-weight: 600; font-size: 12px; color: var(--muted); }
-    .pill { display: inline-block; padding: 0 .4rem; border-radius: 999px; background: #fff4e5; color: #9a5b00; font-size: 11px; margin-left: .3rem; }
-    .alert { background: #fff4e5; border: 1px solid #f5c26b; border-radius: 8px; padding: .5rem .75rem; margin: 0 auto .5rem; max-width: 1200px; }
+    tr.click:hover { background: var(--hover); }
+    tr.active { background: var(--active); }
+    .group td { background: var(--subtle); font-weight: 600; font-size: 12px; color: var(--muted); }
+    .pill { display: inline-block; padding: 0 .4rem; border-radius: 999px; background: var(--pill-bg); color: var(--pill-text); font-size: 11px; margin-left: .3rem; }
+    .alert { background: var(--alert-bg); border: 1px solid var(--alert-line); border-radius: 8px; padding: .5rem .75rem; margin: 0 auto .5rem; max-width: 1200px; }
     .scroll { overflow-x: auto; }
     .txn-desc { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pager { display: flex; justify-content: space-between; align-items: center; margin-top: .75rem; gap: .5rem; flex-wrap: wrap; }
@@ -47,7 +66,7 @@
     #custom-range.show { display: flex; }
     details summary { cursor: pointer; font-weight: 600; }
     .full { grid-column: 1 / -1; }
-    dialog { border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; width: min(480px, calc(100vw - 32px)); }
+    dialog { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; width: min(480px, calc(100vw - 32px)); }
     dialog h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
     dialog ol { padding-left: 1.2rem; line-height: 1.5; }
     dialog textarea { width: 100%; font: 12px ui-monospace, monospace; padding: .5rem; border: 1px solid var(--line); border-radius: 6px; }
@@ -58,12 +77,54 @@
     .preview { max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; margin: .25rem 0 .75rem; }
     .preview td { font-size: 12px; padding: .3rem .45rem; }
     .hidden { display: none !important; }
+    /* tabs and theme */
+    nav.tabs { display: flex; gap: .25rem; }
+    nav.tabs button { border-color: transparent; background: transparent; }
+    nav.tabs button.on { background: var(--active); color: var(--accent); font-weight: 600; }
+    .view:not(.on) { display: none !important; }
+    .stack { max-width: 1200px; margin: 0 auto; padding: 1rem; display: grid; gap: 1rem; }
+    /* targets */
+    .meter { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; min-width: 60px; }
+    .meter > span { display: block; height: 100%; background: var(--ok); }
+    .meter.warn > span { background: var(--warn); }
+    .meter.over > span { background: var(--over); }
+    td.target { width: 34%; }
+    td.target input { width: 6.5rem; padding: .2rem .35rem; text-align: right; }
+    .delta { font-size: 11px; margin-left: .35rem; }
+    .delta.up { color: var(--red); }
+    .delta.down { color: var(--green); }
+    .pace { margin: .6rem 0 0; }
+    /* review */
+    .leak-row { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; padding: .3rem 0; border-bottom: 1px dashed var(--alert-line); }
+    .leak-row:last-child { border-bottom: 0; }
+    .leak-row select, .leak-row button { padding: .15rem .35rem; font-size: 12px; }
+    .note { display: block; font-size: 12px; color: var(--muted); white-space: normal; }
+    button.icon { border: 0; background: transparent; padding: 0 .2rem; opacity: .55; }
+    button.icon:hover { opacity: 1; }
+    /* trends */
+    .chart { width: 100%; height: auto; display: block; }
+    .chart text { fill: var(--muted); font-size: 11px; }
+    .chart .grid { stroke: var(--line); }
+    .chart .zero { stroke: var(--muted); }
+    .legend { display: flex; gap: 1rem; font-size: 12px; color: var(--muted); }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: .3rem; vertical-align: -1px; }
+    .heat td.num { font-size: 12px; }
+    .heat th { white-space: nowrap; }
+    .heat td:first-child { white-space: nowrap; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .75rem; }
+    .stat { background: var(--subtle); border-radius: 8px; padding: .65rem .8rem; }
+    .stat b { display: block; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
 <header>
   <div class="bar">
     <h1>Budget</h1>
+    <nav class="tabs" aria-label="Pages">
+      <button data-view="budget">Budget</button>
+      <button data-view="trends">Trends</button>
+      <button data-view="recurring">Recurring</button>
+    </nav>
     <select id="period" aria-label="Period"></select>
     <span id="custom-range">
       <input type="date" id="start" aria-label="Start date"> –
@@ -75,15 +136,18 @@
     <button id="sync-btn">Sync now</button>
     <button id="upload-btn">Upload CSV</button>
     <button id="connect-btn" class="primary">+ Connect account</button>
+    <button id="theme-btn" title="Switch light / dark / match device" aria-label="Theme"></button>
     <button id="logout-btn">Log out</button>
   </div>
 </header>
 <div id="alerts" style="padding: .5rem 1rem 0"></div>
 
-<main>
+<main id="view-budget" class="view">
   <section>
-    <h2>Budget <span class="muted small" id="range-label"></span></h2>
+    <h2>Budget <span class="muted small" id="range-label"></span>
+      <button class="small" id="targets-btn" title="Set a monthly amount for each category">Set targets</button></h2>
     <table id="summary"></table>
+    <p class="small pace hidden" id="pace"></p>
     <p class="muted small" id="excluded"></p>
     <div id="leaks" class="alert small hidden"></div>
     <p id="ai-row" class="small hidden"><button id="ai-btn">✨ Categorize “Other” with AI</button>
@@ -93,7 +157,7 @@
   <section>
     <h2>Transactions <span class="muted small" id="txn-count"></span></h2>
     <div class="filters">
-      <input type="search" id="q" placeholder="Search description or merchant">
+      <input type="search" id="q" placeholder="Search description, merchant or note">
       <select id="category-filter" aria-label="Category"><option value="">All categories</option></select>
     </div>
     <div class="scroll">
@@ -125,6 +189,33 @@
     </details>
   </section>
 </main>
+
+<div id="view-trends" class="view stack">
+  <section>
+    <h2>Last 12 months <span class="muted small">Same numbers as the Budget page for each month · click a month to open it</span></h2>
+    <div class="cards" id="trend-cards"></div>
+    <div class="legend" style="margin:.75rem 0 .25rem">
+      <span><i style="background:var(--income-bar)"></i>Income</span>
+      <span><i style="background:var(--expense-bar)"></i>Expenses</span>
+      <span><i style="background:var(--accent)"></i>Remaining</span>
+    </div>
+    <div id="trend-chart"></div>
+  </section>
+  <section>
+    <h2>By category <button class="small" id="avg-targets-btn" title="Fill each target with the category's monthly average">Use averages as targets</button></h2>
+    <div class="scroll"><table class="heat" id="trend-table"></table></div>
+    <p class="muted small">Averages use whole months only; the current month is left out until it's over.</p>
+  </section>
+</div>
+
+<div id="view-recurring" class="view stack">
+  <section>
+    <h2>Recurring charges <span class="muted small">Found from the last 13 months: same merchant, regular schedule, steady amount</span></h2>
+    <div class="cards" id="recurring-cards"></div>
+    <div class="scroll" style="margin-top:.75rem"><table id="recurring"></table></div>
+    <p class="muted small">Read-only: this doesn't change the budget. A merchant needs 3 or more charges on a schedule (2 for yearly) to show up.</p>
+  </section>
+</div>
 
 <dialog id="connect-dialog">
   <form id="connect-form" method="dialog">
@@ -249,6 +340,7 @@ const state = {
   q: params.get("q") || "",
   page: Number(params.get("page") || 1),
   page_size: Number(params.get("page_size") || 50),
+  view: params.get("view") || "budget",
 };
 
 const iso = (d) => d.toISOString().slice(0, 10);
@@ -301,24 +393,109 @@ function query(extra = {}) {
 function saveURL() { history.replaceState(null, "", "?" + query()); }
 
 // ---------- summary ----------
+let targets = {};
+let editingTargets = false;
+
+// The same stretch of time just before the one shown, for "vs last month".
+function previousRange() {
+  const s = parseISO(state.start), e = parseISO(state.end);
+  const sameMonth = s.getUTCDate() === 1 && s.getUTCFullYear() === e.getUTCFullYear() && s.getUTCMonth() === e.getUTCMonth();
+  if (sameMonth) {
+    // A month (or this month so far) compares with the same days of the month before.
+    const ps = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth() - 1, 1));
+    const lastDay = new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), 0)).getUTCDate();
+    const pe = new Date(Date.UTC(ps.getUTCFullYear(), ps.getUTCMonth(), Math.min(e.getUTCDate(), lastDay)));
+    const fullMonth = e.getUTCDate() === new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth() + 1, 0)).getUTCDate();
+    return [iso(ps), fullMonth ? iso(new Date(Date.UTC(s.getUTCFullYear(), s.getUTCMonth(), 0))) : iso(pe), "last month"];
+  }
+  const days = Math.round((e - s) / 864e5) + 1;
+  return [iso(new Date(s - days * 864e5)), iso(new Date(s - 864e5)), `the ${days} days before`];
+}
+
+// Targets are monthly; a longer range gets a proportional target.
+function targetFactor() {
+  const s = parseISO(state.start), e = parseISO(state.end);
+  if (s.getUTCFullYear() === e.getUTCFullYear() && s.getUTCMonth() === e.getUTCMonth()) return 1;
+  return Math.round(((e - s) / 864e5 + 1) / 30.4375 * 10) / 10;
+}
+
+function meter(spent, target) {
+  const ratio = target > 0 ? spent / target : 0;
+  const cls = ratio > 1 ? "over" : ratio > 0.85 ? "warn" : "";
+  return h("div", { class: "meter " + cls, title: `${Math.round(ratio * 100)}% of ${money(target)}` },
+    h("span", { style: `width:${Math.min(100, Math.max(0, ratio * 100))}%` }));
+}
+
 async function loadSummary() {
-  const s = await api("/api/summary?" + query());
+  const [ps, pe, prevLabel] = previousRange();
+  const [s, prev, t] = await Promise.all([
+    api("/api/summary?" + query()),
+    api("/api/summary?" + query({ start: ps, end: pe })).catch(() => null),
+    api("/api/targets").catch(() => ({ targets: {} })),
+  ]);
+  targets = t.targets || {};
+  const prevBy = {};
+  if (prev) for (const r of [...prev.income, ...prev.expenses]) prevBy[r.category] = Number(r.amount);
+  const factor = targetFactor();
+  const showTargets = editingTargets || Object.keys(targets).length > 0;
+
+  const delta = (category, amount, kind) => {
+    if (!prev) return null;
+    const before = prevBy[category] || 0, diff = Number(amount) - before;
+    if (Math.abs(diff) < 1) return null;
+    // More spending is bad (red); more income is good (green).
+    const bad = kind === "income" ? diff < 0 : diff > 0;
+    return h("span", { class: "delta " + (bad ? "up" : "down"), title: `${money(before)} in ${prevLabel} (${ps} → ${pe})` },
+      (diff > 0 ? "▲" : "▼") + money(Math.abs(diff)).replace(".00", ""));
+  };
+
+  const targetCell = (category, amount, kind) => {
+    if (!showTargets) return null;
+    if (kind === "income") return h("td", { class: "target" });
+    const monthly = Number(targets[category] || 0);
+    if (editingTargets) {
+      return h("td", { class: "target num" }, h("input", { type: "number", min: 0, step: "1", inputmode: "decimal",
+        "data-category": category, value: monthly || "", placeholder: "—", "aria-label": `${category} monthly target`,
+        onclick: (e) => e.stopPropagation() }));
+    }
+    if (!monthly) return h("td", { class: "target" });
+    const target = monthly * factor;
+    const left = target - Number(amount);
+    return h("td", { class: "target" }, meter(Number(amount), target),
+      h("span", { class: "small " + (left < 0 ? "neg" : "muted") }, left < 0 ? `${money(-left)} over` : `${money(left)} left of ${money(target)}`));
+  };
+
   const rows = [];
   const row = (label, amount, opts = {}) => h("tr", {
       class: [opts.cls, opts.category ? "click" : "", opts.category && opts.category === state.category ? "active" : ""].join(" "),
-      onclick: opts.category ? () => setCategory(opts.category === state.category ? "" : opts.category) : null,
+      onclick: opts.category && !editingTargets ? () => setCategory(opts.category === state.category ? "" : opts.category) : null,
       title: opts.count != null ? `${opts.count} transaction${opts.count === 1 ? "" : "s"}` : null,
     },
     h("td", {}, label),
-    h("td", { class: "num " + (opts.amountCls || "") }, money(amount)));
+    h("td", { class: "num " + (opts.amountCls || "") }, money(amount), opts.category ? delta(opts.category, amount, opts.kind) : null),
+    opts.target === false ? (showTargets ? h("td") : null) : targetCell(opts.name || opts.category, amount, opts.kind));
 
-  rows.push(h("tr", {}, h("th", {}, "Category"), h("th", { class: "num" }, "Amount")));
-  for (const r of s.income) rows.push(row(r.category, r.amount, { category: r.category, count: r.count, amountCls: "in" }));
-  if (!s.income.length) rows.push(row("Income", 0));
-  for (const r of s.expenses) rows.push(row(r.category, r.amount, { category: r.category, count: r.count }));
-  rows.push(row("Total Expenses", s.total_expenses, { cls: "total" }));
-  rows.push(row("Remaining", s.remaining, { cls: "total", amountCls: Number(s.remaining) < 0 ? "neg" : "in" }));
+  rows.push(h("tr", {}, h("th", {}, "Category"), h("th", { class: "num" }, "Amount"),
+    showTargets ? h("th", {}, factor === 1 ? "Monthly target" : `Target × ${factor} months`) : null));
+  for (const r of s.income) rows.push(row(r.category, r.amount, { category: r.category, count: r.count, amountCls: "in", kind: "income" }));
+  if (!s.income.length) rows.push(row("Income", 0, { target: false }));
+  const shown = new Set(s.expenses.map((r) => r.category));
+  for (const r of s.expenses) rows.push(row(r.category, r.amount, { category: r.category, count: r.count, kind: r.kind }));
+  // Categories with a target (or all of them while editing) show even before any spending.
+  for (const [name, kind] of Object.entries(KINDS)) {
+    if (shown.has(name) || (kind !== "expense" && kind !== "savings")) continue;
+    if (editingTargets || targets[name]) rows.push(row(name, 0, { name, category: editingTargets ? null : name, kind, cls: "muted" }));
+  }
+  const totalTarget = Object.values(targets).reduce((a, b) => a + Number(b), 0) * factor;
+  rows.push(row("Total Expenses", s.total_expenses, { cls: "total", target: false }));
+  if (showTargets && totalTarget && !editingTargets) {
+    rows[rows.length - 1].lastChild.replaceWith(h("td", { class: "target" }, meter(Number(s.total_expenses), totalTarget),
+      h("span", { class: "small muted" }, `of ${money(totalTarget)} planned`)));
+  }
+  rows.push(row("Remaining", s.remaining, { cls: "total", amountCls: Number(s.remaining) < 0 ? "neg" : "in", target: false }));
   $("summary").replaceChildren(...rows);
+  $("targets-btn").textContent = editingTargets ? "Save targets" : Object.keys(targets).length ? "Edit targets" : "Set targets";
+  $("targets-btn").classList.toggle("primary", editingTargets);
   const hasOther = s.expenses.some((r) => r.category === "Other") || s.income.some((r) => r.category === "Other Income");
   $("ai-row").classList.toggle("hidden", !hasOther);
 
@@ -326,25 +503,82 @@ async function loadSummary() {
   $("excluded").textContent = (Number(s.total_savings) ? `Spending without savings: ${money(s.total_spending)}. ` : "") +
     (ex ? `Not counted (moving money between your own accounts): ${ex}` : "");
   $("range-label").textContent = `${state.start} → ${state.end}`;
+  renderPace(s);
   renderLeaks(s);
 }
 
+// This month so far: where spending is heading if it keeps the same pace.
+function renderPace(s) {
+  const box = $("pace");
+  const t = parseISO(TODAY), st = parseISO(state.start);
+  const thisMonth = state.end === TODAY && st.getUTCDate() === 1 && st.getUTCMonth() === t.getUTCMonth() && st.getUTCFullYear() === t.getUTCFullYear();
+  const day = t.getUTCDate(), days = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
+  if (!thisMonth || day < 3 || day === days) { box.classList.add("hidden"); return; }
+  const projected = Number(s.total_spending) / day * days;
+  const planned = Object.entries(targets).filter(([c]) => KINDS[c] === "expense").reduce((a, [, v]) => a + Number(v), 0);
+  box.replaceChildren(`📈 Day ${day} of ${days}: spending ${money(s.total_spending)} so far is on pace for about `,
+    h("b", {}, money(projected)), " this month",
+    planned ? h("span", { class: projected > planned ? "neg" : "in" }, ` (${projected > planned ? "over" : "under"} your ${money(planned)} spending targets)`) : "",
+    ". Bills that come once a month make early-month pace look high or low; treat it as a rough guide.");
+  box.classList.remove("hidden");
+}
+
+$("targets-btn").addEventListener("click", async (e) => {
+  if (!editingTargets) { editingTargets = true; state.category = ""; return loadSummary(); }
+  const values = {};
+  for (const input of document.querySelectorAll("#summary input[data-category]")) {
+    values[input.dataset.category] = input.value === "" ? null : input.value;
+  }
+  e.target.disabled = true;
+  try {
+    await api("/api/targets", { method: "POST", body: JSON.stringify({ targets: values }) });
+    editingTargets = false;
+    await loadSummary();
+  } catch (err) { alert(err.message); }
+  e.target.disabled = false;
+});
+
 // Transfers and card payments are left out of the totals because the money stays
-// yours. That only holds when the other end is tracked too.
+// yours. That only holds when the other end is tracked too, so each one without a
+// matching other half is listed here with what it could have been.
 function renderLeaks(s) {
   const box = $("leaks");
   const rows = s.unmatched_transfers || [];
-  if (!rows.length || Math.abs(Number(s.unmatched_total)) < 1) { box.classList.add("hidden"); return; }
+  if (!rows.length) { box.classList.add("hidden"); return; }
   const net = Number(s.unmatched_total);
-  const fmt = (r) => h("li", {}, `${r.date} · ${r.account} · ${r.description || ""} · `,
-    h("span", { class: Number(r.flow) > 0 ? "in" : "neg" }, (Number(r.flow) > 0 ? "+" : "") + money(r.flow)));
+  const choices = (r) => Number(r.flow) > 0
+    ? [["Income", "Income (pay, a refund, money owed to you)"], ["Other Income", "Other income (gift, cash back)"]]
+    : [["Person-to-Person", "Paid a person"], ["Savings", "Went to savings I don't track"], ["Other", "Spending (pick the category later)"]];
+  const item = (r) => {
+    const into = Number(r.flow) > 0;
+    const pick = h("select", { "aria-label": "What was this?", onchange: async (e) => {
+      if (!e.target.value) return;
+      try {
+        await api("/api/transactions/category", { method: "POST", body: JSON.stringify({ id: r.id, category: e.target.value, remember: false }) });
+        await refresh(false);
+      } catch (err) { alert(err.message); }
+    }}, h("option", { value: "" }, "It was really…"), choices(r).map(([v, label]) => h("option", { value: v }, label)));
+    return h("div", { class: "leak-row" },
+      h("span", {}, `${r.date} · ${r.account} · ${r.description || ""} `,
+        h("b", { class: into ? "in" : "neg" }, (into ? "+" : "") + money(r.flow))),
+      h("span", { class: "spacer" }),
+      h("button", { title: into ? "Your own money from an account you don't track here: not income, not spending" :
+                                  "Your own money to an account you don't track here: not spending",
+        onclick: async () => {
+          try {
+            await api("/api/transactions/review", { method: "POST", body: JSON.stringify({ id: r.id, reviewed: true }) });
+            await refresh(false);
+          } catch (err) { alert(err.message); }
+        } }, into ? "✓ My own money, came from another account" : "✓ My own money, moved to another account"),
+      pick);
+  };
   box.replaceChildren(
-    h("b", {}, `⚠ ${money(Math.abs(net))} ${net < 0 ? "left" : "came into"} these accounts as transfers or card payments with no matching other half.`),
-    h("p", { style: "margin:.35rem 0" }, net < 0
-      ? "It isn't counted as spending, so if it went somewhere you don't track (a friend, a bill paid from an unticked account), this budget looks better than it is."
-      : "It isn't counted as income."),
-    h("p", { style: "margin:.35rem 0" }, "To fix: tick the account it went to under Accounts, so its spending is counted, or change the category from Transfer to what the money was really for (e.g. Person-to-Person)."),
-    h("details", {}, h("summary", {}, `${rows.length} unmatched`), h("ul", { style: "margin:.3rem 0; padding-left:1.1rem" }, rows.slice(0, 50).map(fmt))));
+    h("b", {}, `⚠ ${rows.length} transfer${rows.length === 1 ? "" : "s"} with no matching other half`,
+      Math.abs(net) >= 1 ? ` (${money(Math.abs(net))} ${net < 0 ? "out" : "in"})` : ""),
+    h("p", { style: "margin:.35rem 0" }, "None of these are counted as income or spending yet. For each one, say what it was: ",
+      h("b", {}, "my own money"), " if it moved to or from an account of yours the app doesn't track (it stays out of the totals and stops being flagged), or pick what it really was. ",
+      "If the other account is one you track, upload its CSV or tick it under Accounts instead."),
+    ...rows.slice(0, 50).map(item));
   box.classList.remove("hidden");
 }
 
@@ -377,10 +611,21 @@ function txnRow(t) {
     h("td", { class: "small", style: "white-space:nowrap" }, t.date),
     h("td", { class: "txn-desc", title: t.description }, t.merchant || t.description,
       t.status === "pending" ? h("span", { class: "pill" }, "pending") : null,
-      t.source === "csv" ? h("span", { class: "pill", title: "From a CSV upload" }, "csv") : null),
+      t.source === "csv" ? h("span", { class: "pill", title: "From a CSV upload" }, "csv") : null,
+      h("button", { class: "icon small", title: t.note ? "Edit note" : "Add a note", "aria-label": "Note", onclick: () => editNote(t) }, "✎"),
+      t.note ? h("span", { class: "note" }, t.note) : null),
     h("td", { class: "small" }, `${t.account_name || ""}${t.last_four ? " ·" + t.last_four : ""}`),
     h("td", {}, select, t.ai_suggested ? h("span", { class: "pill", title: "Category suggested by Claude. Pick one to replace it." }, "AI") : null),
     h("td", { class: "num " + (flow > 0 ? "in" : "") }, (flow > 0 ? "+" : "") + money(flow)));
+}
+
+async function editNote(t) {
+  const note = prompt(`Note for ${t.merchant || t.description} (${t.date}, ${money(t.flow)}):`, t.note || "");
+  if (note === null) return;
+  try {
+    await api("/api/transactions/note", { method: "POST", body: JSON.stringify({ id: t.id, note }) });
+    await loadTransactions();
+  } catch (e) { alert(e.message); }
 }
 
 async function changeCategory(t, select) {
@@ -695,12 +940,176 @@ async function removeConnection(id) {
   refresh(true);
 }
 
+// ---------- trends ----------
+const monthName = (m, opts = { month: "short" }) => parseISO(m + "-01").toLocaleString("en-US", { ...opts, timeZone: "UTC" });
+
+function openMonth(m) {
+  state.period = "m:" + m;
+  if (m === TODAY.slice(0, 7)) state.period = "mtd";
+  $("period").value = state.period;
+  applyPeriod();
+  showView("budget");
+}
+
+function trendChart(months) {
+  const W = 760, H = 240, pad = { l: 56, r: 8, t: 10, b: 24 };
+  const vals = months.flatMap((m) => [Number(m.total_income), Number(m.total_expenses), Number(m.remaining)]);
+  const max = Math.max(1, ...vals), min = Math.min(0, ...vals);
+  const y = (v) => pad.t + (max - v) / (max - min) * (H - pad.t - pad.b);
+  const slot = (W - pad.l - pad.r) / months.length, bw = Math.max(4, slot * 0.32);
+  const ns = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs, text) => {
+    const e = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (text != null) e.textContent = text;
+    return e;
+  };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, class: "chart", role: "img", "aria-label": "Income and expenses by month" });
+  const step = Math.pow(10, Math.floor(Math.log10((max - min) / 4 || 1)));
+  const tick = Math.ceil((max - min) / 4 / step) * step;
+  for (let v = Math.ceil(min / tick) * tick; v <= max; v += tick) {
+    svg.append(el("line", { x1: pad.l, x2: W - pad.r, y1: y(v), y2: y(v), class: v === 0 ? "zero" : "grid" }));
+    svg.append(el("text", { x: pad.l - 6, y: y(v) + 4, "text-anchor": "end" }, Math.abs(v) >= 1000 ? `${v / 1000}k` : String(v)));
+  }
+  let path = "";
+  months.forEach((m, i) => {
+    const x = pad.l + slot * i + slot / 2;
+    const g = el("g", { style: "cursor:pointer" });
+    g.addEventListener("click", () => openMonth(m.month));
+    g.append(el("title", {}, `${monthName(m.month, { month: "long", year: "numeric" })}${m.partial ? " (so far)" : ""}\n` +
+      `Income ${money(m.total_income)}\nExpenses ${money(m.total_expenses)}\nRemaining ${money(m.remaining)}`));
+    g.append(el("rect", { x: x - slot / 2, y: pad.t, width: slot, height: H - pad.t - pad.b, fill: "transparent" }));
+    const inc = Number(m.total_income), exp = Number(m.total_expenses);
+    g.append(el("rect", { x: x - bw - 1, y: y(Math.max(0, inc)), width: bw, height: Math.abs(y(0) - y(inc)), rx: 2, fill: "var(--income-bar)" }));
+    g.append(el("rect", { x: x + 1, y: y(Math.max(0, exp)), width: bw, height: Math.abs(y(0) - y(exp)), rx: 2, fill: "var(--expense-bar)",
+      opacity: m.partial ? 0.55 : 1 }));
+    g.append(el("text", { x, y: H - 6, "text-anchor": "middle" }, monthName(m.month)));
+    svg.append(g);
+    path += `${i ? "L" : "M"}${x},${y(Number(m.remaining))}`;
+  });
+  svg.append(el("path", { d: path, fill: "none", stroke: "var(--accent)", "stroke-width": 2 }));
+  months.forEach((m, i) => svg.append(el("circle", { cx: pad.l + slot * i + slot / 2, cy: y(Number(m.remaining)), r: 3, fill: "var(--accent)" })));
+  return svg;
+}
+
+let trendAverages = {};
+
+async function loadTrends() {
+  const { months } = await api("/api/trends?" + new URLSearchParams({ months: 12, account: state.account }));
+  const full = months.filter((m) => !m.partial);
+  const avg = (f) => full.length ? full.reduce((a, m) => a + Number(f(m)), 0) / full.length : 0;
+  const saved = full.reduce((a, m) => a + Number(m.remaining), 0);
+  const stat = (label, value, cls = "") => h("div", { class: "stat" }, h("span", { class: "muted small" }, label), h("b", { class: cls }, value));
+  $("trend-cards").replaceChildren(
+    stat("Average income / month", money(avg((m) => m.total_income)), "in"),
+    stat("Average expenses / month", money(avg((m) => m.total_expenses))),
+    stat("Average left over / month", money(avg((m) => m.remaining)), avg((m) => m.remaining) < 0 ? "neg" : "in"),
+    stat(`Left over, last ${full.length} full months`, money(saved), saved < 0 ? "neg" : "in"));
+  $("trend-chart").replaceChildren(trendChart(months));
+
+  // Category × month, shaded by how big each month is for that category.
+  const names = Object.keys(KINDS).filter((c) => KINDS[c] !== "excluded" && months.some((m) => Number(m.categories[c] || 0) !== 0));
+  trendAverages = {};
+  const head = h("tr", {}, h("th", {}, "Category"), months.map((m) => h("th", { class: "num click", title: "Open this month",
+    onclick: () => openMonth(m.month) }, monthName(m.month) + (m.partial ? "*" : ""))), h("th", { class: "num" }, "Avg"));
+  const body = names.map((c) => {
+    const vals = months.map((m) => Number(m.categories[c] || 0));
+    const fullVals = months.map((m, i) => m.partial ? null : vals[i]).filter((v) => v != null);
+    const average = fullVals.length ? fullVals.reduce((a, b) => a + b, 0) / fullVals.length : 0;
+    trendAverages[c] = average;
+    const top = Math.max(...vals.map(Math.abs), 1);
+    const color = KINDS[c] === "income" ? "var(--income-bar)" : "var(--expense-bar)";
+    return h("tr", {}, h("td", {}, c), vals.map((v, i) => h("td", {
+      class: "num click", title: `${c}, ${monthName(months[i].month, { month: "long", year: "numeric" })}: ${money(v)}`,
+      onclick: () => { state.category = c; $("category-filter").value = c; openMonth(months[i].month); },
+      style: v ? `background: color-mix(in srgb, ${color} ${Math.round(Math.abs(v) / top * 38)}%, transparent)` : "",
+    }, v ? money(v).replace(/\.\d\d$/, "") : "")), h("td", { class: "num" }, h("b", {}, money(average).replace(/\.\d\d$/, ""))));
+  });
+  const totals = (label, f, cls) => h("tr", { class: "total" }, h("td", {}, label),
+    months.map((m) => h("td", { class: "num " + (cls ? cls(m) : "") }, money(f(m)).replace(/\.\d\d$/, ""))),
+    h("td", { class: "num" }, money(avg(f)).replace(/\.\d\d$/, "")));
+  $("trend-table").replaceChildren(head, ...body, totals("Total Expenses", (m) => m.total_expenses),
+    totals("Remaining", (m) => m.remaining, (m) => Number(m.remaining) < 0 ? "neg" : "in"));
+}
+
+$("avg-targets-btn").addEventListener("click", async () => {
+  const values = {};
+  for (const [c, v] of Object.entries(trendAverages)) if (KINDS[c] === "expense" || KINDS[c] === "savings") values[c] = Math.max(0, Math.round(v));
+  if (!Object.keys(values).length) return alert("No full months of spending yet.");
+  if (!confirm("Set every category's monthly target to its average over the last full months? You can edit them afterwards on the Budget page.")) return;
+  try {
+    await api("/api/targets", { method: "POST", body: JSON.stringify({ targets: values }) });
+    showView("budget");
+  } catch (err) { alert(err.message); }
+});
+
+// ---------- recurring ----------
+async function loadRecurring() {
+  const { recurring } = await api("/api/recurring?" + new URLSearchParams({ account: state.account }));
+  const monthly = recurring.reduce((a, r) => a + Number(r.monthly_cost), 0);
+  const soon = recurring.filter((r) => r.next_date >= TODAY && (parseISO(r.next_date) - parseISO(TODAY)) / 864e5 <= 14);
+  const stat = (label, value) => h("div", { class: "stat" }, h("span", { class: "muted small" }, label), h("b", {}, value));
+  $("recurring-cards").replaceChildren(
+    stat("Recurring per month", money(monthly)),
+    stat("Per year", money(monthly * 12)),
+    stat("Due in the next 2 weeks", `${soon.length} · ${money(soon.reduce((a, r) => a + Number(r.typical), 0))}`));
+  const rows = [h("tr", {}, h("th", {}, "Merchant"), h("th", {}, "Category"), h("th", {}, "How often"),
+    h("th", { class: "num" }, "Usual"), h("th", { class: "num" }, "Last"), h("th", {}, "Next expected"), h("th", { class: "num" }, "Per month"))];
+  for (const r of recurring) {
+    const change = r.price_change != null ? Number(r.price_change) : 0;
+    rows.push(h("tr", { class: "click", title: "Show these transactions", onclick: () => {
+        state.q = r.name.slice(0, 40); $("q").value = state.q; state.category = ""; state.period = "custom";
+        state.start = iso(new Date(parseISO(TODAY) - 400 * 864e5)); state.end = TODAY; $("period").value = "custom";
+        $("start").value = state.start; $("end").value = state.end; $("custom-range").classList.add("show");
+        showView("budget");
+      } },
+      h("td", { class: "txn-desc" }, r.name),
+      h("td", { class: "small" }, r.category),
+      h("td", { class: "small" }, `${r.frequency} · ${r.count}×`),
+      h("td", { class: "num" }, money(r.typical)),
+      h("td", { class: "num" }, money(r.last_amount), change ? h("span", { class: "pill", title: "Last charge differs from the usual amount" },
+        `${change > 0 ? "▲" : "▼"} ${money(Math.abs(change))}`) : null, h("div", { class: "small muted" }, r.last_date)),
+      h("td", { class: "small " + (r.next_date < TODAY ? "neg" : "") }, r.next_date < TODAY ? `${r.next_date} (late?)` : r.next_date),
+      h("td", { class: "num" }, money(r.monthly_cost))));
+  }
+  if (!recurring.length) rows.push(h("tr", {}, h("td", { colspan: 7, class: "muted" }, "Nothing recurring found yet. It needs a few months of history.")));
+  $("recurring").replaceChildren(...rows);
+}
+
+// ---------- pages and theme ----------
+function showView(view, withAccounts = false) {
+  state.view = ["budget", "trends", "recurring"].includes(view) ? view : "budget";
+  for (const b of document.querySelectorAll("nav.tabs button")) b.classList.toggle("on", b.dataset.view === state.view);
+  for (const v of ["budget", "trends", "recurring"]) $("view-" + v).classList.toggle("on", v === state.view);
+  // The period only applies to the Budget page.
+  for (const id of ["period", "custom-range"]) $(id).style.visibility = state.view === "budget" ? "" : "hidden";
+  state.page = state.view === "budget" ? state.page : 1;
+  refresh(withAccounts);
+}
+for (const b of document.querySelectorAll("nav.tabs button")) b.addEventListener("click", () => showView(b.dataset.view));
+
+const THEMES = ["auto", "light", "dark"];
+function theme() { try { return localStorage.getItem("theme") || "auto"; } catch (e) { return "auto"; } }
+function applyTheme(t) {
+  if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  $("theme-btn").textContent = { auto: "🌓", light: "☀️", dark: "🌙" }[t];
+  $("theme-btn").title = { auto: "Theme: matches your device", light: "Theme: light", dark: "Theme: dark" }[t] + " (click to change)";
+}
+$("theme-btn").addEventListener("click", () => {
+  const next = THEMES[(THEMES.indexOf(theme()) + 1) % THEMES.length];
+  try { localStorage.setItem("theme", next); } catch (e) { /* private mode: still switch for this visit */ }
+  applyTheme(next);
+});
+applyTheme(theme());
+
 // ---------- wiring ----------
 async function refresh(withAccounts = true) {
   saveURL();
   try {
     if (withAccounts) await loadAccounts();
-    await Promise.all([loadSummary(), loadTransactions()]);
+    if (state.view === "trends") await loadTrends();
+    else if (state.view === "recurring") await loadRecurring();
+    else await Promise.all([loadSummary(), loadTransactions()]);
   } catch (e) { console.error(e); $("alerts").append(h("div", { class: "alert" }, e.message)); }
 }
 
@@ -734,7 +1143,7 @@ buildPeriodOptions();
 if (state.period === "custom" && state.start && state.end) {
   $("start").value = state.start; $("end").value = state.end; $("custom-range").classList.add("show");
 } else applyPeriod();
-refresh(true);
+showView(state.view, true);
 </script>
 </body>
 </html>
