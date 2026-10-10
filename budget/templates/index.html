@@ -290,8 +290,8 @@ async function changeCategory(t, select) {
   const name = t.merchant || t.description;
   const remember = confirm(`Use “${select.value}” for every transaction from “${name}” (past and future)?\n\nOK = all from this merchant · Cancel = just this one`);
   try {
-    await api(`/api/transactions/${encodeURIComponent(t.id)}/category`, {
-      method: "POST", body: JSON.stringify({ category: select.value, remember }),
+    await api("/api/transactions/category", {
+      method: "POST", body: JSON.stringify({ id: t.id, category: select.value, remember }),
     });
     await refresh(false);
   } catch (e) { alert(e.message); select.value = t.category; }
@@ -328,11 +328,11 @@ async function loadAccounts() {
   const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"))];
   for (const a of accountsData.accounts) {
     const box = h("input", { type: "checkbox", checked: a.include_in_budget, onchange: async (e) => {
-      await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ include_in_budget: e.target.checked }) });
+      await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: a.id, include_in_budget: e.target.checked }) });
       refresh(false);
     }});
     const type = h("select", { "aria-label": "Account type", onchange: async (e) => {
-      await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ subtype: e.target.value }) });
+      await api("/api/accounts/update", { method: "POST", body: JSON.stringify({ id: a.id, subtype: e.target.value }) });
       refresh(true);
     }}, ACCOUNT_TYPES.map(([v, label]) => h("option", { value: v, selected: v === a.subtype }, label)));
     // The full message is in the banner at the top; keep the row narrow so nothing scrolls off screen.
@@ -393,7 +393,7 @@ $("connect-form").addEventListener("submit", async (e) => {
 async function checkAccount(a, button) {
   button.disabled = true; button.textContent = "Checking…";
   try {
-    const r = await api(`/api/accounts/${encodeURIComponent(a.id)}/compare?` + query());
+    const r = await api("/api/accounts/compare?" + query({ check_account: a.id }));
     const fmt = (t) => `  ${t.date}  ${money(t.amount)}  ${t.description || ""}${t.pending ? " (pending)" : ""}`;
     const lines = [`${a.name}, ${r.start} → ${r.end}`];
     if (!r.found) {

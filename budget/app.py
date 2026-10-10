@@ -211,9 +211,12 @@ def api_accounts():
         return jsonify(accounts=queries.accounts(conn), enrollments=queries.enrollments(conn))
 
 
-@app.get("/api/accounts/<account_id>/compare")
+# Account and transaction ids contain ":" and other characters that don't
+# survive URL paths on every host, so they travel in the query string or body.
+@app.get("/api/accounts/compare")
 @login_required
-def api_compare_account(account_id):
+def api_compare_account():
+    account_id = request.args.get("check_account", "")
     filters = _filters()
     end = min(filters["end"], today())
     # Each 40 days is one SimpleFIN request, and SimpleFIN rate-limits them.
@@ -229,11 +232,14 @@ def api_compare_account(account_id):
     return jsonify(result)
 
 
-@app.post("/api/accounts/<account_id>")
+@app.post("/api/accounts/update")
 @login_required
-def api_update_account(account_id):
+def api_update_account():
     body = request.get_json(force=True)
+    account_id = body.get("id", "")
     with db.connect() as conn:
+        if not conn.execute("SELECT 1 FROM accounts WHERE id = %s", (account_id,)).fetchone():
+            return jsonify(error="Account not found. Reload the page and try again."), 404
         if "subtype" in body:
             subtype = body["subtype"]
             if subtype not in SUBTYPES:
@@ -251,10 +257,11 @@ def api_update_account(account_id):
     return jsonify(ok=True)
 
 
-@app.post("/api/transactions/<txn_id>/category")
+@app.post("/api/transactions/category")
 @login_required
-def api_set_category(txn_id):
+def api_set_category():
     body = request.get_json(force=True)
+    txn_id = body.get("id", "")
     category = body.get("category") or None
     if category and category not in CATEGORY_NAMES:
         return jsonify(error="Unknown category"), 400

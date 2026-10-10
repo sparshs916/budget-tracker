@@ -219,16 +219,19 @@ def test_changing_account_type_sticks_and_recategorizes(conn):
     category = lambda: queries.transactions(conn, month_filters(account="all", q="AUTOMATIC"), 1, 5)["rows"][0]["category"]  # noqa: E731
     assert category() == "Credit Card Payment"
 
-    resp = client.post(f"/api/accounts/{K('cc')}", json={"subtype": "checking"}, headers={"X-CSRF-Token": csrf})
+    resp = client.post("/api/accounts/update", json={"id": K("cc"), "subtype": "checking"}, headers={"X-CSRF-Token": csrf})
     assert resp.status_code == 200
     conn.rollback()
     assert category() == "Other Income"
+
+    assert client.post("/api/accounts/update", json={"id": "missing", "subtype": "checking"},
+                       headers={"X-CSRF-Token": csrf}).status_code == 404
 
     resync(conn, FakeSimpleFIN(OCT))
     row = conn.execute("SELECT subtype, type_locked FROM accounts WHERE id = %s", (K("cc"),)).fetchone()
     assert (row["subtype"], row["type_locked"]) == ("checking", True)
 
-    client.post(f"/api/accounts/{K('cc')}", json={"subtype": "credit_card"}, headers={"X-CSRF-Token": csrf})
+    client.post("/api/accounts/update", json={"id": K("cc"), "subtype": "credit_card"}, headers={"X-CSRF-Token": csrf})
     conn.rollback()
     assert category() == "Credit Card Payment"
     assert conn.execute("SELECT 1 FROM transactions WHERE id = %s", (payment,)).fetchone()
@@ -271,8 +274,8 @@ def test_web_flow(conn):
 
     # Mutations need the CSRF header.
     chewy = K("cc", "k4")
-    assert client.post(f"/api/transactions/{chewy}/category", json={"category": "Shopping"}).status_code == 403
-    resp = client.post(f"/api/transactions/{chewy}/category", json={"category": "Shopping", "remember": True},
+    assert client.post("/api/transactions/category", json={"id": chewy, "category": "Shopping"}).status_code == 403
+    resp = client.post("/api/transactions/category", json={"id": chewy, "category": "Shopping", "remember": True},
                        headers={"X-CSRF-Token": csrf})
     assert resp.status_code == 200
     s = client.get("/api/summary?start=2026-10-01&end=2026-10-09").get_json()
@@ -363,7 +366,8 @@ def test_full_resync_refills_history(conn, monkeypatch):
     monkeypatch.setattr(app_module, "today", lambda: TODAY)
     web = app.test_client()
     csrf = login(web)
-    resp = web.get(f"/api/accounts/{K('cc')}/compare?start=2026-10-01&end=2026-10-09")
+    resp = web.get("/api/accounts/compare", query_string={"check_account": K("cc"), "start": "2026-10-01",
+                                                          "end": "2026-10-09"})
     assert resp.status_code == 200 and len(resp.get_json()["missing"]) == 1
 
     assert web.post("/api/sync?full=1", headers={"X-CSRF-Token": csrf}).status_code == 200
