@@ -532,3 +532,49 @@ def test_upload_endpoint_preview_commit_undo_and_new_account(conn):
     assert post(account_id="", commit="0").status_code == 400
     assert web.post("/api/import", data={"file": (io.BytesIO(GOLDEN1.encode()), "x.csv"), "account_id": K("sav")},
                     content_type="multipart/form-data").status_code == 403  # CSRF
+
+
+APPLE = '''Transaction Date,Clearing Date,Description,Merchant,Category,Type,Amount (USD),Purchased By
+10/04/2026,10/06/2026,"KP RX CPP 256 300 PULLMAN ST LIVERMORE 94551 CA USA","Kp Rx Cpp 256","Other","Purchase","30.00","Me"
+09/29/2026,09/29/2026,"ACH DEPOSIT INTERNET TRANSFER FROM ACCOUNT ENDING IN 7022","Ach Deposit Internet Transfer From Account Ending In 7022","Payment","Payment","-803.90","Me"
+09/27/2026,09/28/2026,"APPLE.COM/BILL ONE APPLE PARK WAY CUPERTINO 95014 CA USA","Apple Services","Other","Purchase","2.99","Me"
+09/15/2026,09/17/2026,"CYCLEBOAT BOSTON, LLC (RETURN)","Cycleboat Boston, Llc (return)","Credit","Credit","-108.95","Me"
+09/14/2026,09/15/2026,"CYCLEBOAT BOSTON, LLC","Cycleboat Boston, Llc","Other","Purchase","108.95","Me"
+'''
+
+
+def test_manual_accounts_and_apple_card_upload(conn):
+    web = app.test_client()
+    headers = {"X-CSRF-Token": login(web)}
+    made = web.post("/api/accounts/manual", json={"name": "Apple Card", "institution": "Apple", "subtype": "credit_card"},
+                    headers=headers).get_json()
+    assert made["id"].startswith("manual:")
+    assert web.post("/api/accounts/manual", json={"name": "", "subtype": "credit_card"}, headers=headers).status_code == 400
+
+    def post(**form):
+        data = {"file": (io.BytesIO(APPLE.encode()), "apple.csv"), **form}
+        return web.post("/api/import", data=data, headers=headers, content_type="multipart/form-data").get_json()
+
+    preview = post(account_id=made["id"], commit="0")
+    assert preview["flip"] is True and preview["new_count"] == 5  # Apple lists purchases as positive
+    post(account_id=made["id"], commit="1")
+    conn.rollback()
+    rows = {r["description"][:20]: r for r in conn.execute(
+        "SELECT description, flow, auto_category FROM transactions WHERE account_id = %s", (made["id"],)).fetchall()}
+    assert rows["ACH DEPOSIT INTERNET"]["auto_category"] == "Credit Card Payment"
+    assert rows["ACH DEPOSIT INTERNET"]["flow"] == Decimal("803.90")
+    assert rows["KP RX CPP 256 300 PU"]["auto_category"] == "Health" and rows["KP RX CPP 256 300 PU"]["flow"] == Decimal("-30.00")
+    assert rows["APPLE.COM/BILL ONE A"]["auto_category"] == "Subscriptions"
+
+    s = queries.summary(conn, {"start": datetime.date(2026, 9, 1), "end": TODAY, "account": made["id"]})
+    assert amounts(s["expenses"]) == {"Health": Decimal("30.00"), "Subscriptions": Decimal("2.99"), "Other": Decimal("0.00")}
+
+    # Two different new accounts from the same file don't collide.
+    other = post(account_id="new", new_name="Apple Card (2)", new_subtype="credit_card", commit="1")
+    assert other["new_count"] == 5
+
+    # Only hand-made accounts can be removed, and their transactions go with them.
+    assert web.post("/api/accounts/delete", json={"id": K("cc")}, headers=headers).status_code == 400
+    assert web.post("/api/accounts/delete", json={"id": made["id"]}, headers=headers).status_code == 200
+    conn.rollback()
+    assert not conn.execute("SELECT 1 FROM transactions WHERE account_id = %s", (made["id"],)).fetchone()

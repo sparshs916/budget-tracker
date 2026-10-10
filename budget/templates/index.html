@@ -38,7 +38,7 @@
     .pill { display: inline-block; padding: 0 .4rem; border-radius: 999px; background: #fff4e5; color: #9a5b00; font-size: 11px; margin-left: .3rem; }
     .alert { background: #fff4e5; border: 1px solid #f5c26b; border-radius: 8px; padding: .5rem .75rem; margin: 0 auto .5rem; max-width: 1200px; }
     .scroll { overflow-x: auto; }
-    .txn-desc { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .txn-desc { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pager { display: flex; justify-content: space-between; align-items: center; margin-top: .75rem; gap: .5rem; flex-wrap: wrap; }
     .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
     .filters input[type=search] { flex: 1; min-width: 160px; }
@@ -116,6 +116,8 @@
       <summary>Accounts</summary>
       <p class="muted small">Unchecked accounts are left out of “Budget accounts”. Savings accounts start unchecked so a transfer to savings is counted once, as Savings on checking. SimpleFIN doesn’t say what type each account is, so the type is a guess from its name. Fix it here if it’s wrong: it decides how card payments and transfers are counted.</p>
       <div class="scroll"><table id="accounts"></table></div>
+      <p><button id="add-account-btn">+ Add account by hand</button>
+        <span class="muted small">For accounts SimpleFIN can't connect (like Apple Card). Fill them with CSV uploads.</span></p>
     </details>
   </section>
 </main>
@@ -137,10 +139,32 @@
   </form>
 </dialog>
 
+<dialog id="account-dialog">
+  <form id="account-form" method="dialog">
+    <h2>Add an account by hand</h2>
+    <div class="form-grid">
+      <label for="account-name">Name</label>
+      <input id="account-name" placeholder="e.g. Apple Card" required maxlength="100">
+      <label for="account-institution">Bank</label>
+      <input id="account-institution" placeholder="e.g. Apple (optional)" maxlength="100">
+      <label for="account-type">Type</label>
+      <select id="account-type">
+        <option value="credit_card">Credit card</option><option value="checking">Checking</option>
+        <option value="savings">Savings</option><option value="other">Other</option>
+      </select>
+    </div>
+    <p class="neg small" id="account-error"></p>
+    <div class="dialog-buttons">
+      <button type="button" id="account-cancel">Cancel</button>
+      <button type="submit" class="primary">Add account</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="upload-dialog">
   <form id="upload-form" method="dialog">
     <h2>Upload transactions from a CSV</h2>
-    <p class="small muted">Download the CSV from your bank's website, then pick which account it belongs to. Rows already in the app are skipped, so overlapping or repeated uploads are safe. You'll see a preview before anything is saved.</p>
+    <p class="small muted">Download the CSV from your bank's website. The file doesn't say which account it's from, so pick that here (or add a new account). Rows already in the app are skipped, so overlapping or repeated uploads are safe. You'll see a preview before anything is saved.</p>
     <div class="form-grid">
       <label for="upload-account">Account</label>
       <select id="upload-account" required></select>
@@ -388,7 +412,8 @@ async function loadAccounts() {
       h("td", {}, `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""} `,
         a.enrollment_status === "manual" ? null : h("button", { class: "small", title: "Compare with what SimpleFIN returns for the selected dates",
           onclick: (e) => checkAccount(a, e.target) }, "Check"), " ",
-        h("button", { class: "small", title: "Add transactions from a CSV file", onclick: () => openUpload(a.id) }, "Upload CSV")),
+        h("button", { class: "small", title: "Add transactions from a CSV file", onclick: () => openUpload(a.id) }, "Upload CSV"),
+        a.enrollment_status === "manual" ? [" ", h("button", { class: "small", onclick: () => removeAccount(a) }, "Remove")] : null),
       h("td", {}, type),
       h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
       h("td", { class: "num small", title: "Synced transactions, and the newest one's date" },
@@ -572,6 +597,30 @@ async function loadUploadHistory() {
       await loadUploadHistory();
       await refresh(true);
     }}, "Undo"))) : [h("p", { class: "muted" }, "No uploads yet.")]));
+}
+
+// ---------- manual accounts ----------
+$("add-account-btn").addEventListener("click", () => {
+  $("account-name").value = ""; $("account-institution").value = ""; $("account-error").textContent = "";
+  $("account-dialog").showModal();
+});
+$("account-cancel").addEventListener("click", () => $("account-dialog").close());
+$("account-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await api("/api/accounts/manual", { method: "POST", body: JSON.stringify({
+      name: $("account-name").value, institution: $("account-institution").value, subtype: $("account-type").value }) });
+    $("account-dialog").close();
+    await refresh(true);
+  } catch (err) { $("account-error").textContent = err.message; }
+});
+
+async function removeAccount(a) {
+  if (!confirm(`Remove “${a.name}” and all ${a.transaction_count || 0} of its transactions?`)) return;
+  try {
+    await api("/api/accounts/delete", { method: "POST", body: JSON.stringify({ id: a.id }) });
+    await refresh(true);
+  } catch (err) { alert(err.message); }
 }
 
 $("upload-btn").addEventListener("click", () => openUpload());

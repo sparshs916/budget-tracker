@@ -91,7 +91,7 @@ KEYWORD_RULES = [
     ("Transportation", _rx(r"uber", r"lyft", r"parking", r"toll", r"fastrak", r"ez ?pass", r"clipper", r"bart", r"caltrain", r"metro", r"transit", r"dmv", r"jiffy lube", r"auto repair", r"car wash", r"tire")),
     ("Travel", _rx(r"airlines?", r"united", r"delta", r"southwest", r"alaska air", r"jetblue", r"american air\w*", r"hotel", r"marriott", r"hilton", r"hyatt", r"airbnb", r"vrbo", r"expedia", r"booking\.com")),
     ("Giving", _rx(r"church", r"tithe\w*", r"tithely", r"pushpay", r"planning center", r"ministr\w*", r"donation", r"charit\w*", r"compassion intl", r"world vision", r"gofundme")),
-    ("Health", _rx(r"cvs", r"walgreens", r"rite aid", r"pharmacy", r"kaiser", r"dental", r"dentist", r"medical", r"clinic", r"hospital", r"optometr\w*", r"gym", r"fitness", r"planet fitness", r"24 hour fitness")),
+    ("Health", _rx(r"goodrx", r"kp rx", r"rx", r"cvs", r"walgreens", r"rite aid", r"pharmacy", r"kaiser", r"dental", r"dentist", r"medical", r"clinic", r"hospital", r"optometr\w*", r"gym", r"fitness", r"planet fitness", r"24 hour fitness")),
     ("Entertainment", _rx(r"amc", r"cinema", r"theat(?:er|re)", r"ticketmaster", r"stubhub", r"steam", r"playstation", r"xbox", r"nintendo", r"bowling", r"concert")),
     ("Shopping", _rx(r"amazon", r"amzn", r"target", r"walmart", r"best buy", r"home depot", r"lowe'?s", r"ikea", r"etsy", r"ebay", r"tj ?maxx", r"marshalls", r"ross", r"old navy", r"nike", r"apple store")),
     ("Fees & Interest", _rx(r"interest charge", r"finance charge", r"late fee", r"annual fee", r"overdraft", r"service fee", r"atm fee", r"foreign transaction fee")),
@@ -129,12 +129,19 @@ HINTS = [
     (re.compile(r"entertain", re.IGNORECASE), "Entertainment"),
     (re.compile(r"health|medical|pharmacy", re.IGNORECASE), "Health"),
     (re.compile(r"travel|airline|hotel", re.IGNORECASE), "Travel"),
+    (re.compile(r"transport", re.IGNORECASE), "Transportation"),
     (re.compile(r"shopping|merchandise", re.IGNORECASE), "Shopping"),
 ]
 
 
 def categorize(*, description, merchant, flow, account_type, hint=None):
     category = _categorize(description=description, merchant=merchant, flow=flow, account_type=account_type)
+    # Money coming onto a card from your bank is a payment, however it's worded
+    # ("ACH DEPOSIT INTERNET TRANSFER FROM ACCOUNT ENDING IN 7022").
+    if (account_type == "credit" and flow > 0 and category != "Credit Card Payment"
+            and (INTERNAL_TRANSFER.search(description or "") or re.search(r"\bach deposit\b", description or "", re.IGNORECASE)
+                 or (hint and re.fullmatch(r"\s*payment\s*", hint, re.IGNORECASE)))):
+        return "Credit Card Payment"
     if category in ("Other", "Other Income") and hint:
         for pattern, hinted in HINTS:
             if pattern.search(hint):

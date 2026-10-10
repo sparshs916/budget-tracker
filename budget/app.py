@@ -318,6 +318,42 @@ def api_remove_connection(connection_id):
     return jsonify(ok=True)
 
 
+def _create_manual_account(conn, name, subtype, institution=None):
+    account_id = "manual:" + secrets.token_hex(8)
+    conn.execute(
+        """INSERT INTO accounts (id, institution, name, type, subtype, status, include_in_budget, type_locked)
+           VALUES (%s, %s, %s, %s, %s, 'open', %s, TRUE)""",
+        (account_id, institution or "Manual", name, SUBTYPES[subtype], subtype, subtype in ("checking", "credit_card")),
+    )
+    return account_id
+
+
+@app.post("/api/accounts/manual")
+@login_required
+def api_add_manual_account():
+    body = request.get_json(force=True)
+    name = (body.get("name") or "").strip()[:100]
+    subtype = body.get("subtype") or ""
+    if not name or subtype not in SUBTYPES:
+        return jsonify(error="Give the account a name and type."), 400
+    with db.connect() as conn:
+        account_id = _create_manual_account(conn, name, subtype, (body.get("institution") or "").strip()[:100] or None)
+    return jsonify(id=account_id)
+
+
+@app.post("/api/accounts/delete")
+@login_required
+def api_delete_manual_account():
+    account_id = request.get_json(force=True).get("id", "")
+    with db.connect() as conn:
+        # Only hand-made accounts; SimpleFIN accounts would just come back on the next sync.
+        deleted = conn.execute("DELETE FROM accounts WHERE id = %s AND enrollment_id IS NULL RETURNING id",
+                               (account_id,)).fetchone()
+    if not deleted:
+        return jsonify(error="Only accounts you added by hand can be removed."), 400
+    return jsonify(ok=True)
+
+
 @app.post("/api/import")
 @login_required
 def api_import():
@@ -337,8 +373,10 @@ def api_import():
             subtype = form.get("new_subtype") or "checking"
             if not name or subtype not in SUBTYPES:
                 return jsonify(error="Give the new account a name and type."), 400
-            account = {"id": "manual:" + secrets.token_hex(8), "name": name, "type": SUBTYPES[subtype],
-                       "subtype": subtype, "new": True}
+            account = {"id": "manual:preview", "name": name, "type": SUBTYPES[subtype], "subtype": subtype}
+            if form.get("commit") == "1":
+                # Create it first: imported rows are fingerprinted with the account's id.
+                account["id"] = _create_manual_account(conn, name, subtype)
         else:
             account = conn.execute("SELECT id, name, type, subtype FROM accounts WHERE id = %s",
                                    (form.get("account_id") or "",)).fetchone()
@@ -358,13 +396,6 @@ def api_import():
             "duplicates": [_import_row(r) for r in sorted(duplicates, key=lambda r: r["date"], reverse=True)[:200]],
         }
         if form.get("commit") == "1":
-            if account.get("new"):
-                conn.execute(
-                    """INSERT INTO accounts (id, institution, name, type, subtype, status, include_in_budget, type_locked)
-                       VALUES (%s, 'Uploaded', %s, %s, %s, 'open', %s, TRUE)""",
-                    (account["id"], account["name"], account["type"], account["subtype"],
-                     account["subtype"] in ("checking", "credit_card")),
-                )
             result["import_id"] = csv_import.save(conn, account, new_rows, upload.filename) if new_rows else None
             result["saved"] = True
     return jsonify(result)
