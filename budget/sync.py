@@ -226,3 +226,45 @@ def recategorize_account(conn, account_id):
             (flow, categorize(description=r["description"], merchant=r["merchant"], flow=flow,
                               account_type=account["type"]), r["id"]),
         )
+
+
+def compare_account(conn, account_id, start, end, client=None):
+    """What SimpleFIN returns for one account and date range vs. what the app has saved."""
+    tz = ZoneInfo(config.TIMEZONE)
+    row = conn.execute(
+        """SELECT a.id, e.access_token FROM accounts a JOIN enrollments e ON e.id = a.enrollment_id
+           WHERE a.id = %s""",
+        (account_id,),
+    ).fetchone()
+    if not row:
+        return None
+    client = client or SimpleFINClient(crypto.decrypt(row["access_token"]))
+    accounts, errors = _fetch(client, start, end, tz)
+    remote = accounts.get(account_id)
+    if remote is None:
+        return {"found": False, "errors": errors}
+
+    saved = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id = %s", (account_id,)).fetchall()}
+    remote_ids = set()
+    missing = []
+    for t in remote["transactions"]:
+        txn_id = f"{account_id}:{t['id']}"
+        remote_ids.add(txn_id)
+        if txn_id not in saved:
+            timestamp = t.get("transacted_at") or t.get("posted")
+            missing.append({"date": _local_date(timestamp, tz).isoformat() if timestamp else None,
+                            "description": t.get("description"), "amount": t.get("amount"),
+                            "pending": bool(t.get("pending"))})
+    in_range = conn.execute(
+        "SELECT id, date, description, raw_amount FROM transactions WHERE account_id = %s AND date BETWEEN %s AND %s",
+        (account_id, start, end),
+    ).fetchall()
+    return {
+        "found": True,
+        "errors": errors,
+        "simplefin_count": len(remote_ids),
+        "app_count": len(in_range),
+        "missing": sorted(missing, key=lambda m: m["date"] or "")[:100],
+        "not_returned": [{"date": r["date"].isoformat(), "description": r["description"], "amount": str(r["raw_amount"])}
+                         for r in in_range if r["id"] not in remote_ids][:100],
+    }

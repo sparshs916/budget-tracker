@@ -14,7 +14,7 @@ from werkzeug.security import check_password_hash
 from . import config, db, queries
 from .categorize import CATEGORIES, CATEGORY_NAMES
 from .simplefin import SimpleFINError, claim_setup_token
-from .sync import SUBTYPES, recategorize_account, save_connection, sync_all, sync_enrollment
+from .sync import SUBTYPES, compare_account, recategorize_account, save_connection, sync_all, sync_enrollment
 
 logging.basicConfig(level=logging.INFO)
 
@@ -211,6 +211,24 @@ def api_accounts():
         return jsonify(accounts=queries.accounts(conn), enrollments=queries.enrollments(conn))
 
 
+@app.get("/api/accounts/<account_id>/compare")
+@login_required
+def api_compare_account(account_id):
+    filters = _filters()
+    end = min(filters["end"], today())
+    # Each 40 days is one SimpleFIN request, and SimpleFIN rate-limits them.
+    start = max(filters["start"], end - datetime.timedelta(days=89))
+    with db.connect() as conn:
+        try:
+            result = compare_account(conn, account_id, start, end)
+        except SimpleFINError as e:
+            return jsonify(error=e.message), 502
+    if result is None:
+        return jsonify(error="Not found"), 404
+    result.update(start=start, end=end)
+    return jsonify(result)
+
+
 @app.post("/api/accounts/<account_id>")
 @login_required
 def api_update_account(account_id):
@@ -296,6 +314,10 @@ def api_remove_connection(connection_id):
 @login_required
 def api_sync():
     with db.connect() as conn:
+        if request.args.get("full"):
+            # Re-fetch the full history window, e.g. to fill gaps from an earlier sync.
+            conn.execute("UPDATE accounts SET history_synced = FALSE")
+            conn.commit()
         return jsonify(results=sync_all(conn, today=today()))
 
 

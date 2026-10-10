@@ -325,7 +325,7 @@ async function loadAccounts() {
   sel.value = prev;
   if (sel.value !== prev) { state.account = "budget"; sel.value = "budget"; }
 
-  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"))];
+  const rows = [h("tr", {}, h("th", {}, "In budget"), h("th", {}, "Account"), h("th", {}, "Type"), h("th", { class: "num" }, "Balance"), h("th", { class: "num" }, "Transactions"), h("th", {}, "Status"), h("th", {}, ""))];
   for (const a of accountsData.accounts) {
     const box = h("input", { type: "checkbox", checked: a.include_in_budget, onchange: async (e) => {
       await api(`/api/accounts/${encodeURIComponent(a.id)}`, { method: "POST", body: JSON.stringify({ include_in_budget: e.target.checked }) });
@@ -343,9 +343,11 @@ async function loadAccounts() {
       h("td", { class: "num" }, a.ledger_balance != null ? money(a.ledger_balance) : "—"),
       h("td", { class: "num small", title: "Synced transactions, and the newest one's date" },
         a.transaction_count ? `${a.transaction_count} · latest ${a.latest_transaction}` : "none yet"),
-      h("td", { class: "small" }, status)));
+      h("td", { class: "small" }, status),
+      h("td", {}, h("button", { class: "small", title: "Compare with what SimpleFIN returns for the selected dates",
+        onclick: (e) => checkAccount(a, e.target) }, "Check"))));
   }
-  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 6, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
+  if (!accountsData.accounts.length) rows.push(h("tr", {}, h("td", { colspan: 7, class: "muted" }, "No accounts yet. Click “+ Connect account”.")));
   $("accounts").replaceChildren(...rows);
 
   const alerts = accountsData.enrollments.filter((e) => e.status !== "ok").map((e) =>
@@ -386,6 +388,38 @@ $("connect-form").addEventListener("submit", async (e) => {
     button.disabled = false; button.textContent = "Connect";
   }
 });
+
+async function checkAccount(a, button) {
+  button.disabled = true; button.textContent = "Checking…";
+  try {
+    const r = await api(`/api/accounts/${encodeURIComponent(a.id)}/compare?` + query());
+    const fmt = (t) => `  ${t.date}  ${money(t.amount)}  ${t.description || ""}${t.pending ? " (pending)" : ""}`;
+    const lines = [`${a.name}, ${r.start} → ${r.end}`];
+    if (!r.found) {
+      lines.push("SimpleFIN didn't return this account at all. Check it in SimpleFIN Bridge.");
+    } else {
+      lines.push(`SimpleFIN returned ${r.simplefin_count} transactions; the app has ${r.app_count} saved in this range.`);
+      if (r.missing.length) lines.push("", `Returned by SimpleFIN but missing from the app (${r.missing.length}):`, ...r.missing.slice(0, 15).map(fmt));
+      if (r.not_returned.length) lines.push("", `In the app but not returned by SimpleFIN for these dates (${r.not_returned.length}), usually a date-boundary difference:`, ...r.not_returned.slice(0, 10).map(fmt));
+      if (!r.missing.length) lines.push("", "Nothing is missing on the app's side. Anything else missing isn't being sent by SimpleFIN.");
+    }
+    if (r.errors && r.errors.length) lines.push("", `SimpleFIN said: ${r.errors.join(" · ")}`);
+    if (r.missing && r.missing.length) {
+      if (confirm(lines.join("\n") + "\n\nRe-import the last 90 days for all accounts now?")) await fullResync();
+    } else {
+      alert(lines.join("\n"));
+    }
+  } catch (err) { alert(err.message); }
+  button.disabled = false; button.textContent = "Check";
+}
+
+async function fullResync() {
+  $("sync-status").textContent = "Re-importing…";
+  const r = await api("/api/sync?full=1", { method: "POST" });
+  const errors = r.results.filter((x) => x.error);
+  if (errors.length) alert(errors.map((x) => `${x.enrollment}: ${x.error}`).join("\n"));
+  await refresh(true);
+}
 
 async function removeConnection(id) {
   if (!confirm("Remove this connection and the transactions from its accounts?")) return;

@@ -342,3 +342,30 @@ def test_client_keeps_credentials_out_of_url():
 
 def test_error_messages_accepts_both_formats():
     assert simplefin.error_messages({"errors": ["a"], "errlist": [{"msg": "b"}, "c"]}) == ["a", "b", "c"]
+
+
+def test_compare_account_finds_gaps(conn):
+    # Pretend an earlier sync lost one Chase transaction.
+    conn.execute("DELETE FROM transactions WHERE id = %s", (K("cc", "k2"),))
+    conn.commit()
+    r = sync.compare_account(conn, K("cc"), datetime.date(2026, 10, 1), TODAY, client=FakeSimpleFIN(OCT))
+    assert r["found"] and r["simplefin_count"] == 6 and r["app_count"] == 5
+    assert [m["description"] for m in r["missing"]] == ["NETFLIX.COM"]
+    assert r["not_returned"] == []
+    assert sync.compare_account(conn, "nope", datetime.date(2026, 10, 1), TODAY) is None
+
+
+def test_full_resync_refills_history(conn, monkeypatch):
+    conn.execute("DELETE FROM transactions WHERE id = %s", (K("cc", "k2"),))
+    conn.commit()
+    client = FakeSimpleFIN(OCT)
+    monkeypatch.setattr(sync, "SimpleFINClient", lambda url: client)
+    monkeypatch.setattr(app_module, "today", lambda: TODAY)
+    web = app.test_client()
+    csrf = login(web)
+    resp = web.get(f"/api/accounts/{K('cc')}/compare?start=2026-10-01&end=2026-10-09")
+    assert resp.status_code == 200 and len(resp.get_json()["missing"]) == 1
+
+    assert web.post("/api/sync?full=1", headers={"X-CSRF-Token": csrf}).status_code == 200
+    conn.rollback()
+    assert conn.execute("SELECT 1 FROM transactions WHERE id = %s", (K("cc", "k2"),)).fetchone()
