@@ -12,7 +12,7 @@ Every category has a kind:
 import re
 
 # Bump when the rules below change; existing transactions are then re-categorized.
-RULES_VERSION = "2026-10-10.6"
+RULES_VERSION = "2026-11-14.1"
 
 # Display order of the budget table.
 CATEGORIES = [
@@ -146,7 +146,13 @@ HINTS = [
 ]
 
 
+# Card rewards paid out: a little income, even though Discover words it "...PYMT/STMT CRDT".
+CASH_BACK = _rx(r"cash ?back", r"cashback bonus", r"rewards? redemption", r"redeemed rewards?", r"daily cash")
+
+
 def categorize(*, description, merchant, flow, account_type, hint=None):
+    if flow > 0 and CASH_BACK.search(f"{description or ''} {merchant or ''}"):
+        return "Other Income"
     category = _categorize(description=description, merchant=merchant, flow=flow, account_type=account_type)
     # Money coming onto a card from your bank is a payment, however it's worded
     # ("ACH DEPOSIT INTERNET TRANSFER FROM ACCOUNT ENDING IN 7022").

@@ -3,6 +3,7 @@ import datetime
 import hashlib
 import io
 import hmac
+import json
 import logging
 import secrets
 from decimal import Decimal
@@ -683,6 +684,183 @@ def api_import():
 
 def _import_row(r):
     return {"date": r["date"], "description": r["description"], "flow": r["flow"], "reason": r.get("reason")}
+
+
+# ---------- many files at once, and uploads from a phone ----------
+
+def _account_label(a):
+    bank = "" if not a["institution"] or a["institution"] == "Manual" else a["institution"] + " "
+    four = f" ·{a['last_four']}" if a.get("last_four") and a["last_four"] not in (a["name"] or "") else ""
+    return f"{bank}{a['name']}{four}"
+
+
+def _plan_batch(conn, files, choices=None):
+    """Read every file, split multi-account files, find each block's account and plan it.
+    choices: {key: account_id or "skip"} from the person; anything else uses the detected account."""
+    choices = choices or {}
+    results = []
+    for i, (filename, data) in enumerate(files):
+        try:
+            sections = csv_import.parse_sections(data, filename)
+        except csv_import.CSVImportError as e:
+            results.append({"key": f"{i}", "filename": filename, "status": "error", "error": str(e)})
+            continue
+        for j, section in enumerate(sections):
+            key = f"{i}.{j}"
+            account, candidates, how = csv_import.identify(conn, section)
+            chosen = choices.get(key)
+            if chosen and chosen != "skip":
+                account = conn.execute("SELECT id, name, institution, last_four, type, subtype FROM accounts WHERE id = %s",
+                                       (chosen,)).fetchone()
+                how = "chosen by you"
+            dates = [r["date"] for r in section["rows"]]
+            what = section["label"] or (f"{section['bank'].title()} export" if section["bank"] else "Transactions")
+            item = {"key": key, "filename": filename, "what": what, "rows": len(section["rows"]),
+                    "start": min(dates), "end": max(dates), "how": how,
+                    "candidates": [{"id": c["id"], "label": _account_label(c)} for c in candidates]}
+            if chosen == "skip":
+                results.append({**item, "status": "skipped"})
+                continue
+            if not account:
+                results.append({**item, "status": "choose"})
+                continue
+            flip = csv_import.suggest_flip(section, account["type"])
+            new, duplicates, _ = csv_import.plan(conn, account, section, flip)
+            elsewhere = csv_import.matches_elsewhere(conn, account["id"], new)
+            status = ("nothing_new" if not new else "check" if elsewhere and not chosen else "ready")
+            results.append({**item, "status": status, "account": {"id": account["id"], "label": _account_label(account)},
+                            "new_count": len(new), "duplicate_count": len(duplicates), "elsewhere": elsewhere,
+                            "new": [_import_row(r) for r in sorted(new, key=lambda r: r["date"], reverse=True)[:60]],
+                            "_plan": (account, new)})
+    return results
+
+
+def _import_batch(conn, results):
+    """Save every block that's ready. Returns the results without internals."""
+    for r in results:
+        plan = r.pop("_plan", None)
+        if r["status"] == "ready" and plan:
+            account, new = plan
+            r["import_id"] = csv_import.save(conn, account, new, r["filename"])
+            r["imported"] = len(new)
+    conn.commit()
+    if any(r.get("imported") for r in results):
+        _auto_categorize(conn, limit=100)
+    return results
+
+
+def _batch_files():
+    files = [(f.filename or "upload.csv", f.read()) for f in request.files.getlist("files") if f and f.filename]
+    if not files:
+        abort(400, "Choose one or more CSV files.")
+    return files
+
+
+@app.post("/api/import/batch")
+@login_required
+def api_import_batch():
+    """Preview (commit=0) or import (commit=1) several CSV files; each finds its own account."""
+    files = _batch_files()
+    try:
+        choices = json.loads(request.form.get("choices") or "{}")
+    except ValueError:
+        abort(400, "Bad choices")
+    with db.connect() as conn:
+        results = _plan_batch(conn, files, choices if isinstance(choices, dict) else {})
+        if request.form.get("commit") == "1":
+            results = _import_batch(conn, results)
+        else:
+            for r in results:
+                r.pop("_plan", None)
+    return jsonify(results=results)
+
+
+# The phone key only adds transactions: it can't read anything or change settings.
+UPLOAD_KEY_META = "upload_key_sha256"
+
+
+def _key_hash(key):
+    return hashlib.sha256(key.encode()).hexdigest()
+
+
+@app.get("/api/upload-key")
+@login_required
+def api_upload_key_status():
+    with db.connect() as conn:
+        return jsonify(active=bool(queries.get_setting(conn, UPLOAD_KEY_META)),
+                       created=queries.get_setting(conn, "upload_key_created"),
+                       last_used=queries.get_setting(conn, "upload_key_last_used"),
+                       url=request.url_root.rstrip("/") + "/api/upload")
+
+
+@app.post("/api/upload-key")
+@login_required
+def api_upload_key_create():
+    """A new key replaces any old one. It's shown once; only its hash is stored."""
+    key = "bt_" + secrets.token_urlsafe(32)
+    with db.connect() as conn:
+        queries.set_setting(conn, UPLOAD_KEY_META, _key_hash(key))
+        queries.set_setting(conn, "upload_key_created", today().isoformat())
+        queries.set_setting(conn, "upload_key_last_used", None)
+    return jsonify(key=key, url=request.url_root.rstrip("/") + "/api/upload")
+
+
+@app.delete("/api/upload-key")
+@login_required
+def api_upload_key_revoke():
+    with db.connect() as conn:
+        for name in (UPLOAD_KEY_META, "upload_key_created", "upload_key_last_used"):
+            queries.set_setting(conn, name, None)
+    return jsonify(ok=True)
+
+
+@app.post("/api/upload")
+def api_upload_with_key():
+    """For an iPhone Shortcut (or any script): send a CSV with 'Authorization: Bearer <key>'.
+    Each file goes to the account it's from; nothing is imported where that isn't certain.
+    Answers in plain text, which the Shortcut shows."""
+    def text(message, status=200):
+        return Response(message + "\n", status=status, mimetype="text/plain")
+
+    ip = "key:" + (_client_ip() or "")
+    sent = request.headers.get("Authorization", "")
+    sent = sent[7:].strip() if sent.lower().startswith("bearer ") else ""
+    with db.connect() as conn:
+        failures = conn.execute(
+            """SELECT COUNT(*) AS n FROM login_attempts
+               WHERE ip = %s AND NOT success AND created_at > now() - make_interval(mins => %s)""",
+            (ip, LOCKOUT_MINUTES)).fetchone()["n"]
+        if failures >= MAX_FAILURES_PER_IP:
+            return text(f"Too many wrong keys. Try again in {LOCKOUT_MINUTES} minutes.", 429)
+        stored = queries.get_setting(conn, UPLOAD_KEY_META)
+        ok = bool(stored and sent and hmac.compare_digest(_key_hash(sent), stored))
+        if not ok:
+            conn.execute("INSERT INTO login_attempts (ip, success) VALUES (%s, FALSE)", (ip,))
+            return text("Upload key missing or wrong. Make a new one on the site: Upload CSV → Phone upload.", 401)
+        queries.set_setting(conn, "upload_key_last_used", today().isoformat())
+        conn.commit()
+
+        files = [(f.filename or "upload.csv", f.read()) for _, sent_files in request.files.lists() for f in sent_files if f]
+        if not files and request.content_length:
+            files = [(request.headers.get("X-Filename", "upload.csv"), request.get_data())]
+        if not files:
+            return text("No file came with the request. In the Shortcut, send the shared file as the request body.", 400)
+        results = _import_batch(conn, _plan_batch(conn, files))
+
+    lines = []
+    for r in results:
+        name = r.get("account", {}).get("label") or r.get("what") or r["filename"]
+        if r["status"] == "error":
+            lines.append(f"✗ {r['filename']}: {r['error']}")
+        elif r["status"] == "choose":
+            lines.append(f"? {r['what']} ({r['rows']} rows): couldn't tell which account. Upload it on the site instead.")
+        elif r["status"] == "check":
+            lines.append(f"? {name}: most rows are already in {r['elsewhere']['account']}. Not imported; check it on the site.")
+        elif r["status"] == "nothing_new":
+            lines.append(f"✓ {name}: nothing new ({r['duplicate_count']} already there).")
+        else:
+            lines.append(f"✓ {name}: {r['imported']} added, {r['duplicate_count']} already there.")
+    return text("\n".join(lines))
 
 
 @app.get("/api/imports")

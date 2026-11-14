@@ -372,3 +372,191 @@ def test_uploading_a_file_into_the_wrong_account_is_flagged(conn):
     conn.commit()
     pay = _preview(client, csrf, "off", "Transaction Date,Description,Amount\n" + "\n".join(f"09/{d}/2026,PAYMENT,500.00" for d in range(14, 24)))
     assert pay["elsewhere"] is None
+
+
+# ---------- many files at once, and the phone upload ----------
+
+GOLDEN1_TWO_ACCOUNTS = '''"Transaction List","Nov 01, 2026 to Nov 14, 2026"
+"FREE CHECKING","*******197958"
+"Date","Account","Account Type","Description","Check #","Category","Credit","Debit"
+"11/10/2026","FREE CHECKING","Checking","Checking Deposit Overdraft transfer from ****022-S0 (Overdraft Transfer)","","Financial Services/Transfers","200.00",""
+"11/02/2026","FREE CHECKING","Checking","Withdrawal-ACH-A-670654 WEBDISCOVER (E-PAYMENT) (Discover Card Payment)","","Financial Services/Credit Card Payment","","-95.83"
+"11/02/2026","FREE CHECKING","Checking","ZELLE W/D - TO SAINI,SANDEEP","","Uncategorized Income","0.00",""
+"","","","","Totals:","3 items","200.00","-95.83"
+"SAVINGS","*******7022-0"
+"Date","Account","Account Type","Description","Check #","Category","Credit","Debit"
+"11/10/2026","SAVINGS","Savings","Deposit-ACH-1296959 HP ENTERPRISE CO (PAYROLL) (Hp Enterprise Co Payroll)","","Income/Payroll","2919.50",""
+"11/10/2026","SAVINGS","Savings","Withdrawal Overdraft transfer to ****022-S9 (Overdraft Transfer)","","Financial Services/Transfers","","-200.00"
+"","","","","Totals:","2 items","2919.50","-200.00"
+'''
+DISCOVER = '''Trans. Date,Post Date,Description,Amount,Category
+11/01/2026,11/01/2026,"INTERNET PAYMENT - THANK YOU",-95.83,"Payments and Credits"
+11/02/2026,11/02/2026,"AMAZON MKTPL*PT4OO4HS3 AMZN.COM/BILLWA6L45XLARQQ5",24.02,"Merchandise"
+11/08/2026,11/08/2026,"CASHBACK BONUS REDEMPTION PYMT/STMT CRDT",-2.83,"Awards and Rebate Credits"
+'''
+APPLE = '''Transaction Date,Clearing Date,Description,Merchant,Category,Type,Amount (USD),Purchased By
+11/04/2026,11/05/2026,"APPLE.COM/BILL ONE APPLE PARK WAY CUPERTINO 95014 CA USA","Apple Services","Other","Purchase","2.99","Sam"
+11/02/2026,11/02/2026,"ACH DEPOSIT INTERNET TRANSFER FROM ACCOUNT ENDING IN 7958","Ach Deposit","Payment","Payment","-50.00","Sam"
+'''
+CHASE = '''Transaction Date,Post Date,Description,Category,Type,Amount,Memo
+11/03/2026,11/04/2026,TRADER JOE S #175,Groceries,Sale,-45.10,
+'''
+
+
+@pytest.fixture()
+def banks(conn):
+    for account, name, bank, four in [("chk", "FREE CHECKING", "Golden 1 Credit Union", "7958"),
+                                      ("sav", "SAVINGS", "Golden 1 Credit Union", "7022"),
+                                      ("card", "Chase Sapphire Preferred", "Chase", "2827"),
+                                      ("off", "Discover it", "Manual", None)]:
+        conn.execute("UPDATE accounts SET name = %s, institution = %s, last_four = %s WHERE id = %s", (name, bank, four, account))
+    conn.execute("INSERT INTO accounts (id, name, institution, type, subtype) VALUES ('apple', 'Apple Card', 'Manual', 'credit', 'credit_card')")
+    conn.commit()
+    return conn
+
+
+def _batch(client, csrf, files, commit=False, choices=None):
+    data = {"commit": "1" if commit else "0", "choices": __import__("json").dumps(choices or {}),
+            "files": [(io.BytesIO(text.encode()), name) for name, text in files]}
+    r = client.post("/api/import/batch", data=data, headers={"X-CSRF-Token": csrf}, content_type="multipart/form-data")
+    assert r.status_code == 200, r.get_data(as_text=True)
+    return {x["what"]: x for x in r.get_json()["results"]}
+
+
+def _logged_in():
+    client, _ = client_for()
+    with client.session_transaction() as s:
+        return client, s["csrf"]
+
+
+ALL_FILES = [("Transactions-multiAccount-2026-11-14.csv", GOLDEN1_TWO_ACCOUNTS), ("DFS-Search-20261114.csv", DISCOVER),
+             ("Apple Card Transactions - November 2026.csv", APPLE), ("Chase2827_Activity_20261114.csv", CHASE)]
+
+
+def test_every_file_finds_its_own_account(banks):
+    client, csrf = _logged_in()
+    found = _batch(client, csrf, ALL_FILES)
+    assert {what: (r["account"]["id"], r["status"], r["new_count"]) for what, r in found.items()} == {
+        "FREE CHECKING": ("chk", "ready", 3), "SAVINGS": ("sav", "ready", 2),
+        "Discover export": ("off", "ready", 3), "Apple export": ("apple", "ready", 2), "Chase export": ("card", "ready", 1)}
+    assert banks.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"] == 0  # preview writes nothing
+
+    done = _batch(client, csrf, ALL_FILES, commit=True)
+    assert sum(r["imported"] for r in done.values()) == 11
+    rows = {r["account_id"]: r["n"] for r in banks.execute("SELECT account_id, COUNT(*) AS n FROM transactions GROUP BY 1")}
+    assert rows == {"chk": 3, "sav": 2, "off": 3, "apple": 2, "card": 1}
+    # Signs come out right per account: card purchases are money out, payments money in.
+    flows = {r["description"].split()[0]: r["flow"] for r in banks.execute("SELECT description, flow FROM transactions")}
+    assert flows["AMAZON"] == Decimal("-24.02") and flows["INTERNET"] == Decimal("95.83") and flows["CASHBACK"] == Decimal("2.83")
+    assert flows["APPLE.COM/BILL"] == Decimal("-2.99")
+    # And again: nothing new anywhere.
+    again = _batch(client, csrf, ALL_FILES, commit=True)
+    assert {r["status"] for r in again.values()} == {"nothing_new"}
+    # Each block is its own undoable upload.
+    assert banks.execute("SELECT COUNT(*) AS n FROM imports").fetchone()["n"] == 5
+
+
+def test_a_file_that_cant_be_placed_waits_for_you(banks):
+    client, csrf = _logged_in()
+    mystery = [("export.csv", "Date,Description,Amount\n11/03/2026,SOMETHING,-10.00\n")]
+    r = _batch(client, csrf, mystery)["Transactions"]
+    assert r["status"] == "choose" and {c["id"] for c in r["candidates"]} >= {"chk", "card"}
+    r = _batch(client, csrf, mystery, commit=True)["Transactions"]
+    assert "imported" not in r and banks.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"] == 0
+    r = _batch(client, csrf, mystery, commit=True, choices={"0.0": "chk"})["Transactions"]
+    assert r["imported"] == 1 and r["how"] == "chosen by you"
+
+
+def test_two_accounts_with_the_same_number_or_bank_are_asked_about(banks):
+    banks.execute("INSERT INTO accounts (id, name, institution, type, subtype) VALUES ('disc2', 'Discover More', 'Discover', 'credit', 'credit_card')")
+    banks.commit()
+    client, csrf = _logged_in()
+    r = _batch(client, csrf, [("DFS.csv", DISCOVER)])["Discover export"]
+    assert r["status"] == "choose" and {c["id"] for c in r["candidates"]} == {"off", "disc2"}
+
+
+def test_a_block_that_looks_like_another_account_is_skipped_unless_you_choose(banks):
+    client, csrf = _logged_in()
+    _batch(client, csrf, [("Chase2827_Activity.csv", CHASE)], commit=True)
+    # The same Chase rows, in a file with no account number or bank format.
+    plain = [("x.csv", "Date,Description,Amount\n11/03/2026,TRADER JOE S #175,-45.10\n" +
+              "".join(f"11/0{d}/2026,SHOP {d},-{d}.00\n" for d in range(1, 6)))]
+    for d in range(1, 6):
+        add(banks, "card", f"2026-11-0{d}", f"-{d}.00", f"SHOP {d}")
+    banks.commit()
+    r = _batch(client, csrf, plain, commit=True, choices={"0.0": "apple"})["Transactions"]
+    assert r["imported"] == 6  # you chose: imported despite the warning
+    r = _batch(client, csrf, [("y.csv", "Date,Description,Amount\n" + "".join(f"11/0{d}/2026,SHOP {d},-{d}.00\n" for d in range(1, 6)))])
+    r = r["Transactions"]
+    assert r["status"] == "choose"  # no clue which account, so it isn't guessed at all
+
+
+def test_one_account_upload_refuses_a_file_with_two_accounts(banks):
+    client, csrf = _logged_in()
+    data = {"account_id": "chk", "flip": "auto", "commit": "1",
+            "file": (io.BytesIO(GOLDEN1_TWO_ACCOUNTS.encode()), "g1.csv")}
+    r = client.post("/api/import", data=data, headers={"X-CSRF-Token": csrf}, content_type="multipart/form-data")
+    assert r.status_code == 400 and "2 accounts" in r.get_json()["error"]
+    assert banks.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"] == 0
+
+
+def test_phone_upload_with_a_key(banks):
+    client, csrf = _logged_in()
+    assert client.get("/api/upload-key").get_json()["active"] is False
+    anon = app_module.app.test_client()
+    assert anon.post("/api/upload", data=APPLE).status_code == 401  # off: no key exists
+    assert anon.post("/api/upload-key").status_code == 401           # making a key needs you logged in
+    key = client.post("/api/upload-key", headers={"X-CSRF-Token": csrf}).get_json()["key"]
+    stored = banks.execute("SELECT value FROM app_meta WHERE key = 'upload_key_sha256'").fetchone()["value"]
+    assert key not in stored  # only a hash is kept
+
+    auth = {"Authorization": f"Bearer {key}"}
+    # As a Shortcut sends it: a form with the file.
+    r = anon.post("/api/upload", data={"file": (io.BytesIO(APPLE.encode()), "Apple Card.csv")}, headers=auth,
+                  content_type="multipart/form-data")
+    assert r.status_code == 200 and r.mimetype == "text/plain" and "✓ Apple Card: 2 added" in r.get_data(as_text=True)
+    # Or the file as the whole body.
+    r = anon.post("/api/upload", data=DISCOVER, headers={**auth, "Content-Type": "text/csv"})
+    assert "✓ Discover it: 3 added" in r.get_data(as_text=True)
+    r = anon.post("/api/upload", data={"file": (io.BytesIO(APPLE.encode()), "Apple Card.csv")}, headers=auth,
+                  content_type="multipart/form-data")
+    assert "nothing new (2 already there)" in r.get_data(as_text=True)
+    # Unplaceable files are left alone, with a message.
+    r = anon.post("/api/upload", data="Date,Description,Amount\n11/03/2026,X,-1.00\n", headers=auth)
+    assert "couldn't tell which account" in r.get_data(as_text=True)
+    assert banks.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"] == 5
+    # The key can't read anything.
+    assert anon.get("/api/transactions", headers=auth).status_code == 401
+    assert anon.get("/api/upload-key", headers=auth).status_code == 401
+
+    # A new key turns the old one off; turning it off stops uploads.
+    new_key = client.post("/api/upload-key", headers={"X-CSRF-Token": csrf}).get_json()["key"]
+    assert anon.post("/api/upload", data=APPLE, headers=auth).status_code == 401
+    client.delete("/api/upload-key", headers={"X-CSRF-Token": csrf})
+    assert anon.post("/api/upload", data=APPLE, headers={"Authorization": f"Bearer {new_key}"}).status_code == 401
+
+
+def test_phone_upload_locks_out_key_guessing(banks):
+    client, csrf = _logged_in()
+    key = client.post("/api/upload-key", headers={"X-CSRF-Token": csrf}).get_json()["key"]
+    anon = app_module.app.test_client()
+    for _ in range(app_module.MAX_FAILURES_PER_IP):
+        assert anon.post("/api/upload", data=APPLE, headers={"Authorization": "Bearer guess"}).status_code == 401
+    r = anon.post("/api/upload", data=APPLE, headers={"Authorization": f"Bearer {key}"})
+    assert r.status_code == 429  # even the right key waits out the lockout
+
+
+@pytest.mark.parametrize("text,bank,flip", [
+    # A quiet month: more payments/credits than purchases. The format decides, not the majority.
+    ("Trans. Date,Post Date,Description,Amount,Category\n11/01/2026,11/01/2026,PAYMENT,-95.83,x\n"
+     "11/02/2026,11/02/2026,CREDIT,-5.00,x\n11/03/2026,11/03/2026,AMAZON,24.02,x\n", "discover", True),
+    ("Transaction Date,Clearing Date,Description,Merchant,Category,Type,Amount (USD),Purchased By\n"
+     "11/02/2026,11/02/2026,ACH DEPOSIT,Ach,Payment,Payment,-50.00,Sam\n11/04/2026,11/05/2026,APPLE.COM,A,Other,Purchase,2.99,Sam\n",
+     "apple", True),
+    ("Transaction Date,Post Date,Description,Category,Type,Amount,Memo\n11/03/2026,11/04/2026,PAYMENT,,Payment,500.00,\n"
+     "11/03/2026,11/04/2026,REFUND,,Return,20.00,\n11/05/2026,11/05/2026,TJ,,Sale,-45.10,\n", "chase", False),
+])
+def test_known_card_formats_get_signs_right_in_any_month(text, bank, flip):
+    from budget import csv_import
+    parsed = csv_import.parse(text)
+    assert parsed["bank"] == bank and csv_import.suggest_flip(parsed, "credit") is flip

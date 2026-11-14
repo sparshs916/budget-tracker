@@ -34,14 +34,23 @@ See `.env.example` for all settings.
 
 ## CSV uploads
 
-For banks SimpleFIN can't reach (or accounts it only sends balances for), download a CSV from the bank's website and use **Upload CSV**. Pick the account, or create a new one, preview, then import. Every upload can be undone under **Recent uploads**.
+For banks SimpleFIN can't reach (or accounts it only sends balances for), download CSVs from the banks' websites and use **Upload CSV**, or drop the files anywhere on the page. Several files go in at once, and with **Detect automatically** each one finds its own account:
+
+- by the last four digits the file carries (Golden 1 puts `*******7022` above each account; Chase puts them in the filename; Capital One in a column), then
+- by the bank's export format (Discover, Apple Card, Chase), narrowed by account type when a bank has several.
+
+A file holding several accounts (Golden 1's multi-account export) is split so each part goes to its own account. Anything that matches more than one account, or none, waits for you to pick; anything whose rows already sit in a different account is skipped unless you choose it. You can also pick one account (or create one) for a single file as before. Every upload can be undone under **Recent uploads**.
+
+### From your iPhone
+
+**Upload CSV → 📱 Phone upload** makes a key and shows how to build a two-step Shortcut, so a CSV shared from any app (e.g. Wallet → Apple Card → Export Transactions) goes straight in. The Shortcut posts the file to `/api/upload` with `Authorization: Bearer <key>` and shows the plain-text reply. The key can only add transactions; it can't read anything. Only its hash is stored, a new key replaces the old one, and wrong keys are locked out like wrong passwords. Files the app can't place with certainty are not imported.
 
 Duplicates are skipped two ways:
 
 - Each row gets a fingerprint from its account, date, amount, description and position among identical rows, so re-uploading a file or uploading overlapping date ranges adds nothing twice. Two genuinely identical rows in one file are both kept.
 - A row that matches a transaction the account already has (same amount, within 3 days, paired one-to-one, closest date first) is skipped, whatever the description says. When SimpleFIN later sends a transaction that was uploaded, the sync takes over that row instead of adding a second one, and the sync never deletes uploaded rows.
 
-Card exports that list purchases as positive numbers are detected and flipped; the preview shows the signs so you can check before importing.
+Card exports that list purchases as positive numbers are flipped: by the bank's known format (Discover and Apple Card write purchases positive, Chase negative), otherwise by which sign most rows have. The preview shows the signs so you can check before importing.
 
 ## AI categories (optional)
 

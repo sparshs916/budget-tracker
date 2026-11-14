@@ -20,6 +20,9 @@ from budget.categorize import categorize
     ("Online Transfer from CHK ...1111", 500, "depository", "Transfer"),
     ("Deposit-ACH-A-1171471 WEBCAPITAL ONE (TRANSFER)", 1000, "depository", "Transfer"),
     ("MYSTERY DEPOSIT", 20, "depository", "Other Income"),
+    ("CASHBACK BONUS REDEMPTION PYMT/STMT CRDT", 2.83, "credit", "Other Income"),  # Discover rewards, not a payment
+    ("DAILY CASH ADJUSTMENT", -2.18, "credit", "Other"),                        # Apple taking Daily Cash back: not income
+    ("INTERNET PAYMENT - THANK YOU", 95.83, "credit", "Credit Card Payment"),
     ("MYSTERY CHARGE", -20, "credit", "Other"),
     ("AMAZON MKTPL REFUND", 25, "credit", "Shopping"),
 ])

@@ -72,6 +72,15 @@
     dialog textarea { width: 100%; font: 12px ui-monospace, monospace; padding: .5rem; border: 1px solid var(--line); border-radius: 6px; }
     .dialog-buttons { display: flex; justify-content: flex-end; gap: .5rem; }
     #upload-dialog { width: min(760px, calc(100vw - 32px)); }
+    #phone-dialog { width: min(560px, calc(100vw - 32px)); }
+    #phone-dialog ol { padding-left: 1.2rem; }
+    .copyrow { display: flex; gap: .35rem; }
+    .copyrow input { flex: 1; min-width: 0; font: 12px ui-monospace, monospace; }
+    body.dragging::after { content: "Drop CSV files to upload"; position: fixed; inset: 12px; border: 3px dashed var(--accent);
+      border-radius: 14px; display: grid; place-items: center; font-size: 1.3rem; font-weight: 600; color: var(--accent);
+      background: color-mix(in srgb, var(--bg) 85%, transparent); z-index: 20; pointer-events: none; }
+    .batch td { vertical-align: top; }
+    .batch select { max-width: 230px; }
     .form-grid { display: grid; grid-template-columns: max-content 1fr; gap: .5rem .75rem; align-items: center; margin: .75rem 0; }
     .form-grid select, .form-grid input { width: 100%; }
     .preview { max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; margin: .25rem 0 .75rem; }
@@ -380,8 +389,8 @@
 
 <dialog id="upload-dialog">
   <form id="upload-form" method="dialog">
-    <h2>Upload transactions from a CSV</h2>
-    <p class="small muted">Download the CSV from your bank's website. The file doesn't say which account it's from, so pick that here (or add a new account). Rows already in the app are skipped, so overlapping or repeated uploads are safe. You'll see a preview before anything is saved.</p>
+    <h2>Upload transactions from CSV files</h2>
+    <p class="small muted">Download CSVs from your banks and choose them all at once (or drop them anywhere on the page). Each file goes to the account it's from: the app reads the account number or the bank's format, and asks when it can't tell. Rows already in the app are skipped, so overlapping or repeated uploads are safe. You'll see a preview before anything is saved.</p>
     <div class="form-grid">
       <label for="upload-account">Account</label>
       <select id="upload-account" required></select>
@@ -392,10 +401,10 @@
         <option value="credit_card">Credit card</option><option value="checking">Checking</option>
         <option value="savings">Savings</option><option value="other">Other</option>
       </select>
-      <label for="upload-file">CSV file</label>
-      <input id="upload-file" type="file" accept=".csv,text/csv" required>
-      <label for="upload-flip">Amount signs</label>
-      <select id="upload-flip">
+      <label for="upload-file">CSV files</label>
+      <input id="upload-file" type="file" accept=".csv,text/csv" multiple required>
+      <label for="upload-flip" class="single-only">Amount signs</label>
+      <select id="upload-flip" class="single-only">
         <option value="auto">Detect automatically</option>
         <option value="0">Use as in the file</option>
         <option value="1">Flip (file shows purchases as positive)</option>
@@ -404,6 +413,7 @@
     <div id="upload-result"></div>
     <p class="neg small" id="upload-error"></p>
     <div class="dialog-buttons">
+      <button type="button" id="phone-btn" title="Send Apple Card (or any) CSVs from your iPhone's Share button" style="margin-right:auto">📱 Phone upload</button>
       <button type="button" id="upload-cancel">Close</button>
       <button type="button" id="upload-preview">Preview</button>
       <button type="button" class="primary hidden" id="upload-commit">Import</button>
@@ -412,6 +422,42 @@
       <summary>Recent uploads</summary>
       <div id="upload-history-list"></div>
     </details>
+  </form>
+</dialog>
+
+<dialog id="phone-dialog">
+  <form method="dialog">
+    <h2>Upload from your iPhone</h2>
+    <p class="small">Send a CSV straight from the Share button, e.g. an Apple Card export from the Wallet app. It goes to the right account automatically, duplicates are skipped, and anything the app isn't sure about is left for you to upload here instead.</p>
+    <div id="phone-status" class="small"></div>
+    <div id="phone-key" class="hidden">
+      <p class="alert small"><b>Copy this key now.</b> It's shown only once. It can only add transactions; it can't read anything. Anyone who has it could add fake rows, so keep it in the Shortcut only.</p>
+      <div class="form-grid">
+        <span class="small">URL</span><span class="copyrow"><input id="phone-url" readonly><button type="button" class="small" data-copy="phone-url">Copy</button></span>
+        <span class="small">Key</span><span class="copyrow"><input id="phone-key-value" readonly><button type="button" class="small" data-copy="phone-key-value">Copy</button></span>
+      </div>
+      <details class="small" open>
+        <summary>Make the Shortcut (2 minutes, once)</summary>
+        <ol>
+          <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, name it <b>Send to Budget</b>.</li>
+          <li>Tap the <b>ⓘ</b> (settings) and turn on <b>Show in Share Sheet</b>; set it to receive <b>Files</b>.</li>
+          <li>Add the action <b>Get Contents of URL</b>. Set the URL to the one above, then tap <b>Show More</b>:
+            <ul>
+              <li>Method: <b>POST</b></li>
+              <li>Headers: add <b>Authorization</b> with the value <b>Bearer</b>, a space, then your key</li>
+              <li>Request Body: <b>Form</b>; add a <b>File</b> field named <b>file</b> and set it to <b>Shortcut Input</b></li>
+            </ul></li>
+          <li>Add the action <b>Show Result</b> so you see what was imported.</li>
+        </ol>
+        <p><b>Apple Card:</b> Wallet → Apple Card → Card Balance → pick a month → <b>Export Transactions</b> → <b>CSV</b> → Share → <b>Send to Budget</b>.</p>
+      </details>
+    </div>
+    <p class="neg small" id="phone-error"></p>
+    <div class="dialog-buttons">
+      <button type="button" id="phone-revoke" class="hidden">Turn off</button>
+      <button type="button" id="phone-create">Make a key</button>
+      <button type="button" id="phone-close" class="primary">Done</button>
+    </div>
   </form>
 </dialog>
 
@@ -960,7 +1006,8 @@ function openAccount(id) {
 let accountsData = { accounts: [], enrollments: [] };
 
 function baseLabel(a) {
-  return `${a.institution || ""} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`.trim();
+  const bank = a.institution && a.institution !== "Manual" ? a.institution : "";  // "Manual" is internal
+  return `${bank} ${a.name}${a.last_four ? " ·" + a.last_four : ""}`.trim();
 }
 
 // Banks sometimes report one account twice under the same name; tell the copies apart.
@@ -1117,25 +1164,37 @@ async function fullResync() {
 }
 
 // ---------- CSV upload ----------
-function openUpload(accountId, fresh = true) {
+function openUpload(accountId, fresh = true, files = null) {
   const sel = $("upload-account");
-  sel.replaceChildren(h("option", { value: "" }, "Choose an account…"),
-    ...accountsData.accounts.map((a) => h("option", { value: a.id }, accountLabel(a))),
+  sel.replaceChildren(h("option", { value: "auto" }, "Detect automatically from each file"),
+    h("optgroup", { label: "Or put everything into…" }, ...accountsData.accounts.map((a) => h("option", { value: a.id }, accountLabel(a)))),
     h("option", { value: "new" }, "New account (not in SimpleFIN)…"));
-  sel.value = accountId || "";
+  sel.value = accountId || "auto";
   toggleNewAccount();
   $("upload-file").value = "";
   $("upload-flip").value = "auto";
   $("upload-new-name").value = "";
   resetUploadPreview();
+  if (files) {
+    const dt = new DataTransfer();
+    for (const f of files) dt.items.add(f);
+    $("upload-file").files = dt.files;
+  }
   if (fresh) {
     loadUploadHistory();
-    $("upload-dialog").showModal();
+    if (!$("upload-dialog").open) $("upload-dialog").showModal();
   }
+  toggleNewAccount();
+  if (files && files.length) runPreview();
 }
+
+const batchMode = () => $("upload-account").value === "auto" || $("upload-file").files.length > 1;
+const runPreview = () => (batchMode() ? previewBatch() : previewUpload());
+const runCommit = () => (batchMode() ? commitBatch() : commitUpload());
 
 function toggleNewAccount() {
   for (const el of document.querySelectorAll(".new-account")) el.classList.toggle("hidden", $("upload-account").value !== "new");
+  for (const el of document.querySelectorAll(".single-only")) el.classList.toggle("hidden", batchMode());
 }
 
 function resetUploadPreview() {
@@ -1241,6 +1300,162 @@ async function loadUploadHistory() {
     }}, "Undo"))) : [h("p", { class: "muted" }, "No uploads yet.")]));
 }
 
+// ---------- many files at once ----------
+let batchResults = [];
+
+async function sendBatch(commit, choices = {}) {
+  const files = $("upload-file").files;
+  if (!files.length) throw new Error("Choose one or more CSV files.");
+  const form = new FormData();
+  for (const f of files) form.append("files", f);
+  form.append("commit", commit ? "1" : "0");
+  form.append("choices", JSON.stringify(choices));
+  const res = await fetch("/api/import/batch", { method: "POST", body: form, headers: { "X-CSRF-Token": CSRF } });
+  if (res.status === 401) { location.href = "/login"; throw new Error("Logged out"); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
+  return data.results;
+}
+
+// What the person picked for each block: only where it differs from what was detected,
+// so a block with a warning stays skipped unless they choose an account for it.
+function batchChoices() {
+  const choices = {};
+  for (const sel of document.querySelectorAll("#upload-result select[data-key]")) {
+    if (sel.value !== sel.dataset.detected) choices[sel.dataset.key] = sel.value || "skip";
+  }
+  return choices;
+}
+
+function renderBatch(results, done = false) {
+  const rows = results.map((r) => {
+    if (r.status === "error") return h("tr", {}, h("td", {}, h("b", {}, r.filename)), h("td", { colspan: 2, class: "neg" }, r.error));
+    const detected = r.status === "check" ? "skip" : r.account?.id || "";
+    const pick = done ? h("span", {}, r.account?.label || "—")
+      : h("select", { "data-key": r.key, "data-detected": detected, "aria-label": `Account for ${r.what}`, onchange: updateBatchButton },
+          h("option", { value: "" }, "Choose an account…"), h("option", { value: "skip" }, "Skip this one"),
+          h("optgroup", { label: "Accounts" }, ...accountsData.accounts.map((a) => h("option", { value: a.id }, accountLabel(a)))));
+    if (!done) pick.value = detected;
+    const result = done
+      ? (r.imported ? h("span", { class: "in" }, `${r.imported} added`) : h("span", { class: "muted" }, r.status === "nothing_new" ? "nothing new" : "not imported"))
+      : r.status === "choose" ? h("span", { class: "neg" }, "Which account? Pick one.")
+      : r.status === "skipped" ? h("span", { class: "muted" }, "skipped")
+      : h("span", {}, h("b", {}, `${r.new_count} new`), ` · ${r.duplicate_count} already there`);
+    return h("tr", {},
+      h("td", {}, h("b", {}, r.what), h("div", { class: "small muted" }, `${r.filename} · ${r.rows} rows · ${r.start} → ${r.end}`)),
+      h("td", {}, pick, h("div", { class: "small muted" }, r.how)),
+      h("td", { class: "small" }, result,
+        r.elsewhere ? h("div", { class: "neg" }, `⚠ ${r.elsewhere.count} of these are already in “${r.elsewhere.account}”. Skipped unless you pick an account.`) : null));
+  });
+  $("upload-result").replaceChildren(
+    done ? h("p", {}, h("b", {}, `Imported ${results.reduce((a, r) => a + (r.imported || 0), 0)} transactions.`), " Undo any upload under Recent uploads.")
+         : h("p", { class: "small" }, "Check each file went to the right account; change any that didn't."),
+    h("div", { class: "scroll" }, h("table", { class: "batch" }, h("tr", {}, h("th", {}, "File"), h("th", {}, "Goes to"), h("th", {}, "")), rows)));
+}
+
+function updateBatchButton() {
+  let count = 0, changed = false;
+  for (const r of batchResults) {
+    const sel = document.querySelector(`#upload-result select[data-key="${r.key}"]`);
+    if (!sel || !sel.value || sel.value === "skip") continue;
+    if (sel.value !== sel.dataset.detected) changed = true;  // a new account: the count is known after import
+    else count += r.new_count || 0;
+  }
+  const unresolved = [...document.querySelectorAll("#upload-result select[data-key]")].some((s) => !s.value);
+  const button = $("upload-commit");
+  button.textContent = unresolved ? "Pick an account for each one (or skip it)"
+    : changed ? "Import" : count ? `Import ${count} transaction${count === 1 ? "" : "s"}` : "Nothing new to import";
+  button.disabled = unresolved || (!changed && !count);
+  button.classList.remove("hidden");
+}
+
+async function previewBatch() {
+  resetUploadPreview();
+  const button = $("upload-preview");
+  button.disabled = true;
+  try {
+    batchResults = await sendBatch(false);
+    renderBatch(batchResults);
+    updateBatchButton();
+  } catch (e) { $("upload-error").textContent = e.message; }
+  button.disabled = false;
+}
+
+async function commitBatch() {
+  const button = $("upload-commit");
+  button.disabled = true;
+  try {
+    const results = await sendBatch(true, batchChoices());
+    renderBatch(results, true);
+    $("upload-commit").classList.add("hidden");
+    $("upload-file").value = "";
+    await loadUploadHistory();
+    $("upload-history").open = true;
+    await refresh(true);
+  } catch (e) { $("upload-error").textContent = e.message; button.disabled = false; }
+}
+
+// Drop CSVs anywhere on the page.
+let dragDepth = 0;
+const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+document.addEventListener("dragenter", (e) => { if (hasFiles(e)) { dragDepth++; document.body.classList.add("dragging"); } });
+document.addEventListener("dragleave", (e) => { if (hasFiles(e) && --dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dragging"); } });
+document.addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+document.addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dragDepth = 0; document.body.classList.remove("dragging");
+  const files = [...e.dataTransfer.files].filter((f) => /\.csv$/i.test(f.name) || f.type === "text/csv");
+  if (!files.length) return alert("Only CSV files can be uploaded.");
+  openUpload("", true, files);
+});
+
+// ---------- phone upload ----------
+async function loadPhone() {
+  $("phone-error").textContent = "";
+  try {
+    const s = await api("/api/upload-key");
+    $("phone-status").replaceChildren(s.active
+      ? h("p", {}, "✓ On since ", h("b", {}, s.created), s.last_used ? ` · last used ${s.last_used}` : " · not used yet",
+          ". Making a new key turns the old one off.")
+      : h("p", {}, "Off. Make a key to turn it on."));
+    $("phone-create").textContent = s.active ? "Make a new key" : "Make a key";
+    $("phone-revoke").classList.toggle("hidden", !s.active);
+  } catch (e) { $("phone-error").textContent = e.message; }
+}
+$("phone-btn").addEventListener("click", () => {
+  $("phone-key").classList.add("hidden");
+  loadPhone();
+  $("phone-dialog").showModal();
+});
+$("phone-create").addEventListener("click", async (e) => {
+  if (!$("phone-revoke").classList.contains("hidden") && !confirm("Make a new key? The Shortcut will need the new one.")) return;
+  e.target.disabled = true;
+  try {
+    const r = await api("/api/upload-key", { method: "POST" });
+    $("phone-url").value = r.url;
+    $("phone-key-value").value = r.key;
+    $("phone-key").classList.remove("hidden");
+    await loadPhone();
+  } catch (err) { $("phone-error").textContent = err.message; }
+  e.target.disabled = false;
+});
+$("phone-revoke").addEventListener("click", async () => {
+  if (!confirm("Turn off phone upload? The Shortcut will stop working until you make a new key.")) return;
+  try {
+    await api("/api/upload-key", { method: "DELETE" });
+    $("phone-key").classList.add("hidden");
+    toast("Phone upload turned off.");
+    loadPhone();
+  } catch (err) { $("phone-error").textContent = err.message; }
+});
+$("phone-close").addEventListener("click", () => $("phone-dialog").close());
+for (const b of document.querySelectorAll("[data-copy]")) b.addEventListener("click", async () => {
+  const input = $(b.dataset.copy);
+  input.select();
+  try { await navigator.clipboard.writeText(input.value); toast("Copied."); } catch (e) { document.execCommand("copy"); }
+});
+
 // ---------- manual accounts ----------
 $("add-account-btn").addEventListener("click", () => {
   $("account-name").value = ""; $("account-institution").value = ""; $("account-error").textContent = "";
@@ -1288,8 +1503,9 @@ $("upload-btn").addEventListener("click", () => openUpload());
 $("upload-cancel").addEventListener("click", () => $("upload-dialog").close());
 $("upload-account").addEventListener("change", () => { toggleNewAccount(); resetUploadPreview(); });
 for (const id of ["upload-file", "upload-flip", "upload-new-type"]) $(id).addEventListener("change", resetUploadPreview);
-$("upload-preview").addEventListener("click", previewUpload);
-$("upload-commit").addEventListener("click", commitUpload);
+$("upload-preview").addEventListener("click", runPreview);
+$("upload-commit").addEventListener("click", runCommit);
+$("upload-file").addEventListener("change", toggleNewAccount);
 
 async function removeConnection(id) {
   if (!confirm("Remove this connection and the transactions from its accounts?")) return;
