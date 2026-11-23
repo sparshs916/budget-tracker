@@ -75,6 +75,8 @@
     #phone-dialog { width: min(560px, calc(100vw - 32px)); }
     #phone-dialog ol { padding-left: 1.2rem; }
     .copyrow { display: flex; gap: .35rem; }
+    .seg { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .seg label { white-space: nowrap; }
     .copyrow input { flex: 1; min-width: 0; font: 12px ui-monospace, monospace; }
     body.dragging::after { content: "Drop CSV files to upload"; position: fixed; inset: 12px; border: 3px dashed var(--accent);
       border-radius: 14px; display: grid; place-items: center; font-size: 1.3rem; font-weight: 600; color: var(--accent);
@@ -214,7 +216,8 @@
   </section>
 
   <section>
-    <h2>Transactions <span class="muted small" id="txn-count"></span></h2>
+    <h2>Transactions <span class="muted small" id="txn-count"></span>
+      <button class="small" id="add-txn-btn" title="Type in a transaction: cash, or one the bank hasn't sent yet">+ Add</button></h2>
     <div class="filters">
       <span class="searchbox">
         <input type="search" id="q" placeholder="Search anything: amazon, groceries, >100, 8/14, savings…" aria-label="Search"
@@ -332,6 +335,38 @@
     <div class="dialog-buttons" style="margin-top:1rem">
       <button type="button" id="category-cancel">Cancel</button>
       <button type="submit" class="primary">Change</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="txn-dialog">
+  <form id="txn-form" method="dialog">
+    <h2>Add a transaction</h2>
+    <p class="small muted">For cash, or a purchase the bank hasn't sent yet. If the bank later sends the same one (same account, same amount, within 3 days), it replaces this entry and keeps your category and note, so nothing is counted twice.</p>
+    <div class="form-grid">
+      <label for="txn-direction">Type</label>
+      <span class="seg" role="radiogroup" aria-label="Money out or in">
+        <label class="check"><input type="radio" name="direction" value="out" checked> Money out</label>
+        <label class="check"><input type="radio" name="direction" value="in"> Money in</label>
+      </span>
+      <label for="txn-amount">Amount</label>
+      <input id="txn-amount" inputmode="decimal" placeholder="12.50" required autocomplete="off">
+      <label for="txn-description">What</label>
+      <input id="txn-description" maxlength="200" placeholder="e.g. Farmers market" required autocomplete="off">
+      <label for="txn-date">Date</label>
+      <input id="txn-date" type="date" required>
+      <label for="txn-account">Account</label>
+      <select id="txn-account" required></select>
+      <label for="txn-category">Category</label>
+      <select id="txn-category"></select>
+      <label for="txn-note">Note</label>
+      <input id="txn-note" maxlength="500" placeholder="optional">
+    </div>
+    <p class="neg small" id="txn-error"></p>
+    <div class="dialog-buttons">
+      <label class="check small" style="margin-right:auto" title="Keep the dialog open to add several in a row"><input type="checkbox" id="txn-another"> Add another</label>
+      <button type="button" id="txn-cancel">Cancel</button>
+      <button type="submit" class="primary" id="txn-submit">Add</button>
     </div>
   </form>
 </dialog>
@@ -906,9 +941,13 @@ function txnRow(t) {
       h("span", { class: "desc-text", title: t.description }, t.merchant || t.description),
       t.status === "pending" ? h("span", { class: "pill" }, "pending") : null,
       t.source === "csv" ? h("span", { class: "pill", title: "From a CSV upload" }, "csv") : null,
+      t.source === "manual" ? h("span", { class: "pill", title: "You added this by hand" }, "manual") : null,
       h("span", { class: "row-actions" },
         h("button", { class: "icon small", title: t.note ? "Edit note" : "Add a note", "aria-label": "Note", onclick: () => editNote(t) }, "✎"),
-        t.hidden ? null : h("button", { class: "icon small", title: "Not a real transaction (duplicate or stray bank row): hide it from every total",
+        // Your own entries can be deleted; bank and CSV rows would come back, so those are hidden instead.
+        t.source === "manual" ? h("button", { class: "icon small", title: "Delete this transaction you added", "aria-label": "Delete",
+          onclick: () => deleteTransaction(t) }, "🗑")
+        : t.hidden ? null : h("button", { class: "icon small", title: "Not a real transaction (duplicate or stray bank row): hide it from every total",
           "aria-label": "Hide", onclick: () => { if (confirm(`Hide “${t.merchant || t.description}” (${money(t.flow)}) from every total? You can bring it back.`)) hideRow(t); } }, "⊘"))),
       t.note ? h("span", { class: "note" }, t.note) : null),
     h("td", { class: "small" }, `${t.account_name || ""}${t.last_four ? " ·" + t.last_four : ""}`),
@@ -1455,6 +1494,69 @@ for (const b of document.querySelectorAll("[data-copy]")) b.addEventListener("cl
   input.select();
   try { await navigator.clipboard.writeText(input.value); toast("Copied."); } catch (e) { document.execCommand("copy"); }
 });
+
+// ---------- transactions you add by hand ----------
+const LAST_ACCOUNT_KEY = "manualTxnAccount";
+
+function openAddTransaction() {
+  const accounts = accountsData.accounts;
+  if (!accounts.length) return alert("Add an account first (Accounts → + Add account by hand), e.g. “Cash”.");
+  const sel = $("txn-account");
+  sel.replaceChildren(...accounts.map((a) => h("option", { value: a.id }, accountLabel(a) + (a.include_in_budget ? "" : " (not in budget)"))));
+  let remembered = null;
+  try { remembered = localStorage.getItem(LAST_ACCOUNT_KEY); } catch (e) { /* private mode */ }
+  // The account being viewed, else the last one used, else the first checking account in the budget.
+  const viewing = accounts.find((a) => a.id === state.account);
+  const fallback = accounts.find((a) => a.include_in_budget && a.subtype === "checking") || accounts[0];
+  sel.value = viewing?.id || (accounts.some((a) => a.id === remembered) ? remembered : fallback.id);
+  $("txn-category").replaceChildren(h("option", { value: "" }, "Automatic (from the description)"),
+    ...CATEGORIES.map((c) => h("option", { value: c }, c)));
+  if (state.category) $("txn-category").value = state.category;
+  $("txn-date").value = TODAY;
+  $("txn-date").max = TODAY;
+  for (const id of ["txn-amount", "txn-description", "txn-note"]) $(id).value = "";
+  $("txn-form").direction.value = "out";
+  $("txn-error").textContent = "";
+  $("txn-dialog").showModal();
+  $("txn-amount").focus();
+}
+
+$("add-txn-btn").addEventListener("click", openAddTransaction);
+$("txn-cancel").addEventListener("click", () => $("txn-dialog").close());
+$("txn-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const button = $("txn-submit");
+  if (button.disabled) return;
+  const amount = $("txn-amount").value.replace(/[$,\s]/g, "");
+  // A typed minus sign means money out, whatever the toggle says.
+  const direction = amount.startsWith("-") ? "out" : $("txn-form").direction.value;
+  button.disabled = true;
+  $("txn-error").textContent = "";
+  try {
+    const r = await api("/api/transactions/manual", { method: "POST", body: JSON.stringify({
+      date: $("txn-date").value, description: $("txn-description").value, amount: amount.replace(/^[-+]/, ""), direction,
+      account_id: $("txn-account").value, category: $("txn-category").value, note: $("txn-note").value }) });
+    try { localStorage.setItem(LAST_ACCOUNT_KEY, $("txn-account").value); } catch (err) { /* private mode */ }
+    toast(`Added ${direction === "out" ? "−" : "+"}${money(amount.replace(/^[-+]/, ""))} · ${r.category}.`);
+    if ($("txn-another").checked) {
+      for (const id of ["txn-amount", "txn-description", "txn-note"]) $(id).value = "";
+      $("txn-amount").focus();
+    } else {
+      $("txn-dialog").close();
+    }
+    await refresh(true);
+  } catch (err) { $("txn-error").textContent = err.message; }
+  button.disabled = false;
+});
+
+async function deleteTransaction(t) {
+  if (!confirm(`Delete “${t.merchant || t.description}” (${t.date}, ${money(t.flow)})? This can't be undone.`)) return;
+  try {
+    await api("/api/transactions/delete", { method: "POST", body: JSON.stringify({ id: t.id }) });
+    toast("Deleted.");
+    await refresh(true);
+  } catch (err) { alert(err.message); }
+}
 
 // ---------- manual accounts ----------
 $("add-account-btn").addEventListener("click", () => {

@@ -778,3 +778,91 @@ def test_simplefin_midnight_utc_dates_stay_on_their_day():
     sept1 = int(datetime.datetime(2026, 9, 1, tzinfo=datetime.timezone.utc).timestamp())
     assert sync._local_date(sept1, tz) == datetime.date(2026, 9, 1)
     assert sync._local_date(sept1 + 9000, tz) == datetime.date(2026, 8, 31)  # 7:30pm PT the evening before
+
+
+# ---------- transactions you add by hand ----------
+
+def _add_manual(web, csrf, **fields):
+    body = {"date": "2026-10-06", "description": "Farmers market", "amount": "23.40", "direction": "out",
+            "account_id": K("chk"), **fields}
+    return web.post("/api/transactions/manual", json=body, headers={"X-CSRF-Token": csrf})
+
+
+def test_add_and_delete_a_transaction_by_hand(conn):
+    web = app.test_client()
+    csrf = login(web)
+    before = queries.summary(conn, month_filters())
+
+    r = _add_manual(web, csrf, note="cash, split with Sam")
+    assert r.status_code == 200 and r.get_json()["category"] == "Groceries"  # categorized like any other
+    cash = r.get_json()["id"]
+    gift = _add_manual(web, csrf, description="Birthday money", amount="$1,000", direction="in", category="Other Income")
+    assert gift.get_json()["category"] == "Other Income"
+
+    s = queries.summary(conn, month_filters())
+    assert s["total_expenses"] == before["total_expenses"] + Decimal("23.40")
+    assert s["total_income"] == before["total_income"] + Decimal("1000.00")
+    rows = {r["id"]: r for r in web.get("/api/transactions?start=2026-10-01&end=2026-10-09&account=all").get_json()["rows"]}
+    assert rows[cash]["source"] == "manual" and rows[cash]["flow"] == "-23.40" and rows[cash]["note"] == "cash, split with Sam"
+    assert rows[gift.get_json()["id"]]["overridden"]  # the category you picked sticks
+
+    # Bank rows can't be deleted (they'd come back); yours can.
+    r = web.post("/api/transactions/delete", json={"id": K("chk", "c2")}, headers={"X-CSRF-Token": csrf})
+    assert r.status_code == 400 and "Hide" in r.get_json()["error"]
+    assert web.post("/api/transactions/delete", json={"id": cash}).status_code == 403  # CSRF
+    assert web.post("/api/transactions/delete", json={"id": cash}, headers={"X-CSRF-Token": csrf}).status_code == 200
+    assert web.post("/api/transactions/delete", json={"id": cash}, headers={"X-CSRF-Token": csrf}).status_code == 404
+    s = queries.summary(conn, month_filters())
+    assert s["total_expenses"] == before["total_expenses"]
+
+
+@pytest.mark.parametrize("fields,message", [
+    ({"description": "  "}, "Describe"),
+    ({"amount": "0"}, "above zero"),
+    ({"amount": "-5"}, "above zero"),
+    ({"amount": "lots"}, "above zero"),
+    ({"direction": "sideways"}, "went out or came in"),
+    ({"account_id": "nope"}, "account"),
+    ({"date": ""}, "date"),
+    ({"date": "1999-12-31"}, "out of range"),
+    ({"category": "Snacks"}, "Unknown category"),
+])
+def test_adding_a_transaction_checks_its_fields(conn, fields, message):
+    web = app.test_client()
+    csrf = login(web)
+    count = conn.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"]
+    r = _add_manual(web, csrf, **fields)
+    assert r.status_code == 400 and message in r.get_json()["error"]
+    assert conn.execute("SELECT COUNT(*) AS n FROM transactions").fetchone()["n"] == count
+
+
+def test_bank_takes_over_a_hand_entered_transaction_instead_of_duplicating(conn):
+    # You type in the Chewy purchase before the bank sends it; then the bank sends it a day later.
+    conn.execute("DELETE FROM transactions WHERE id = %s", (K("cc", "k4"),))
+    conn.commit()
+    web = app.test_client()
+    csrf = login(web)
+    _add_manual(web, csrf, account_id=K("cc"), date="2026-10-06", description="Chewy dog food", amount="30.00",
+                category="Pet Food & Supplies", note="for Max")
+    cash = _add_manual(web, csrf, account_id=K("cc"), description="Cash at the fair", amount="20.00").get_json()["id"]
+
+    resync(conn, FakeSimpleFIN(OCT))
+    rows = conn.execute("SELECT id, source, override_category, note FROM transactions WHERE account_id = %s AND abs(flow) = 30",
+                        (K("cc"),)).fetchall()
+    assert [(r["id"], r["source"], r["override_category"], r["note"]) for r in rows] == [
+        (K("cc", "k4"), "simplefin", "Pet Food & Supplies", "for Max")]
+    # An entry the bank never sends stays, sync after sync.
+    resync(conn, FakeSimpleFIN(OCT))
+    assert conn.execute("SELECT source FROM transactions WHERE id = %s", (cash,)).fetchone()["source"] == "manual"
+
+
+def test_deleting_one_half_of_a_transfer_unpairs_the_other(conn):
+    web = app.test_client()
+    csrf = login(web)
+    out = _add_manual(web, csrf, description="Online Transfer to SAV", amount="75.00").get_json()["id"]
+    inn = _add_manual(web, csrf, account_id=K("sav"), description="Online Transfer from CHK", amount="75.00",
+                      direction="in").get_json()["id"]
+    assert conn.execute("SELECT paired_with FROM transactions WHERE id = %s", (inn,)).fetchone()["paired_with"] == out
+    web.post("/api/transactions/delete", json={"id": out}, headers={"X-CSRF-Token": csrf})
+    row = conn.execute("SELECT paired_with, pair_category FROM transactions WHERE id = %s", (inn,)).fetchone()
+    assert row["paired_with"] is None and row["pair_category"] is None

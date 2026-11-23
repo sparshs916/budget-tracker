@@ -41,6 +41,10 @@ For banks SimpleFIN can't reach (or accounts it only sends balances for), downlo
 
 A file holding several accounts (Golden 1's multi-account export) is split so each part goes to its own account. Anything that matches more than one account, or none, waits for you to pick; anything whose rows already sit in a different account is skipped unless you choose it. You can also pick one account (or create one) for a single file as before. Every upload can be undone under **Recent uploads**.
 
+### Adding transactions by hand
+
+**+ Add** above the transaction list records cash or anything the bank hasn't sent yet: money out or in, amount, description, date, account, and optionally a category and note (the category is otherwise picked from the description like any other row). These are the only rows that can be deleted (🗑); bank and CSV rows would come back on the next sync or upload, so those are hidden instead. Syncs never remove them, and if the bank later sends the same transaction (same account and amount, within 3 days) it takes over the hand-entered row, keeping its category and note, so nothing is counted twice.
+
 ### From your iPhone
 
 **Upload CSV → 📱 Phone upload** makes a key and shows how to build a two-step Shortcut, so a CSV shared from any app (e.g. Wallet → Apple Card → Export Transactions) goes straight in. The Shortcut posts the file to `/api/upload` with `Authorization: Bearer <key>` and shows the plain-text reply. The key can only add transactions; it can't read anything. Only its hash is stored, a new key replaces the old one, and wrong keys are locked out like wrong passwords. Files the app can't place with certainty are not imported.

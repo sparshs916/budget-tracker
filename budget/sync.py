@@ -198,7 +198,8 @@ def _save_account(conn, enrollment, account, window_start, tz, prune):
     existing_ids = {r["id"] for r in conn.execute(
         "SELECT id FROM transactions WHERE account_id = %s AND source = 'simplefin'", (account["key"],)).fetchall()}
     uploaded = conn.execute(
-        "SELECT id, date, flow FROM transactions WHERE account_id = %s AND source = 'csv' ORDER BY date, id",
+        # Uploaded rows and ones you added by hand: SimpleFIN takes them over instead of duplicating them.
+        "SELECT id, date, flow FROM transactions WHERE account_id = %s AND source IN ('csv', 'manual') ORDER BY date, id",
         (account["key"],),
     ).fetchall()
     taken = set()
@@ -213,8 +214,8 @@ def _save_account(conn, enrollment, account, window_start, tz, prune):
         flow = to_flow(t["amount"], account_type)
         txn_id = f"{account['key']}:{t['id']}"
         if txn_id not in existing_ids and not t.get("pending"):
-            # The same transaction may already be here from a CSV upload: same amount
-            # within a few days. Take that row over (keeping any category you set).
+            # The same transaction may already be here from a CSV upload or added by hand: same
+            # amount within a few days. Take that row over (keeping any category or note you set).
             match = _closest_upload(uploaded, taken, date, flow)
             if match:
                 taken.add(match["id"])
@@ -328,7 +329,8 @@ def compare_account(conn, account_id, start, end, client=None):
 
     saved = {r["id"] for r in conn.execute("SELECT id FROM transactions WHERE account_id = %s", (account_id,)).fetchall()}
     uploaded = conn.execute(
-        "SELECT id, date, flow FROM transactions WHERE account_id = %s AND source = 'csv'", (account_id,)).fetchall()
+        "SELECT id, date, flow FROM transactions WHERE account_id = %s AND source IN ('csv', 'manual')",
+        (account_id,)).fetchall()
     taken = set()
     remote_ids = set()
     missing = []

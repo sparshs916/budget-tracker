@@ -15,7 +15,7 @@ from flask.json.provider import DefaultJSONProvider
 from werkzeug.security import check_password_hash
 
 from . import ai_categorize, config, csv_import, db, queries
-from .categorize import CATEGORIES, CATEGORY_KIND, CATEGORY_NAMES
+from .categorize import CATEGORIES, CATEGORY_KIND, CATEGORY_NAMES, categorize, merchant_key
 from .simplefin import SimpleFINError, claim_setup_token
 from .sync import (SUBTYPES, compare_account, link_transfers, recategorize_account, recategorize_all_if_rules_changed,
                    save_connection, sync_all, sync_enrollment)
@@ -414,6 +414,70 @@ def api_trends():
     months = min(24, max(1, request.args.get("months", 12, type=int)))
     with db.connect() as conn:
         return jsonify(months=queries.trends(conn, min(end, t), months, request.args.get("account") or "budget"))
+
+
+@app.post("/api/transactions/manual")
+@login_required
+def api_add_transaction():
+    """A transaction you type in: cash, something the bank hasn't sent yet, or an account
+    with no feed. If the bank later sends the same one, the sync takes this row over."""
+    body = request.get_json(force=True)
+    description = (body.get("description") or "").strip()[:200]
+    note = (body.get("note") or "").strip()[:500] or None
+    category = body.get("category") or None
+    try:
+        date = datetime.date.fromisoformat(body.get("date") or "")
+    except ValueError:
+        return jsonify(error="Pick a date."), 400
+    amount = _money_arg(str(body.get("amount") or "").replace("$", "").replace(",", "").strip(), low=Decimal("0.01"))
+    if not description:
+        return jsonify(error="Describe it, e.g. “Farmers market”."), 400
+    if amount is None:
+        return jsonify(error="Enter an amount above zero, like 12.50."), 400
+    if body.get("direction") not in ("out", "in"):
+        return jsonify(error="Say whether money went out or came in."), 400
+    if category and category not in CATEGORY_NAMES:
+        return jsonify(error="Unknown category"), 400
+    if not datetime.date(2000, 1, 1) <= date <= today() + datetime.timedelta(days=366):
+        return jsonify(error="That date is out of range."), 400
+    flow = amount if body["direction"] == "in" else -amount
+    with db.connect() as conn:
+        account = conn.execute("SELECT id, type FROM accounts WHERE id = %s", (body.get("account_id") or "",)).fetchone()
+        if not account:
+            return jsonify(error="Pick the account it was paid from (or into)."), 400
+        txn_id = "manual-txn:" + secrets.token_hex(12)
+        conn.execute(
+            """INSERT INTO transactions (id, account_id, date, description, merchant, merchant_key, raw_amount, flow,
+                                         status, auto_category, override_category, source, note)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'posted', %s, %s, 'manual', %s)""",
+            (txn_id, account["id"], date, description, description, merchant_key(description, description), flow, flow,
+             categorize(description=description, merchant=description, flow=flow, account_type=account["type"]),
+             category, note))
+        conn.commit()
+        _relink(conn)
+        row = conn.execute(f"SELECT {queries.EFFECTIVE_CATEGORY} AS category {queries.BASE_FROM} WHERE t.id = %s",
+                           (txn_id,)).fetchone()
+    return jsonify(id=txn_id, category=row["category"])
+
+
+@app.post("/api/transactions/delete")
+@login_required
+def api_delete_transaction():
+    """Delete a transaction you added by hand. Bank and CSV rows can't be deleted (the next sync
+    or upload would bring them back); hide those instead, or undo the upload."""
+    txn_id = request.get_json(force=True).get("id", "")
+    with db.connect() as conn:
+        row = conn.execute("SELECT source FROM transactions WHERE id = %s", (txn_id,)).fetchone()
+        if not row:
+            return jsonify(error="Not found. Reload the page."), 404
+        if row["source"] != "manual":
+            return jsonify(error="Only transactions you added by hand can be deleted. Hide this one instead."), 400
+        # Its transfer partner (if any) goes back to being unmatched.
+        conn.execute("UPDATE transactions SET paired_with = NULL, pair_category = NULL WHERE paired_with = %s", (txn_id,))
+        conn.execute("DELETE FROM transactions WHERE id = %s", (txn_id,))
+        conn.commit()
+        _relink(conn)
+    return jsonify(ok=True)
 
 
 @app.post("/api/transactions/hide")
